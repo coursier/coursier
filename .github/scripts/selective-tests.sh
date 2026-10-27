@@ -9,7 +9,7 @@
 #
 # Usage:
 #   selective-tests.sh prepare <selector>...    (empty selectors are ignored)
-#   selective-tests.sh run [Mill option]... <selector>
+#   selective-tests.sh run [Mill option]... <selector> [-- <task argument>...]
 #   selective-tests.sh affected <selector>
 #
 # Selectors are Mill task selectors of test tasks, like `__:CsScalaJsTests.testForked` (see the
@@ -20,9 +20,23 @@
 # `prepare` must run once per job, before any `run`. It checks out the base commit of the pull
 # request, snapshots the inputs of the tests of all the selectors, and checks out the pull request
 # again. When selective execution can't be used - the build isn't a pull request build, the pull
-# request changes the Mill version, the CI configuration or the Mill launchers (which Mill doesn't
-# track), or the selectors can't be resolved at the base commit - `run` runs all the tests of its
-# selector.
+# request changes the Mill version, a file Mill doesn't track but that drives how the tests of the
+# job run (see below), or the selectors can't be resolved at the base commit - `run` runs all the
+# tests of its selector.
+#
+# Mill tracks the files the build reads through `Task.Source(s)` (sources, test resources, the
+# test-metadata submodules, …) and the build code, but not the CI configuration or the scripts it
+# runs. So `prepare` falls back to running everything when one of these changed:
+# - the paths of `always_relevant_paths` below, that matter to every job,
+# - the paths listed in `SELECTIVE_TESTS_EXTRA_PATHS`, that the job running `prepare` sets to
+#   the other files it uses, like the scripts its steps run.
+# This is an allowlist: changes to other files of `.github`, like release-only scripts, don't
+# disable selective execution. So a job that starts using a new script or file Mill doesn't
+# track must add it to its `SELECTIVE_TESTS_EXTRA_PATHS` (or to `always_relevant_paths` if
+# every job uses it).
+#
+# Task arguments after `--` are passed to all the tasks of the selector that run, like
+# `run '__.fix' -- --check`.
 #
 # `affected` doesn't run anything: it only tells whether the changes affect some task of its
 # selector, as `affected=true` or `affected=false` in `$GITHUB_OUTPUT`, so that a job can skip
@@ -31,9 +45,12 @@
 # selective execution can't be used.
 #
 # Environment:
-#   SELECTIVE_TESTS_BASE_SHA  base commit of the pull request (empty or unset otherwise)
-#   GITHUB_EVENT_NAME         set by GitHub Actions, selective execution is used for pull_request only
-#   SCALA_VERSION, CI, …      read by build.mill, must be the same for `prepare` and `run`
+#   SELECTIVE_TESTS_BASE_SHA     base commit of the pull request (empty or unset otherwise)
+#   SELECTIVE_TESTS_EXTRA_PATHS  whitespace-separated paths, relative to the repository root,
+#                                whose changes disable selective execution in this job, on top of
+#                                `always_relevant_paths`
+#   GITHUB_EVENT_NAME            set by GitHub Actions, selective execution is used for pull_request only
+#   SCALA_VERSION, CI, …         read by build.mill, must be the same for `prepare` and `run`
 
 set -euo pipefail
 
@@ -53,6 +70,15 @@ out_dir="${MILL_OUTPUT_DIR:-out}"
 snapshot="$out_dir/mill-selective-execution.json"
 # our own copy of it, so that several `run`s can follow a single `prepare`
 saved_snapshot="$out_dir/ci-selective-execution.json"
+
+# Files Mill doesn't track that drive how the tests of every job run: the Mill launchers, the CI
+# configuration, and this script. Jobs add their own files via SELECTIVE_TESTS_EXTRA_PATHS.
+always_relevant_paths=(
+  mill
+  mill.bat
+  .github/workflows/ci.yml
+  .github/scripts/selective-tests.sh
+)
 
 # Joins selectors into a single `{a,b,c}` one: the `selective.*` commands only take
 # their first positional argument into account, extra ones are silently dropped.
@@ -106,8 +132,17 @@ prepare() {
   fi
 
   # Mill doesn't track these, while they drive how tests run - and the native launchers are built
-  if ! git diff --quiet "$base" "$head" -- .github mill mill.bat; then
-    echo "CI configuration or Mill launchers changed since the base commit, all tests will run"
+  local extra_paths=()
+  read -r -a extra_paths <<< "${SELECTIVE_TESTS_EXTRA_PATHS:-}"
+  local changed_paths
+  if ! changed_paths="$(git diff --name-only "$base" "$head" -- \
+    "${always_relevant_paths[@]}" ${extra_paths[@]+"${extra_paths[@]}"})"; then
+    echo "Could not diff base commit $base with the pull request, all tests will run"
+    return
+  fi
+  if [ -n "$changed_paths" ]; then
+    echo "Files that Mill doesn't track changed since the base commit, all tests will run:"
+    echo "$changed_paths"
     return
   fi
 
@@ -137,17 +172,27 @@ prepare() {
 }
 
 run() {
-  if [ "$#" -eq 0 ]; then
-    echo "Usage: $0 run [Mill option]... <selector>" >&2
+  local args=() task_args=()
+  while [ "$#" -gt 0 ]; do
+    if [ "$1" = "--" ]; then
+      shift
+      task_args=("$@")
+      break
+    fi
+    args+=("$1")
+    shift
+  done
+  if [ "${#args[@]}" -eq 0 ]; then
+    echo "Usage: $0 run [Mill option]... <selector> [-- <task argument>...]" >&2
     exit 1
   fi
-  local selector="${!#}"
-  local mill_opts=("${@:1:$#-1}")
+  local selector="${args[${#args[@]}-1]}"
+  local mill_opts=("${args[@]:0:${#args[@]}-1}")
   # `${a[@]+"${a[@]}"}`: with `set -u`, bash < 4.4 (macOS) rejects "${a[@]}" for an empty array
 
   if [ ! -f "$saved_snapshot" ]; then
     echo "Running all tests"
-    "$MILL" -i ${mill_opts[@]+"${mill_opts[@]}"} "$selector"
+    "$MILL" -i ${mill_opts[@]+"${mill_opts[@]}"} "$selector" ${task_args[@]+"${task_args[@]}"}
     return
   fi
 
@@ -156,7 +201,8 @@ run() {
   "$MILL" -i --ticker false selective.resolveChanged "$selector" || true
   echo "Tests affected by those changes:"
   "$MILL" -i --ticker false selective.resolve "$selector"
-  "$MILL" -i ${mill_opts[@]+"${mill_opts[@]}"} selective.run "$selector"
+  # selective.run passes the arguments following the selector to the tasks it runs
+  "$MILL" -i ${mill_opts[@]+"${mill_opts[@]}"} selective.run "$selector" ${task_args[@]+"${task_args[@]}"}
 }
 
 affected() {
@@ -207,7 +253,7 @@ case "${1:-}" in
     affected "$@"
     ;;
   *)
-    echo "Usage: $0 prepare <selector>... | run [Mill option]... <selector> | affected <selector>" >&2
+    echo "Usage: $0 prepare <selector>... | run [Mill option]... <selector> [-- <task argument>...] | affected <selector>" >&2
     exit 1
     ;;
 esac

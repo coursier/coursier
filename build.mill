@@ -1366,6 +1366,9 @@ trait CliTests extends CsModule { self =>
       exec.setExecutable(true)
     exec.toString
   }
+  // a source, so that changing it re-runs the CLI tests on pull requests (selective execution
+  // doesn't see files read straight from the workspace)
+  def authProxyDataDir = Task.Source(BuildCtx.workspaceRoot / "project/authenticated-proxy")
   private def sharedTestArgs = {
     val arch = sys.props.getOrElse("os.arch", "").toLowerCase(java.util.Locale.ROOT)
     val (scalaCli, scalaCliIsJar) = GetCs.scalaCliUrl(
@@ -1414,7 +1417,7 @@ trait CliTests extends CsModule { self =>
         "-Dcoursier-test-is-native=false",
         "-Dcoursier-test-is-native-static=false",
         "-Dcoursier-test-is-standalone=false",
-        s"-Dcoursier.test.auth-proxy-data-dir=${BuildCtx.workspaceRoot / "project/authenticated-proxy"}",
+        s"-Dcoursier.test.auth-proxy-data-dir=${self.authProxyDataDir().path}",
         s"-Dcoursier.test.auth-proxy-image=${coursierbuild.Docker.alpineImage}",
         s"-Dcoursier.test.alpine-image=${coursierbuild.Docker.alpineImage}",
         s"-Dcoursier.test.alpine-java-image=${coursierbuild.Docker.alpineJavaImage}"
@@ -1448,7 +1451,7 @@ trait CliTests extends CsModule { self =>
           "-Dcoursier-test-is-native=true",
           s"-Dcoursier-test-is-native-static=$isStatic",
           "-Dcoursier-test-is-standalone=false",
-          s"-Dcoursier.test.auth-proxy-data-dir=${BuildCtx.workspaceRoot / "project/authenticated-proxy"}",
+          s"-Dcoursier.test.auth-proxy-data-dir=${self.authProxyDataDir().path}",
           s"-Dcoursier.test.auth-proxy-image=${coursierbuild.Docker.alpineImage}",
           s"-Dcoursier.test.alpine-image=${coursierbuild.Docker.alpineImage}",
           s"-Dcoursier.test.alpine-java-image=${coursierbuild.Docker.alpineJavaImage}"
@@ -1483,7 +1486,7 @@ trait CliTests extends CsModule { self =>
         "-Dcoursier-test-is-standalone=true",
         s"-Dcoursier-test-launcher-dir=$launcherDir",
         s"-Dcoursier-test-launcher-sub-path=${cli.launcherSubPath}",
-        s"-Dcoursier.test.auth-proxy-data-dir=${BuildCtx.workspaceRoot / "project/authenticated-proxy"}",
+        s"-Dcoursier.test.auth-proxy-data-dir=${self.authProxyDataDir().path}",
         s"-Dcoursier.test.auth-proxy-image=${coursierbuild.Docker.alpineImage}",
         s"-Dcoursier.test.alpine-image=${coursierbuild.Docker.alpineImage}",
         s"-Dcoursier.test.alpine-java-image=${coursierbuild.Docker.alpineJavaImage}"
@@ -1508,7 +1511,7 @@ trait CliTests extends CsModule { self =>
         "-Dcoursier-test-is-native=false",
         "-Dcoursier-test-is-native-static=false",
         "-Dcoursier-test-is-standalone=false",
-        s"-Dcoursier.test.auth-proxy-data-dir=${BuildCtx.workspaceRoot / "project/authenticated-proxy"}",
+        s"-Dcoursier.test.auth-proxy-data-dir=${self.authProxyDataDir().path}",
         s"-Dcoursier.test.auth-proxy-image=${coursierbuild.Docker.alpineImage}",
         s"-Dcoursier.test.alpine-image=${coursierbuild.Docker.alpineImage}",
         s"-Dcoursier.test.alpine-java-image=${coursierbuild.Docker.alpineJavaImage}"
@@ -2001,9 +2004,12 @@ def standaloneJvmTests() = Task.Command[Unit] {
   `cli-tests`.`standalone-jvm-tests`.testForked()()
 }
 
+/** The `cs.sh` script, as a source so that selective execution knows `csShTests` depends on it */
+def csShScript = Task.Source(BuildCtx.workspaceRoot / CsSh.relPath)
+
 def csShTests(version: String = "") = Task.Command[Unit] {
   CsSh.test(
-    BuildCtx.workspaceRoot / "cs.sh",
+    csShScript().path,
     fetchModule = s"org.scala-lang:scala-library:${ScalaVersions.scala213}",
     workDir = Task.dest / "work",
     versionOverride = Some(version).filter(_.nonEmpty)
@@ -2265,15 +2271,17 @@ object docs extends ScalaModule {
   def mdocInput        = Task.Source(os.sub / "pages")
   def mkdocsConfigFile = Task.Sources(os.sub / "mkdocs.yml")
 
-  def mdocOutput   = Task.Source(os.sub / "docs")
-  def mkdocsOutput = Task.Source(os.sub / "site")
+  // not sources: these are written by mdoc and mkdocs, and changing them shouldn't make
+  // selective execution consider the website affected
+  def mdocOutput: os.Path   = moduleDir / "docs"
+  def mkdocsOutput: os.Path = moduleDir / "site"
 
   def mdocArgs = Task.Anon {
     Args(
       "--in",
       mdocInput().path.toString,
       "--out",
-      mdocOutput().path.toString,
+      mdocOutput.toString,
       "--site.VERSION",
       coursier.jvm(sv).publishVersion(),
       "--classpath",
@@ -2309,7 +2317,7 @@ object docs extends ScalaModule {
     Seq("--config-file", mkdocsConfigFile0.head.toString)
   }
   def mkdocsSiteDirArgs = Task {
-    Seq("--site-dir", mkdocsOutput().path.toString)
+    Seq("--site-dir", mkdocsOutput.toString)
   }
   def mkdocsWatchScript: T[PathRef] = Task {
     mdoc()()
@@ -2379,7 +2387,6 @@ object docs extends ScalaModule {
       sys.error(s"Got exit code $serveRetCode for mkdocs serve and $mdocRetCode for mdoc")
     ()
   }
-  def site = Task.Source(os.sub / "site")
   def mkdocsBuild() = Task.Command[PathRef] {
     mdoc()()
     os.proc("mkdocs", "build", mkdocsConfigArgs(), mkdocsSiteDirArgs())
@@ -2390,7 +2397,7 @@ object docs extends ScalaModule {
         stdout = os.Inherit
       )
 
-    site()
+    PathRef(mkdocsOutput)
   }
   def mkdocsGhDeploy() = Task.Command[Unit] {
     mdoc()()

@@ -30,6 +30,29 @@ trait Doc extends ScalaModule {
 
   def forkWorkingDir = Task.dest
 
+  // not under moduleDir (that's modules/doc)
+  private def websiteDir = BuildCtx.workspaceRoot / "doc/website"
+
+  /** The pages processed by mdoc in [[generate]] */
+  def mdocInput = Task.Source(BuildCtx.workspaceRoot / "doc/docs")
+
+  /** What npm and Docusaurus read under doc/website in [[generate]]
+    *
+    * Not the whole directory, as npm and Docusaurus write in it (see doc/website/.gitignore). Keep
+    * this in sync with the files under doc/website, for selective execution to consider the website
+    * affected when they change.
+    */
+  def websiteSources = Task.Sources(
+    websiteDir / "blog",
+    websiteDir / "core",
+    websiteDir / "pages",
+    websiteDir / "static",
+    websiteDir / "package.json",
+    websiteDir / "package-lock.json",
+    websiteDir / "sidebars.json",
+    websiteDir / "siteConfig.js"
+  )
+
   def generate(args: String*) = Task.Command {
 
     def processArgs(
@@ -71,7 +94,7 @@ trait Doc extends ScalaModule {
       "--classpath",
       classPath().map(_.path.toString).mkString(File.pathSeparator),
       "--in",
-      (BuildCtx.workspaceRoot / "doc" / "docs").toString,
+      mdocInput().path.toString,
       "--out",
       outputDir.toString,
       "--site.VERSION",
@@ -88,7 +111,8 @@ trait Doc extends ScalaModule {
 
     // TODO Run yarn run thing right after, add --watch mode
 
-    val websiteDir = BuildCtx.workspaceRoot / "doc" / "website"
+    // npm and Docusaurus read these from websiteDir, this only makes Mill track them
+    val _ = websiteSources()
 
     // Done here rather than via copyVersionedData, as Mill doesn't order the tasks a command
     // depends on, so that the versioned docs are there before Docusaurus builds the site
