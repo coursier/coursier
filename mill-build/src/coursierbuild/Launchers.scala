@@ -460,7 +460,7 @@ object Launchers {
         cp.map(path => ClassPathEntry.Url(path.toNIO.toUri.toASCIIString))
       val loaderContent = coursier.launcher.ClassLoaderContent(entries)
       val params = Parameters.Bootstrap(Seq(loaderContent), mainClass0)
-        .withDeterministic(true)
+        .copy(deterministic = true)
         .withPreamble(preamble)
 
       BootstrapGenerator.generate(params, dest.toNIO)
@@ -506,7 +506,7 @@ object Launchers {
       }
       val loaderContent = coursier.launcher.ClassLoaderContent(entries)
       val params = Parameters.Bootstrap(Seq(loaderContent), mainClass0)
-        .withDeterministic(true)
+        .copy(deterministic = true)
         .withPreamble(preamble)
 
       BootstrapGenerator.generate(params, dest.toNIO)
