@@ -263,7 +263,7 @@ jobs:
         SCALA213: ${{ needs.scala-versions.outputs.scala213 }}
     # On pull requests, only the tests affected by the changes run, see the script
     - name: Snapshot test inputs at the base commit
-      run: .github/scripts/selective-tests.sh prepare "$INTERFACE_TESTS"
+      run: .github/scripts/selective-tests.sh prepare "$INTERFACE_TESTS" testInterfacePublishedDeps
       env:
         SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
         SELECTIVE_TESTS_BASE_SHA: ${{ github.event.pull_request.base.sha }}
@@ -271,7 +271,9 @@ jobs:
       env:
         SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
     - name: Test published dependencies
-      run: ./mill -i testInterfacePublishedDeps
+      run: .github/scripts/selective-tests.sh run testInterfacePublishedDeps
+      env:
+        SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
 
   bin-compat:
     runs-on: ubuntu-latest
@@ -284,7 +286,12 @@ jobs:
     - uses: coursier/cache-action@95e5b1029b6b86e7bac033ee44a0697d8a527d2d # v8.1.1
       with:
         disableFallback: true
-    - run: ./mill -i -k __.mimaReportBinaryIssues
+    # On pull requests, only the checks affected by the changes run, see the script
+    - name: Snapshot MiMa inputs at the base commit
+      run: .github/scripts/selective-tests.sh prepare "__.mimaReportBinaryIssues"
+      env:
+        SELECTIVE_TESTS_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+    - run: .github/scripts/selective-tests.sh run -k "__.mimaReportBinaryIssues"
 
   website-check:
     runs-on: ubuntu-latest
@@ -341,7 +348,12 @@ jobs:
     - uses: coursier/cache-action@95e5b1029b6b86e7bac033ee44a0697d8a527d2d # v8.1.1
       with:
         disableFallback: true
-    - run: ./mill -i __.fix --check
+    # On pull requests, only the modules affected by the changes are checked, see the script
+    - name: Snapshot Scalafix inputs at the base commit
+      run: .github/scripts/selective-tests.sh prepare "__.fix"
+      env:
+        SELECTIVE_TESTS_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+    - run: .github/scripts/selective-tests.sh run "__.fix" -- --check
 
   test-cs-sh:
     name: ${{ matrix.OS }} cs.sh

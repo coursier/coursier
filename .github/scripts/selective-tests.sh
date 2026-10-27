@@ -9,7 +9,7 @@
 #
 # Usage:
 #   selective-tests.sh prepare <selector>...    (empty selectors are ignored)
-#   selective-tests.sh run [Mill option]... <selector>
+#   selective-tests.sh run [Mill option]... <selector> [-- <task argument>...]
 #   selective-tests.sh affected <selector>
 #
 # Selectors are Mill task selectors of test tasks, like `__:CsScalaJsTests.testForked` (see the
@@ -23,6 +23,9 @@
 # request changes the Mill version, the CI configuration or the Mill launchers (which Mill doesn't
 # track), or the selectors can't be resolved at the base commit - `run` runs all the tests of its
 # selector.
+#
+# Task arguments after `--` are passed to all the tasks of the selector that run, like
+# `run '__.fix' -- --check`.
 #
 # `affected` doesn't run anything: it only tells whether the changes affect some task of its
 # selector, as `affected=true` or `affected=false` in `$GITHUB_OUTPUT`, so that a job can skip
@@ -137,17 +140,27 @@ prepare() {
 }
 
 run() {
-  if [ "$#" -eq 0 ]; then
-    echo "Usage: $0 run [Mill option]... <selector>" >&2
+  local args=() task_args=()
+  while [ "$#" -gt 0 ]; do
+    if [ "$1" = "--" ]; then
+      shift
+      task_args=("$@")
+      break
+    fi
+    args+=("$1")
+    shift
+  done
+  if [ "${#args[@]}" -eq 0 ]; then
+    echo "Usage: $0 run [Mill option]... <selector> [-- <task argument>...]" >&2
     exit 1
   fi
-  local selector="${!#}"
-  local mill_opts=("${@:1:$#-1}")
+  local selector="${args[${#args[@]}-1]}"
+  local mill_opts=("${args[@]:0:${#args[@]}-1}")
   # `${a[@]+"${a[@]}"}`: with `set -u`, bash < 4.4 (macOS) rejects "${a[@]}" for an empty array
 
   if [ ! -f "$saved_snapshot" ]; then
     echo "Running all tests"
-    "$MILL" -i ${mill_opts[@]+"${mill_opts[@]}"} "$selector"
+    "$MILL" -i ${mill_opts[@]+"${mill_opts[@]}"} "$selector" ${task_args[@]+"${task_args[@]}"}
     return
   fi
 
@@ -156,7 +169,8 @@ run() {
   "$MILL" -i --ticker false selective.resolveChanged "$selector" || true
   echo "Tests affected by those changes:"
   "$MILL" -i --ticker false selective.resolve "$selector"
-  "$MILL" -i ${mill_opts[@]+"${mill_opts[@]}"} selective.run "$selector"
+  # selective.run passes the arguments following the selector to the tasks it runs
+  "$MILL" -i ${mill_opts[@]+"${mill_opts[@]}"} selective.run "$selector" ${task_args[@]+"${task_args[@]}"}
 }
 
 affected() {
@@ -207,7 +221,7 @@ case "${1:-}" in
     affected "$@"
     ;;
   *)
-    echo "Usage: $0 prepare <selector>... | run [Mill option]... <selector> | affected <selector>" >&2
+    echo "Usage: $0 prepare <selector>... | run [Mill option]... <selector> [-- <task argument>...] | affected <selector>" >&2
     exit 1
     ;;
 esac
