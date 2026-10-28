@@ -1,7 +1,7 @@
 package coursierbuild
 
 object ScalaVersions {
-  def scala3   = "3.3.8"
+  def scala3   = "3.3.9"
   def scala213 = "2.13.18"
   def scala212 = "2.12.21"
 
