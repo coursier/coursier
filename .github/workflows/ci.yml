@@ -476,7 +476,9 @@ jobs:
 
   generate-compat-native-launchers:
     name: linux compat native
-    runs-on: ubuntu-latest
+    # The launcher built on ubuntu-26.04 runners crashes with an illegal instruction
+    # under QEMU emulating a Nehalem CPU (see qemuCompatTests), stay on 24.04 for now
+    runs-on: ubuntu-24.04
     # to attest the build provenance of the launchers
     permissions:
       contents: read
