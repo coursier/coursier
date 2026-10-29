@@ -69,7 +69,7 @@ object Deps {
     else mvn"org.scala-lang:scala-compiler:$sv"
   // has to match the scalafix-interfaces version that mill-scalafix pulls
   def scalafixCore             = mvn"ch.epfl.scala::scalafix-core:0.14.9"
-  def scalaJsDom               = mvn"org.scala-js::scalajs-dom::2.4.0"
+  def scalaJsDom               = mvn"org.scala-js::scalajs-dom::2.8.1"
   def scalaJsReact             = mvn"com.github.japgolly.scalajs-react::core::4.1.0"
   def scalaNativeTools040      = mvn"org.scala-native::tools:0.4.17"
   def scalaReflect(sv: String) = mvn"org.scala-lang:scala-reflect:$sv"
