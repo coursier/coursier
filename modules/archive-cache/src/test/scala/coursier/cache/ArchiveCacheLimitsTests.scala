@@ -7,6 +7,7 @@ import org.apache.commons.compress.archivers.ar.{ArArchiveEntry, ArArchiveOutput
 import org.apache.commons.compress.archivers.tar.{TarArchiveEntry, TarArchiveOutputStream}
 import org.apache.commons.compress.archivers.zip.{ZipArchiveEntry, ZipArchiveOutputStream}
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorOutputStream
+import org.apache.commons.compress.compressors.xz.XZCompressorOutputStream
 import org.apache.commons.compress.compressors.zstandard.ZstdCompressorOutputStream
 import utest._
 
@@ -29,6 +30,7 @@ object ArchiveCacheLimitsTests extends TestSuite {
   private val gzip  = compressed(new GZIPOutputStream(_)) _
   private val bzip2 = compressed(new BZip2CompressorOutputStream(_)) _
   private val zstd  = compressed(new ZstdCompressorOutputStream(_)) _
+  private val xz    = compressed(new XZCompressorOutputStream(_)) _
 
   private def archive[E <: org.apache.commons.compress.archivers.ArchiveEntry](
     create: OutputStream => ArchiveOutputStream[E],
@@ -63,19 +65,20 @@ object ArchiveCacheLimitsTests extends TestSuite {
   ) _
 
   // archive extension, and archive content
-  // no xz archives here, as org.tukaani:xz isn't on the class path
   private def multiFileArchives(entries: Seq[(String, Array[Byte])]): Seq[(String, Array[Byte])] =
     Seq(
       "tar"     -> tar(entries),
       "tar.gz"  -> gzip(tar(entries)),
       "tar.bz2" -> bzip2(tar(entries)),
       "tar.zst" -> zstd(tar(entries)),
+      "tar.xz"  -> xz(tar(entries)),
       "zip"     -> zip(entries),
       "ar"      -> ar(entries)
     )
   private def singleFileArchives(content: Array[Byte]): Seq[(String, Array[Byte])] =
     Seq(
-      "gz" -> gzip(content)
+      "gz" -> gzip(content),
+      "xz" -> xz(content)
     )
 
   private def get(
