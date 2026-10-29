@@ -2,7 +2,7 @@ package coursier.core
 
 import scala.scalajs.js
 import js.Dynamic.{global => g}
-import org.scalajs.dom.{Node, NodeList}
+import org.scalajs.dom.{Element, Node, NodeList}
 
 import coursier.util.{SaxHandler, Xml}
 
@@ -58,7 +58,7 @@ package object compatibility {
           .getOrElse(Nil)
 
       def attributes = {
-        val attr = node.attributes
+        val attr = node.asInstanceOf[Element].attributes
         (0 until attr.length)
           .map(idx => attr(idx))
           .map { a =>
