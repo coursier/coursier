@@ -1582,7 +1582,7 @@ trait TestCacheJvm extends Cross.Module[String] with CsCrossJvmModule {
   }
   def httpServerClassPath = Task {
     defaultResolver().classpath(
-      Seq(mvn"io.get-coursier:http-server_2.12:1.0.0"),
+      Seq(mvn"io.get-coursier:http-server_2.12:1.0.1"),
       // Clear forced Scala version in particular
       resolutionParamsMapOpt = Some(_ => _root_.coursier.params.ResolutionParams())
     )
