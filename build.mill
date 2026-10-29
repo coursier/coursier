@@ -611,7 +611,7 @@ trait ArchiveCache extends ArchiveCacheBase with DataClassModule {
     }
     def moduleDeps = super.moduleDeps ++ Seq(`test-compat`.jvm()) ++
       (if (withCacheServer) Seq(`cache-server`) else Nil)
-    def mvnDeps = super.mvnDeps() ++ Deps.asyncMvnDeps(crossValue)
+    def mvnDeps = super.mvnDeps() ++ Deps.asyncMvnDeps(crossValue) ++ Seq(Deps.xz)
     def compileMvnDeps = super.compileMvnDeps() ++ Seq(
       Deps.jsoniterMacros(scalaVersion())
     )
