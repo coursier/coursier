@@ -35,7 +35,7 @@ jobs:
       with:
         fetch-depth: 0
         submodules: true
-    - uses: coursier/cache-action@95e5b1029b6b86e7bac033ee44a0697d8a527d2d # v8.1.1
+    - uses: coursier/cache-action@057d08c2f9a2c4e7a4d33df3aae657b7db88b8cc # v8.2.0
       with:
         disableFallback: true
     - run: |
@@ -60,7 +60,7 @@ jobs:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         fetch-depth: 0
-    - uses: coursier/cache-action@95e5b1029b6b86e7bac033ee44a0697d8a527d2d # v8.1.1
+    - uses: coursier/cache-action@057d08c2f9a2c4e7a4d33df3aae657b7db88b8cc # v8.2.0
       with:
         disableFallback: true
     - name: Get Scala versions from the build
@@ -103,7 +103,7 @@ jobs:
       with:
         fetch-depth: 0
         submodules: true
-    - uses: coursier/cache-action@95e5b1029b6b86e7bac033ee44a0697d8a527d2d # v8.1.1
+    - uses: coursier/cache-action@057d08c2f9a2c4e7a4d33df3aae657b7db88b8cc # v8.2.0
       with:
         disableFallback: true
     - run: sudo apt-get install -y nailgun
@@ -186,7 +186,7 @@ jobs:
       with:
         fetch-depth: 0
         submodules: true
-    - uses: coursier/cache-action@95e5b1029b6b86e7bac033ee44a0697d8a527d2d # v8.1.1
+    - uses: coursier/cache-action@057d08c2f9a2c4e7a4d33df3aae657b7db88b8cc # v8.2.0
       with:
         disableFallback: true
     - run: sudo apt-get install -y nailgun
@@ -219,7 +219,7 @@ jobs:
     - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
       with:
         node-version: '18'
-    - uses: coursier/cache-action@95e5b1029b6b86e7bac033ee44a0697d8a527d2d # v8.1.1
+    - uses: coursier/cache-action@057d08c2f9a2c4e7a4d33df3aae657b7db88b8cc # v8.2.0
       with:
         disableFallback: true
     - run: npm install --ignore-scripts
@@ -247,7 +247,7 @@ jobs:
       with:
         fetch-depth: 0
         submodules: true
-    - uses: coursier/cache-action@95e5b1029b6b86e7bac033ee44a0697d8a527d2d # v8.1.1
+    - uses: coursier/cache-action@057d08c2f9a2c4e7a4d33df3aae657b7db88b8cc # v8.2.0
       with:
         disableFallback: true
     # `interface` is built with Scala 2.13 only, its tests run in the Scala 2.13 job
@@ -283,7 +283,7 @@ jobs:
       with:
         fetch-depth: 0
         submodules: true
-    - uses: coursier/cache-action@95e5b1029b6b86e7bac033ee44a0697d8a527d2d # v8.1.1
+    - uses: coursier/cache-action@057d08c2f9a2c4e7a4d33df3aae657b7db88b8cc # v8.2.0
       with:
         disableFallback: true
     # On pull requests, only the checks affected by the changes run, see the script
@@ -309,7 +309,7 @@ jobs:
       with:
         fetch-depth: 0
         submodules: true
-    - uses: coursier/cache-action@95e5b1029b6b86e7bac033ee44a0697d8a527d2d # v8.1.1
+    - uses: coursier/cache-action@057d08c2f9a2c4e7a4d33df3aae657b7db88b8cc # v8.2.0
       with:
         disableFallback: true
     # On pull requests, each website is only built if the changes affect it
@@ -354,7 +354,7 @@ jobs:
       with:
         fetch-depth: 0
         submodules: true
-    - uses: coursier/cache-action@95e5b1029b6b86e7bac033ee44a0697d8a527d2d # v8.1.1
+    - uses: coursier/cache-action@057d08c2f9a2c4e7a4d33df3aae657b7db88b8cc # v8.2.0
       with:
         disableFallback: true
     - uses: coursier/setup-action@648df969f41ef15fda2baba8b37f9fa3d16390a3 # v3.0.4
@@ -369,7 +369,7 @@ jobs:
       with:
         fetch-depth: 0
         submodules: true
-    - uses: coursier/cache-action@95e5b1029b6b86e7bac033ee44a0697d8a527d2d # v8.1.1
+    - uses: coursier/cache-action@057d08c2f9a2c4e7a4d33df3aae657b7db88b8cc # v8.2.0
       with:
         disableFallback: true
     # On pull requests, only the modules affected by the changes are checked, see the script
@@ -402,7 +402,7 @@ jobs:
       with:
         fetch-depth: 0
         submodules: true
-    - uses: coursier/cache-action@95e5b1029b6b86e7bac033ee44a0697d8a527d2d # v8.1.1
+    - uses: coursier/cache-action@057d08c2f9a2c4e7a4d33df3aae657b7db88b8cc # v8.2.0
       with:
         disableFallback: true
     # On pull requests, cs.sh is only tested if the changes affect it
@@ -479,7 +479,7 @@ jobs:
         with:
           fetch-depth: 0
           submodules: true
-      - uses: coursier/cache-action@95e5b1029b6b86e7bac033ee44a0697d8a527d2d # v8.1.1
+      - uses: coursier/cache-action@057d08c2f9a2c4e7a4d33df3aae657b7db88b8cc # v8.2.0
         with:
           disableFallback: true
       - run: sudo apt-get install -y nailgun
@@ -531,7 +531,7 @@ jobs:
         with:
           fetch-depth: 0
           submodules: true
-      - uses: coursier/cache-action@95e5b1029b6b86e7bac033ee44a0697d8a527d2d # v8.1.1
+      - uses: coursier/cache-action@057d08c2f9a2c4e7a4d33df3aae657b7db88b8cc # v8.2.0
         with:
           disableFallback: true
       - run: sudo apt-get install -y nailgun
@@ -587,7 +587,7 @@ jobs:
         with:
           fetch-depth: 0
           submodules: true
-      - uses: coursier/cache-action@95e5b1029b6b86e7bac033ee44a0697d8a527d2d # v8.1.1
+      - uses: coursier/cache-action@057d08c2f9a2c4e7a4d33df3aae657b7db88b8cc # v8.2.0
         with:
           disableFallback: true
       - run: sudo apt-get install -y nailgun
@@ -640,7 +640,7 @@ jobs:
         with:
           fetch-depth: 0
           submodules: true
-      - uses: coursier/cache-action@95e5b1029b6b86e7bac033ee44a0697d8a527d2d # v8.1.1
+      - uses: coursier/cache-action@057d08c2f9a2c4e7a4d33df3aae657b7db88b8cc # v8.2.0
         with:
           disableFallback: true
       - run: sudo apt-get install -y nailgun
@@ -694,7 +694,7 @@ jobs:
         with:
           fetch-depth: 0
           submodules: true
-      - uses: coursier/cache-action@95e5b1029b6b86e7bac033ee44a0697d8a527d2d # v8.1.1
+      - uses: coursier/cache-action@057d08c2f9a2c4e7a4d33df3aae657b7db88b8cc # v8.2.0
         with:
           disableFallback: true
       - run: sudo apt-get install -y nailgun
@@ -736,7 +736,7 @@ jobs:
         with:
           fetch-depth: 0
           submodules: true
-      - uses: coursier/cache-action@95e5b1029b6b86e7bac033ee44a0697d8a527d2d # v8.1.1
+      - uses: coursier/cache-action@057d08c2f9a2c4e7a4d33df3aae657b7db88b8cc # v8.2.0
       - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
         with:
           distribution: 'temurin'
@@ -786,7 +786,7 @@ jobs:
       with:
         fetch-depth: 0
         submodules: true
-    - uses: coursier/cache-action@95e5b1029b6b86e7bac033ee44a0697d8a527d2d # v8.1.1
+    - uses: coursier/cache-action@057d08c2f9a2c4e7a4d33df3aae657b7db88b8cc # v8.2.0
       with:
         disableFallback: true
     - name: Wait for sync to Central
@@ -816,7 +816,7 @@ jobs:
       with:
         fetch-depth: 0
         submodules: true
-    - uses: coursier/cache-action@95e5b1029b6b86e7bac033ee44a0697d8a527d2d # v8.1.1
+    - uses: coursier/cache-action@057d08c2f9a2c4e7a4d33df3aae657b7db88b8cc # v8.2.0
       with:
         disableFallback: true
     - name: Wait for sync to Central
@@ -846,7 +846,7 @@ jobs:
       with:
         fetch-depth: 0
         submodules: true
-    - uses: coursier/cache-action@95e5b1029b6b86e7bac033ee44a0697d8a527d2d # v8.1.1
+    - uses: coursier/cache-action@057d08c2f9a2c4e7a4d33df3aae657b7db88b8cc # v8.2.0
       with:
         disableFallback: true
     - name: Wait for sync to Central
@@ -883,7 +883,7 @@ jobs:
       with:
         fetch-depth: 0
         submodules: true
-    - uses: coursier/cache-action@95e5b1029b6b86e7bac033ee44a0697d8a527d2d # v8.1.1
+    - uses: coursier/cache-action@057d08c2f9a2c4e7a4d33df3aae657b7db88b8cc # v8.2.0
       with:
         disableFallback: true
     - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
@@ -981,7 +981,7 @@ jobs:
       with:
         fetch-depth: 0
         submodules: true
-    - uses: coursier/cache-action@95e5b1029b6b86e7bac033ee44a0697d8a527d2d # v8.1.1
+    - uses: coursier/cache-action@057d08c2f9a2c4e7a4d33df3aae657b7db88b8cc # v8.2.0
       with:
         disableFallback: true
     - name: Open a PR bumping CS_VERSION in cs.sh
@@ -1002,7 +1002,7 @@ jobs:
       with:
         fetch-depth: 0
         submodules: true
-    - uses: coursier/cache-action@95e5b1029b6b86e7bac033ee44a0697d8a527d2d # v8.1.1
+    - uses: coursier/cache-action@057d08c2f9a2c4e7a4d33df3aae657b7db88b8cc # v8.2.0
       with:
         disableFallback: true
     - name: Open a PR bumping csDocker in mill-build/src/coursierbuild/Versions.scala
@@ -1070,7 +1070,7 @@ jobs:
       with:
         fetch-depth: 0
         submodules: true
-    - uses: coursier/cache-action@95e5b1029b6b86e7bac033ee44a0697d8a527d2d # v8.1.1
+    - uses: coursier/cache-action@057d08c2f9a2c4e7a4d33df3aae657b7db88b8cc # v8.2.0
       with:
         disableFallback: true
     - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
@@ -1099,7 +1099,7 @@ jobs:
       with:
         fetch-depth: 0
         submodules: true
-    - uses: coursier/cache-action@95e5b1029b6b86e7bac033ee44a0697d8a527d2d # v8.1.1
+    - uses: coursier/cache-action@057d08c2f9a2c4e7a4d33df3aae657b7db88b8cc # v8.2.0
       with:
         disableFallback: true
     - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
@@ -1166,7 +1166,7 @@ jobs:
       - uses: coursier/setup-action@648df969f41ef15fda2baba8b37f9fa3d16390a3 # v3.0.4
         with:
           apps: scala-cli
-      - uses: coursier/cache-action@95e5b1029b6b86e7bac033ee44a0697d8a527d2d # v8.1.1
+      - uses: coursier/cache-action@057d08c2f9a2c4e7a4d33df3aae657b7db88b8cc # v8.2.0
         with:
           disableFallback: true
       - run: scala-cli run --server=false .github/scripts/UpdateBrewFormula.scala
@@ -1187,7 +1187,7 @@ jobs:
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: '18'
-      - uses: coursier/cache-action@95e5b1029b6b86e7bac033ee44a0697d8a527d2d # v8.1.1
+      - uses: coursier/cache-action@057d08c2f9a2c4e7a4d33df3aae657b7db88b8cc # v8.2.0
         with:
           disableFallback: true
       - run: .github/scripts/setup-mkdocs.sh
@@ -1215,7 +1215,7 @@ jobs:
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: '18'
-      - uses: coursier/cache-action@95e5b1029b6b86e7bac033ee44a0697d8a527d2d # v8.1.1
+      - uses: coursier/cache-action@057d08c2f9a2c4e7a4d33df3aae657b7db88b8cc # v8.2.0
         with:
           disableFallback: true
       - run: .github/scripts/setup-mkdocs.sh
