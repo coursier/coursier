@@ -58,6 +58,11 @@ Prefer minimal, local, reversible changes and follow existing patterns.
   (`.github/scripts/selective-tests.sh`). A new JVM test module reaches the CI by extending
   `CrossJvmCiTests` (under a cross module, runs in the job of its Scala version) or
   `JvmCiTests` (otherwise, runs in the Scala 2.13 jobs).
+- Mill doesn't track the CI configuration and scripts: the script runs all tests when the Mill
+  launchers, `ci.yml`, itself, or the paths in the job's `SELECTIVE_TESTS_EXTRA_PATHS` change.
+  Add any new script or file a selective job uses to that variable, or to the `extra-paths`
+  input of the `selective-affected` action for the jobs using it (other `.github` changes don't
+  disable selective execution).
 - Run the JVM tests the CI runs for Scala 2.13:
   - `./mill -i '{__[2.13.18].__:CrossJvmCiTests,__:JvmCiTests}.testForked'`
 - Run the JVM tests of the cross-built modules for another Scala version:
