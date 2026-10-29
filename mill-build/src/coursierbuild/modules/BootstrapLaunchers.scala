@@ -95,11 +95,12 @@ trait BootstrapLauncher extends CsModule {
 
     val dest = Task.dest / "bootstrap-orig.jar"
 
-    val params = Parameters.Assembly()
-      .withFiles((baseJar +: cp).map(_.toIO))
-      .withMainClass(mainClass0)
-      .withPreambleOpt(None)
-      .withRules(rules)
+    val params = Parameters.Assembly().copy(
+      files = (baseJar +: cp).map(_.toIO),
+      mainClass = Some(mainClass0),
+      preambleOpt = None,
+      rules = rules
+    )
 
     AssemblyGenerator.generate(params, dest.toNIO)
 
@@ -142,11 +143,12 @@ trait BootstrapLauncher extends CsModule {
 
     val dest = Task.dest / "bootstrap-orig.jar"
 
-    val params = Parameters.Assembly()
-      .withFiles((baseJar +: cp).map(_.toIO))
-      .withMainClass(mainClass0)
-      .withPreambleOpt(None)
-      .withRules(rules)
+    val params = Parameters.Assembly().copy(
+      files = (baseJar +: cp).map(_.toIO),
+      mainClass = Some(mainClass0),
+      preambleOpt = None,
+      rules = rules
+    )
 
     AssemblyGenerator.generate(params, dest.toNIO)
 
