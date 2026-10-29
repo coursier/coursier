@@ -15,9 +15,9 @@ object Versions {
   // its Scala suffix, so a pin there would block the Scala 3 line too.
   def jsoniterScalaScala2 = "2.13.8" // scala-steward:off
 
-  def sbtCoursier  = "2.1.4"
+  def sbtCoursier  = "2.1.13"
   def graalVmJvmId = "liberica-nik:25.0.2"
-  def scalaCli     = "1.14.0"
+  def scalaCli     = "1.18.0"
   def csDocker     = "2.1.26"
   def csQemu       = "9.2.1-1"
 }
