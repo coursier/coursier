@@ -404,8 +404,8 @@ abstract class BootstrapTests extends TestSuite with LauncherOptions {
           .call(cwd = tmpDir0)
           .out.text()
         if (Properties.isWin) {
-          val outputElems =
-            ((tmpDir0 / "cs-props-1").toString +: TestUtil.propsCp).mkString(File.pathSeparator)
+          val outputElems = ((tmpDir0 / "cs-props-1").toNIO.toString +: TestUtil.propsCp)
+            .mkString(File.pathSeparator)
           val expectedOutput = outputElems + "__" + outputElems + System.lineSeparator()
           assert(output.replace("\\\\", "\\") == expectedOutput)
         }
