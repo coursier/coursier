@@ -2,7 +2,7 @@ name: Homebrew
 
 # Checks that the formula published in https://github.com/coursier/homebrew-formulas installs,
 # and that the launchers it installs work. That formula is generated from
-# .github/scripts/coursier.rb.template upon releases, see .github/scripts/UpdateBrewFormula.scala.
+# .github/scripts/coursier.rb.template upon releases, see updateBrewFormula in build.mill.
 on:
   schedule:
     # every other day

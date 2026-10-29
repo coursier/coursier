@@ -1163,13 +1163,10 @@ jobs:
         with:
           fetch-depth: 0
           submodules: true
-      - uses: coursier/setup-action@648df969f41ef15fda2baba8b37f9fa3d16390a3 # v3.0.4
-        with:
-          apps: scala-cli
       - uses: coursier/cache-action@ee0650f98295f27a505e4bfd284c9bfaa913a465 # v9.0.1
         with:
           disableFallback: true
-      - run: scala-cli run --server=false .github/scripts/UpdateBrewFormula.scala
+      - run: ./mill -i updateBrewFormula
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
 

@@ -14,6 +14,7 @@ import coursierbuild.{Deps, ScalaVersions, Versions}
 import coursierbuild.Launchers.{Launchers, platformBootstrapExtension}
 import coursierbuild.Relativize.{relativize => doRelativize}
 import coursierbuild.{
+  BrewFormula,
   Check,
   CoursierProperties,
   CsDocker,
@@ -1683,6 +1684,33 @@ def uploadLaunchersSpecialRepo(directory: String = "artifacts") = Task.Command {
   GitHubReleaseAssets.uploadLaunchersSpecialRepo(
     version,
     os.Path(directory, BuildCtx.workspaceRoot)
+  )
+}
+
+/** Updates the formula of https://github.com/coursier/homebrew-formulas for `version`, or for the
+  * tag in `GITHUB_REF` if empty, once the launchers have been uploaded to its GitHub release
+  *
+  * Requires GH_TOKEN, unless `--dryRun true` is passed.
+  */
+def updateBrewFormula(version: String = "", dryRun: Boolean = false) = Task.Command {
+  val version0 =
+    if (version.nonEmpty) version
+    else
+      websiteVersionOpt().getOrElse {
+        sys.error("No version passed, and GITHUB_REF doesn't point at a tag starting with 'v'")
+      }
+  val token =
+    if (dryRun) ""
+    else
+      Option(System.getenv("GH_TOKEN")).getOrElse {
+        sys.error("GH_TOKEN not set")
+      }
+  BrewFormula.update(
+    version0,
+    BuildCtx.workspaceRoot / ".github/scripts/coursier.rb.template",
+    token,
+    dryRun = dryRun,
+    workDir = Task.dest
   )
 }
 
