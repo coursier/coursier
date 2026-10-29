@@ -2,7 +2,7 @@ package coursierbuild.modules
 
 import com.goyeau.mill.scalafix.ScalafixModule
 import coursierbuild.Deps
-import mill._, mill.scalalib._
+import mill._, mill.api.BuildCtx, mill.scalalib._
 
 trait CsScalaModule extends ScalaModule with CoursierJavaModule with ScalafixModule {
   def scalacOptions = Task {
@@ -31,6 +31,12 @@ trait CsScalaModule extends ScalaModule with CoursierJavaModule with ScalafixMod
       "--release",
       releaseVersion
     )
+  }
+  // Scalafix finds .scalafix.conf by itself when no config is passed, but Mill doesn't track
+  // that, so that selective execution wouldn't re-run `fix` when it changes
+  def scalafixConfigFile = Task.Source(BuildCtx.workspaceRoot / ".scalafix.conf")
+  def scalafixConfig = Task {
+    Some(scalafixConfigFile().path)
   }
   // rules from modules/scalafix-rules, enabled by name in .scalafix.conf
   // (build_.package_ is the root module of build.mill, which is compiled along with this file)

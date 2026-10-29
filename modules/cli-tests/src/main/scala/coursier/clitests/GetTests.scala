@@ -83,6 +83,34 @@ abstract class GetTests extends TestSuite {
       }
     }
 
+    test("distrusted eMudhra certificates") {
+      // JVM launchers use the trust store of the JVM they run on, that we don't control here
+      if (isNative) distrustedEmudhraCertificatesTest()
+      else "Only checked for native launchers"
+    }
+    def distrustedEmudhraCertificatesTest(): Unit =
+      TestUtil.withTempDir { tmpDir =>
+        val cache = new File(tmpDir, "cache").getAbsolutePath
+        // Test sites using certificates from the compromised eMudhra intermediate CAs, chaining
+        // to an emSign root or (aaa) to the AAA Certificate Services one,
+        // see https://emudhra.we-have-a-problem.com
+        val urls = Seq(
+          "https://dv-g3b-emudhra.we-have-a-problem.com/",
+          "https://dv-g3b-aaa-emudhra.we-have-a-problem.com/"
+        )
+        for (url <- urls) {
+          val res = os.proc(launcher, "get", url, "--cache", cache)
+            .call(check = false, mergeErrIntoOut = true)
+          val output = res.out.text()
+          if (res.exitCode == 0 || !output.contains("SSLHandshakeException")) {
+            System.err.println(s"Unexpected output for $url:")
+            System.err.println(output)
+          }
+          assert(res.exitCode != 0)
+          assert(output.contains("SSLHandshakeException"))
+        }
+      }
+
     test("Maven Central via authenticated proxy") {
       if (hasDocker) mavenCentralViaAuthProxyTest()
       else "Docker test disabled"

@@ -150,14 +150,31 @@ object Launchers {
       }
     }
 
+    protected def trustStoreDirName = "trust-store"
+
+    /** Directory with the trust store embedded in the image, see [[TrustStore]] */
+    def trustStoreDir = Task {
+      BuildCtx.withFilesystemCheckerDisabled {
+        val dir = nativeImageDockerWorkingDir() / trustStoreDirName
+        os.makeDir.all(dir)
+        os.copy.over(TrustStore.cacerts(), dir / "cacerts")
+        PathRef(dir)
+      }
+    }
+
     def nativeImageOptions = Task {
       val usesDocker = nativeImageDockerParams().nonEmpty
       val cLibPath =
         if (usesDocker) s"/data/$staticLibDirName"
         else staticLibDir().path.toString
+      val trustStoreDir0 = trustStoreDir()
+      val trustStore =
+        if (usesDocker) s"/data/$trustStoreDirName/cacerts"
+        else (trustStoreDir0.path / "cacerts").toString
       super.nativeImageOptions() ++
         Seq(
           s"-H:CLibraryPath=$cLibPath",
+          s"-Djavax.net.ssl.trustStore=$trustStore",
           "--add-exports=org.graalvm.nativeimage.builder/com.oracle.svm.core.jdk=ALL-UNNAMED",
           "--add-exports=org.graalvm.nativeimage.builder/com.oracle.svm.hosted=ALL-UNNAMED",
           "--add-exports=org.graalvm.nativeimage.builder/com.oracle.svm.hosted.c=ALL-UNNAMED"
