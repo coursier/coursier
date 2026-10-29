@@ -263,7 +263,7 @@ jobs:
         SCALA213: ${{ needs.scala-versions.outputs.scala213 }}
     # On pull requests, only the tests affected by the changes run, see the script
     - name: Snapshot test inputs at the base commit
-      run: .github/scripts/selective-tests.sh prepare "$INTERFACE_TESTS"
+      run: .github/scripts/selective-tests.sh prepare "$INTERFACE_TESTS" testInterfacePublishedDeps
       env:
         SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
         SELECTIVE_TESTS_BASE_SHA: ${{ github.event.pull_request.base.sha }}
@@ -271,7 +271,9 @@ jobs:
       env:
         SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
     - name: Test published dependencies
-      run: ./mill -i testInterfacePublishedDeps
+      run: .github/scripts/selective-tests.sh run testInterfacePublishedDeps
+      env:
+        SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
 
   bin-compat:
     runs-on: ubuntu-latest
@@ -284,11 +286,19 @@ jobs:
     - uses: coursier/cache-action@95e5b1029b6b86e7bac033ee44a0697d8a527d2d # v8.1.1
       with:
         disableFallback: true
-    - run: ./mill -i -k __.mimaReportBinaryIssues
+    # On pull requests, only the checks affected by the changes run, see the script
+    - name: Snapshot MiMa inputs at the base commit
+      run: .github/scripts/selective-tests.sh prepare "__.mimaReportBinaryIssues"
+      env:
+        SELECTIVE_TESTS_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+    - run: .github/scripts/selective-tests.sh run -k "__.mimaReportBinaryIssues"
 
   website-check:
     runs-on: ubuntu-latest
     name: Website check
+    env:
+      MKDOCS_TASKS: "{docs.mdoc,docs.mkdocsBuild}"
+      DOCUSAURUS_TASKS: "doc.generate"
     steps:
     - name: Don't convert LF to CRLF during checkout
       if: runner.os == 'Windows'
@@ -299,20 +309,41 @@ jobs:
       with:
         fetch-depth: 0
         submodules: true
-    - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-      with:
-        node-version: '18'
     - uses: coursier/cache-action@95e5b1029b6b86e7bac033ee44a0697d8a527d2d # v8.1.1
       with:
         disableFallback: true
+    # On pull requests, each website is only built if the changes affect it
+    - name: Snapshot the inputs of the websites at the base commit
+      run: .github/scripts/selective-tests.sh prepare "$MKDOCS_TASKS" "$DOCUSAURUS_TASKS"
+      shell: bash
+      env:
+        # scripts run by the steps below, which Mill doesn't track
+        SELECTIVE_TESTS_EXTRA_PATHS: .github/scripts/setup-mkdocs.sh
+        SELECTIVE_TESTS_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+    - name: Check whether the changes affect the mkdocs website
+      id: mkdocs
+      run: .github/scripts/selective-tests.sh affected "$MKDOCS_TASKS"
+      shell: bash
+    - name: Check whether the changes affect the Docusaurus website
+      id: docusaurus
+      run: .github/scripts/selective-tests.sh affected "$DOCUSAURUS_TASKS"
+      shell: bash
     - run: ./mill -i docs.mdoc
+      if: steps.mkdocs.outputs.affected != 'false'
       env:
         COURSIER_JNI: force
     - run: .github/scripts/setup-mkdocs.sh
+      if: steps.mkdocs.outputs.affected != 'false'
     - run: ./mill -i docs.mkdocsBuild
+      if: steps.mkdocs.outputs.affected != 'false'
       env:
         COURSIER_JNI: force
+    - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+      if: steps.docusaurus.outputs.affected != 'false'
+      with:
+        node-version: '18'
     - run: ./mill -i doc.generate --npm-install --yarn-run-build
+      if: steps.docusaurus.outputs.affected != 'false'
       env:
         COURSIER_JNI: force
 
@@ -341,7 +372,12 @@ jobs:
     - uses: coursier/cache-action@95e5b1029b6b86e7bac033ee44a0697d8a527d2d # v8.1.1
       with:
         disableFallback: true
-    - run: ./mill -i __.fix --check
+    # On pull requests, only the modules affected by the changes are checked, see the script
+    - name: Snapshot Scalafix inputs at the base commit
+      run: .github/scripts/selective-tests.sh prepare "__.fix"
+      env:
+        SELECTIVE_TESTS_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+    - run: .github/scripts/selective-tests.sh run "__.fix" -- --check
 
   test-cs-sh:
     name: ${{ matrix.OS }} cs.sh
@@ -369,8 +405,16 @@ jobs:
     - uses: coursier/cache-action@95e5b1029b6b86e7bac033ee44a0697d8a527d2d # v8.1.1
       with:
         disableFallback: true
+    # On pull requests, cs.sh is only tested if the changes affect it
+    - name: Check whether the changes affect cs.sh
+      id: selective
+      uses: ./.github/actions/selective-affected
+      with:
+        selector: csShTests
     - run: ./mill -i csShTests
+      if: steps.selective.outputs.affected != 'false'
     - name: Test cs.sh with CS_VERSION=nightly
+      if: steps.selective.outputs.affected != 'false'
       run: ./mill -i csShTests --version nightly
 
   # 'needs' cannot be made conditional, and a job's 'if' is only evaluated once its
@@ -440,16 +484,14 @@ jobs:
           disableFallback: true
       - run: sudo apt-get install -y nailgun
         if: runner.os == 'Linux'
-      # On pull requests, the launcher is only built and tested if the changes affect it
+      # On pull requests, the launcher is only built, tested and uploaded if the changes affect it
       - name: Check whether the changes affect the launcher
         id: selective
-        run: |
-          .github/scripts/selective-tests.sh prepare "$NATIVE_TESTS"
-          .github/scripts/selective-tests.sh affected "$NATIVE_TESTS"
-        shell: bash
-        env:
-          NATIVE_TESTS: "nativeTests"
-          SELECTIVE_TESTS_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        uses: ./.github/actions/selective-affected
+        with:
+          selector: "{nativeTests,copyLauncher}"
+          # scripts run by the steps below, which Mill doesn't track
+          extra-paths: .github/scripts/maybe-with-graalvm-home.sh .github/scripts/generate-os-packages.sh
       - run: .github/scripts/maybe-with-graalvm-home.sh nativeTests
         if: steps.selective.outputs.affected != 'false'
         shell: bash
@@ -476,7 +518,9 @@ jobs:
 
   generate-compat-native-launchers:
     name: linux compat native
-    runs-on: ubuntu-latest
+    # The launcher built on ubuntu-26.04 runners crashes with an illegal instruction
+    # under QEMU emulating a Nehalem CPU (see qemuCompatTests), stay on 24.04 for now
+    runs-on: ubuntu-24.04
     # to attest the build provenance of the launchers
     permissions:
       contents: read
@@ -491,16 +535,14 @@ jobs:
         with:
           disableFallback: true
       - run: sudo apt-get install -y nailgun
-      # On pull requests, the launcher is only built and tested if the changes affect it
+      # On pull requests, the launcher is only built, tested and uploaded if the changes affect it
       - name: Check whether the changes affect the launcher
         id: selective
-        run: |
-          .github/scripts/selective-tests.sh prepare "$NATIVE_TESTS"
-          .github/scripts/selective-tests.sh affected "$NATIVE_TESTS"
-        shell: bash
-        env:
-          NATIVE_TESTS: "{nativeCompatTests,qemuCompatTests}"
-          SELECTIVE_TESTS_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        uses: ./.github/actions/selective-affected
+        with:
+          selector: "{nativeCompatTests,qemuCompatTests,copyCompatLauncher}"
+          # scripts run by the steps below, which Mill doesn't track
+          extra-paths: .github/scripts/maybe-with-graalvm-home.sh
       - run: .github/scripts/maybe-with-graalvm-home.sh nativeCompatTests
         if: steps.selective.outputs.affected != 'false'
         shell: bash
@@ -550,16 +592,14 @@ jobs:
           disableFallback: true
       - run: sudo apt-get install -y nailgun
         if: runner.os == 'Linux'
-      # On pull requests, the launcher is only built and tested if the changes affect it
+      # On pull requests, the launcher is only built, tested and uploaded if the changes affect it
       - name: Check whether the changes affect the launcher
         id: selective
-        run: |
-          .github/scripts/selective-tests.sh prepare "$NATIVE_TESTS"
-          .github/scripts/selective-tests.sh affected "$NATIVE_TESTS"
-        shell: bash
-        env:
-          NATIVE_TESTS: "nativeStaticTests"
-          SELECTIVE_TESTS_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        uses: ./.github/actions/selective-affected
+        with:
+          selector: "{nativeStaticTests,copyStaticLauncher}"
+          # scripts run by the steps below, which Mill doesn't track
+          extra-paths: .github/scripts/maybe-with-graalvm-home.sh
       - run: .github/scripts/maybe-with-graalvm-home.sh nativeStaticTests
         if: steps.selective.outputs.affected != 'false'
         shell: bash
@@ -605,16 +645,14 @@ jobs:
           disableFallback: true
       - run: sudo apt-get install -y nailgun
         if: runner.os == 'Linux'
-      # On pull requests, the launcher is only built and tested if the changes affect it
+      # On pull requests, the launcher is only built, tested and uploaded if the changes affect it
       - name: Check whether the changes affect the launcher
         id: selective
-        run: |
-          .github/scripts/selective-tests.sh prepare "$NATIVE_TESTS"
-          .github/scripts/selective-tests.sh affected "$NATIVE_TESTS"
-        shell: bash
-        env:
-          NATIVE_TESTS: "nativeContainerTests"
-          SELECTIVE_TESTS_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        uses: ./.github/actions/selective-affected
+        with:
+          selector: "{nativeContainerTests,copyContainerLauncher}"
+          # scripts run by the steps below, which Mill doesn't track
+          extra-paths: .github/scripts/maybe-with-graalvm-home.sh
       - run: .github/scripts/maybe-with-graalvm-home.sh nativeContainerTests
         if: steps.selective.outputs.affected != 'false'
         shell: bash
@@ -661,15 +699,24 @@ jobs:
           disableFallback: true
       - run: sudo apt-get install -y nailgun
         if: runner.os == 'Linux'
+      # On pull requests, the launcher is only built, tested and uploaded if the changes affect it
+      - name: Check whether the changes affect the launcher
+        id: selective
+        uses: ./.github/actions/selective-affected
+        with:
+          selector: "{standaloneJvmTests,copyStandaloneJvmLauncher}"
       - run: ./mill -i standaloneJvmTests
+        if: steps.selective.outputs.affected != 'false'
         timeout-minutes: 35
       - name: Copy artifacts
+        if: steps.selective.outputs.affected != 'false'
         run: ./mill -i copyStandaloneJvmLauncher --directory artifacts/
       - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         if: startsWith(github.ref, 'refs/tags/v')
         with:
           subject-path: 'artifacts/*'
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: steps.selective.outputs.affected != 'false'
         with:
           name: launchers-${{ matrix.OSSHORT }}-standalone
           path: artifacts/
@@ -694,15 +741,24 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '21'
+      # On pull requests, the launcher is only built, tested and uploaded if the changes affect it
+      - name: Check whether the changes affect the launcher
+        id: selective
+        uses: ./.github/actions/selective-affected
+        with:
+          selector: "{standaloneJvmTests,copyStandaloneJvmLauncher}"
       - run: ./mill -i standaloneJvmTests
+        if: steps.selective.outputs.affected != 'false'
         timeout-minutes: 35
       - name: Copy artifacts
+        if: steps.selective.outputs.affected != 'false'
         run: ./mill -i copyStandaloneJvmLauncher --directory artifacts/
       - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         if: startsWith(github.ref, 'refs/tags/v')
         with:
           subject-path: 'artifacts/*'
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: steps.selective.outputs.affected != 'false'
         with:
           name: launchers-windows-arm-standalone
           path: artifacts/
