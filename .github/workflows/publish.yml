@@ -29,7 +29,7 @@ jobs:
           for tag in $(git tag --points-at HEAD); do
             git tag -d "$tag"
           done
-      - uses: coursier/cache-action@057d08c2f9a2c4e7a4d33df3aae657b7db88b8cc # v8.2.0
+      - uses: coursier/cache-action@ee0650f98295f27a505e4bfd284c9bfaa913a465 # v9.0.1
         with:
           disableFallback: true
       # a 'v*' tag releases the coursier modules, and the interface ones too if an
