@@ -21,7 +21,39 @@ import scala.util.Using
   */
 object GraalVm {
 
-  final case class PinnedArchive(url: String, sha256: String)
+  final case class PinnedArchive(url: String, sha256: String) {
+
+    /** Downloads this archive, checks its SHA-256, and extracts it
+      *
+      * @return
+      *   the Java home directory in the extracted archive
+      */
+    def javaHome(): os.Path = {
+      import coursier.cache.{ArchiveCache, FileCache}
+      import coursier.jvm.JvmCache
+      import coursier.util.{Artifact, Task => CsTask}
+
+      val fileCache = FileCache[CsTask]()
+
+      val archiveFile = fileCache.file(Artifact(url)).run
+        .unsafeRun(wrapExceptions = true)(using fileCache.ec)
+        .fold(e => throw e, f => os.Path(f.getAbsolutePath))
+      val actualSha256 = GraalVm.sha256(archiveFile)
+      if (actualSha256 != sha256) {
+        // so that the next attempt downloads it again
+        os.remove(archiveFile)
+        sys.error(
+          s"Invalid SHA-256 for $url: expected $sha256, got $actualSha256 " +
+            s"(removed $archiveFile)"
+        )
+      }
+
+      // Finds the file checked above in the cache, and extracts it if it hasn't been already
+      val jvmCache = JvmCache().copy(archiveCache = ArchiveCache().copy(cache = fileCache))
+      val home     = jvmCache.get(url).unsafeRun(wrapExceptions = true)(using fileCache.ec)
+      os.Path(home.getAbsolutePath)
+    }
+  }
 
   private def releaseUrl =
     "https://github.com/bell-sw/LibericaNIK/releases/download/25.0.2+1-25.0.2+13/bellsoft-liberica-vm-openjdk25.0.2+13-25.0.2+1"
@@ -92,30 +124,6 @@ object GraalVm {
     * @return
     *   the GraalVM home directory
     */
-  def javaHome(): os.Path = {
-    import coursier.cache.{ArchiveCache, FileCache}
-    import coursier.jvm.JvmCache
-    import coursier.util.{Artifact, Task => CsTask}
-
-    val archive   = currentArchive
-    val fileCache = FileCache[CsTask]()
-
-    val archiveFile = fileCache.file(Artifact(archive.url)).run
-      .unsafeRun(wrapExceptions = true)(using fileCache.ec)
-      .fold(e => throw e, f => os.Path(f.getAbsolutePath))
-    val actualSha256 = sha256(archiveFile)
-    if (actualSha256 != archive.sha256) {
-      // so that the next attempt downloads it again
-      os.remove(archiveFile)
-      sys.error(
-        s"Invalid SHA-256 for ${archive.url}: expected ${archive.sha256}, got $actualSha256 " +
-          s"(removed $archiveFile)"
-      )
-    }
-
-    // Finds the file checked above in the cache, and extracts it if it hasn't been already
-    val jvmCache = JvmCache().copy(archiveCache = ArchiveCache().copy(cache = fileCache))
-    val home     = jvmCache.get(archive.url).unsafeRun(wrapExceptions = true)(using fileCache.ec)
-    os.Path(home.getAbsolutePath)
-  }
+  def javaHome(): os.Path =
+    currentArchive.javaHome()
 }
