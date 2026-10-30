@@ -119,7 +119,7 @@ object BootstrapSha256Tests extends TestSuite {
           val cached = CachePath.localFile(appUrl, cache.toFile, null, false).toPath
 
           val launcher = dir.resolve("launcher.jar")
-          val params = Parameters.Bootstrap(
+          val params   = Parameters.Bootstrap(
             Seq(
               ClassLoaderContent(
                 ClassPathEntry.Url(appUrl, Some(ClassPathEntry.sha256(appJar))) +:
@@ -165,7 +165,7 @@ object BootstrapSha256Tests extends TestSuite {
     test("no digest entry without digests") {
       withTmpDir { dir =>
         val launcher = dir.resolve("launcher.jar")
-        val params = Parameters.Bootstrap(
+        val params   = Parameters.Bootstrap(
           Seq(ClassLoaderContent.fromUrls(Seq("https://repo.invalid/a.jar"))),
           hello
         ).copy(preambleOpt = None)
@@ -186,7 +186,7 @@ object BootstrapSha256Tests extends TestSuite {
         Files.copy(appJar, cached)
 
         val launcher = dir.resolve("launcher.jar")
-        val params = Parameters.Bootstrap(
+        val params   = Parameters.Bootstrap(
           Seq(ClassLoaderContent.fromUrls(appUrl +: scalaLibraryUrls)),
           hello
         ).copy(preambleOpt = None)

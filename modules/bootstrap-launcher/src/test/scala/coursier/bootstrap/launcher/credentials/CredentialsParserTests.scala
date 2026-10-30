@@ -10,8 +10,8 @@ object CredentialsParserTests extends TestSuite {
   val tests = Tests {
 
     test("simple") {
-      val s   = "artifacts.foo.com(tha realm) alex:my-pass"
-      val res = CredentialsParser.parse(s).asScala
+      val s           = "artifacts.foo.com(tha realm) alex:my-pass"
+      val res         = CredentialsParser.parse(s).asScala
       val expectedRes =
         Some(new DirectCredentials("artifacts.foo.com", "alex", "my-pass").withRealm("tha realm"))
       assert(res == expectedRes)
@@ -25,8 +25,8 @@ object CredentialsParserTests extends TestSuite {
     }
 
     test("scheme and port") {
-      val s   = "http://artifacts.foo.com:8081(tha realm) alex:my-pass"
-      val res = CredentialsParser.parse(s).asScala
+      val s           = "http://artifacts.foo.com:8081(tha realm) alex:my-pass"
+      val res         = CredentialsParser.parse(s).asScala
       val expectedRes = Some(
         new DirectCredentials("http://artifacts.foo.com:8081", "alex", "my-pass")
           .withRealm("tha realm")
@@ -35,8 +35,8 @@ object CredentialsParserTests extends TestSuite {
     }
 
     test("space in user name") {
-      val s   = "artifacts.foo.com(tha realm) alex a:my-pass"
-      val res = CredentialsParser.parse(s).asScala
+      val s           = "artifacts.foo.com(tha realm) alex a:my-pass"
+      val res         = CredentialsParser.parse(s).asScala
       val expectedRes = Some(
         new DirectCredentials("artifacts.foo.com", "alex a", "my-pass").withRealm("tha realm")
       )
@@ -44,8 +44,8 @@ object CredentialsParserTests extends TestSuite {
     }
 
     test("special chars in password") {
-      val s   = "artifacts.foo.com(tha realm) alex:$%_^12//,.;:"
-      val res = CredentialsParser.parse(s).asScala
+      val s           = "artifacts.foo.com(tha realm) alex:$%_^12//,.;:"
+      val res         = CredentialsParser.parse(s).asScala
       val expectedRes = Some(
         new DirectCredentials("artifacts.foo.com", "alex", "$%_^12//,.;:")
           .withRealm("tha realm")

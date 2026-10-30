@@ -4,12 +4,12 @@ import mill.*
 import mill.scalalib.*
 
 object Deps {
-  def asm              = mvn"org.ow2.asm:asm:9.11.1"
-  def caseApp          = mvn"com.github.alexarchambault::case-app:2.1.1"
-  def catsCore         = mvn"org.typelevel::cats-core:${Versions.cats}"
-  def catsEffect       = mvn"org.typelevel::cats-effect::3.7.1"
-  def classPathUtil    = mvn"io.get-coursier::class-path-util:0.1.4"
-  def collectionCompat = mvn"org.scala-lang.modules::scala-collection-compat::2.14.0"
+  def asm                        = mvn"org.ow2.asm:asm:9.11.1"
+  def caseApp                    = mvn"com.github.alexarchambault::case-app:2.1.1"
+  def catsCore                   = mvn"org.typelevel::cats-core:${Versions.cats}"
+  def catsEffect                 = mvn"org.typelevel::cats-effect::3.7.1"
+  def classPathUtil              = mvn"io.get-coursier::class-path-util:0.1.4"
+  def collectionCompat           = mvn"org.scala-lang.modules::scala-collection-compat::2.14.0"
   def concurrentReferenceHashMap =
     mvn"io.github.alexarchambault:concurrent-reference-hash-map:1.1.0"
   def dataClass    = mvn"io.github.alexarchambault::data-class:0.2.11"
@@ -52,11 +52,11 @@ object Deps {
   // plexus-archiver needs its loggers
   def plexusContainerDefault = mvn"org.codehaus.plexus:plexus-container-default:2.1.1"
     .exclude("junit" -> "junit")
-  def plexusUtils      = mvn"org.codehaus.plexus:plexus-utils:4.1.0"
-  def pprint           = mvn"com.lihaoyi::pprint::0.9.6"
-  def proguard         = mvn"com.guardsquare:proguard-base:7.10.0"
-  def pythonNativeLibs = mvn"ai.kien::python-native-libs:0.2.5"
-  def scalaAsync       = mvn"org.scala-lang.modules::scala-async::1.0.1"
+  def plexusUtils                = mvn"org.codehaus.plexus:plexus-utils:4.1.0"
+  def pprint                     = mvn"com.lihaoyi::pprint::0.9.6"
+  def proguard                   = mvn"com.guardsquare:proguard-base:7.10.0"
+  def pythonNativeLibs           = mvn"ai.kien::python-native-libs:0.2.5"
+  def scalaAsync                 = mvn"org.scala-lang.modules::scala-async::1.0.1"
   def scalaCliConfig(sv: String) =
     if (sv.startsWith("2.12"))
       mvn"org.virtuslab.scala-cli::config:1.1.3"
@@ -100,7 +100,7 @@ object Deps {
   def utest            = mvn"com.lihaoyi::utest::0.9.5"
   def versions         = mvn"io.get-coursier::versions::0.6.1"
   def windowsAnsi      = mvn"io.github.alexarchambault.windows-ansi:windows-ansi:0.0.6"
-  def windowsAnsiPs =
+  def windowsAnsiPs    =
     mvn"io.github.alexarchambault.windows-ansi:windows-ansi-ps:${windowsAnsi.version}"
   // plexus-archiver pulls it with the runtime scope, so only at run time: tests creating xz
   // archives need it at compile time, keep the version in sync with plexus-archiver's

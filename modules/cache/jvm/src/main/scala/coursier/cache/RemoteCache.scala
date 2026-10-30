@@ -352,7 +352,7 @@ import scala.util.Try
 
   override def fetchs: Seq[Cache.Fetch[F]] =
     cachePolicies.map { policy =>
-      val default = fetchWithPolicy(Some(Model.cachePolicyName(policy)))
+      val default  = fetchWithPolicy(Some(Model.cachePolicyName(policy)))
       val fallback =
         fileFallback0.map(fallback => (art: Artifact) => fallback.fetchPerPolicy(art, policy))
       (art: Artifact) =>

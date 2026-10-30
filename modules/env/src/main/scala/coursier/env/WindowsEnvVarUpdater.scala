@@ -93,7 +93,7 @@ import scala.jdk.CollectionConverters._
 
     for ((k, v) <- update.pathLikeAppends) {
       val formerEntries = WindowsEnvVarUpdater.splitPathLike(getEnvironmentVariable(k))
-      val newEntries =
+      val newEntries    =
         if (canReferenceJavaHome && WindowsEnvVarUpdater.isJavaHomeBinDir(k, v, newJavaHomeOpt))
           WindowsEnvVarUpdater.withJavaHomeBinRef(formerEntries, v, formerJavaHomeOpt)
         else
@@ -148,7 +148,7 @@ import scala.jdk.CollectionConverters._
     */
   def removePathEntriesWithPrefix(prefix: String): Boolean = {
     val formerEntries = WindowsEnvVarUpdater.splitPathLike(getEnvironmentVariable("PATH"))
-    val newEntries = WindowsEnvVarUpdater.withoutJvmBinDirsUnder(
+    val newEntries    = WindowsEnvVarUpdater.withoutJvmBinDirsUnder(
       formerEntries,
       prefix,
       WindowsEnvVarUpdater.isJvmBinDir(_, WindowsEnvVarUpdater.pathExtensions)

@@ -84,7 +84,7 @@ object GraalVm {
 
   private def currentPlatform: (String, String) = {
     val osName = System.getProperty("os.name").toLowerCase(Locale.ROOT)
-    val os =
+    val os     =
       if (osName.contains("linux")) "linux"
       else if (osName.contains("mac")) "darwin"
       else if (osName.contains("windows")) "windows"

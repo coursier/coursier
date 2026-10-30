@@ -52,7 +52,7 @@ object TrustStore {
   def cacerts(): os.Path = {
     val path     = archive.javaHome() / "lib/security/cacerts"
     val keyStore = KeyStore.getInstance(path.toIO, "changeit".toCharArray)
-    val names = keyStore.aliases().asScala.toVector.flatMap { alias =>
+    val names    = keyStore.aliases().asScala.toVector.flatMap { alias =>
       keyStore.getCertificate(alias) match {
         case cert: X509Certificate => commonName(cert).toSeq
         case _                     => Nil

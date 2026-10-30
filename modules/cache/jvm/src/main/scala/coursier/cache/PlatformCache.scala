@@ -25,7 +25,7 @@ abstract class PlatformCache[F[_]] {
     artifact: Artifact
   )(implicit S: Sync[F]): EitherT[F, ArtifactError, File] =
     for {
-      f <- file(artifact)
+      f       <- file(artifact)
       invalid <- EitherT(
         S.delay[Either[ArtifactError, Boolean]] {
           val invalid0 = ArchiveIntegrity.check(artifact.url, f).contains(false)

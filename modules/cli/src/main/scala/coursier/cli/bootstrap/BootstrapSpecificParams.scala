@@ -50,7 +50,7 @@ final case class BootstrapSpecificParams(
 
   def jvmCache(cache: Cache[Task]): JvmCache = {
     val archiveCache = ArchiveCache().copy(cache = cache)
-    val c = JvmCache()
+    val c            = JvmCache()
       .copy(archiveCache = archiveCache)
     jvmIndexUrlOpt match {
       case None              => c.withDefaultIndex
@@ -159,7 +159,7 @@ object BootstrapSpecificParams {
           kind match {
             case "rename"     => Validated.validNel(ShadingRule.rename(from, to))
             case "move-under" => Validated.validNel(ShadingRule.moveUnder(from, to))
-            case _ =>
+            case _            =>
               Validated.invalidNel(s"Unrecognized relocation kind '$kind' in rule '$s'")
           }
       }
@@ -178,7 +178,7 @@ object BootstrapSpecificParams {
       .map(JvmChannel.handleAliases)
 
     val baseManifestOptV = options.baseManifest.filter(_.nonEmpty) match {
-      case None => Validated.validNel(None)
+      case None       => Validated.validNel(None)
       case Some(path) =>
         val p = Paths.get(path)
         if (Files.isRegularFile(p))

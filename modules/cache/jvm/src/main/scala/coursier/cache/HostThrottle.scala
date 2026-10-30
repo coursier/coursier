@@ -115,7 +115,7 @@ object HostThrottle {
 
     def holdOff(url: String): HoldOff =
       hostKey(url).flatMap(key => Option(states.get(key))) match {
-        case None => Clear
+        case None         => Clear
         case Some(state0) =>
           val left = state0.notBefore - clock.millis()
           if (left <= 0L) Clear

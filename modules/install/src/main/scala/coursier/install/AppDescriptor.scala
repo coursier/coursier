@@ -150,10 +150,10 @@ import coursier.version.{Latest, Version, VersionConstraint, VersionParse}
         List.empty[(Artifact, File)]
       else {
         val artifactMap = res.artifacts.toMap
-        val subRes = res.resolution.subset0(
+        val subRes      = res.resolution.subset0(
           sharedDependencies.map { m =>
             val module = m.module(scalaVersion.asString)
-            val ver = res.resolution.retainedVersions
+            val ver    = res.resolution.retainedVersions
               .get(module)
               .map(VersionConstraint.fromVersion(_))
               .getOrElse(AppDescriptor.placeholder)
@@ -173,7 +173,7 @@ import coursier.version.{Latest, Version, VersionConstraint, VersionParse}
         l.map { a =>
           val f = artifactMap.get(a) match {
             case Some(f0) => f0
-            case None =>
+            case None     =>
               ???
           }
           a -> f
@@ -604,7 +604,7 @@ object AppDescriptor {
     def forRepo(repo: Repository): Either[String, Set[String]] = {
 
       val logger = cache.loggerOpt.getOrElse(CacheLogger.nop)
-      val t = for {
+      val t      = for {
         _   <- Task.delay(logger.init())
         a   <- repo.versions(mod, cache.fetch).run.attempt
         _   <- Task.delay(logger.stop())

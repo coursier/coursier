@@ -33,7 +33,7 @@ object InterfaceMima {
       new ZipFile(input.toIO),
       os.write.outputStream(output)
     ) { (zf, os0) =>
-      val zos = new ZipOutputStream(os0)
+      val zos                = new ZipOutputStream(os0)
       def keep(name: String) =
         !name.startsWith("coursierapi/shaded/") &&
         !name.startsWith("coursierapi/internal/")

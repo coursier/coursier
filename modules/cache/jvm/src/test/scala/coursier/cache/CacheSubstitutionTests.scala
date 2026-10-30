@@ -21,7 +21,7 @@ object CacheSubstitutionTests extends TestSuite {
     test("substitute FileCache") {
       withTmpDir { dir =>
         withExecutorService(Executors.newFixedThreadPool(1)) { pool =>
-          val logger = new CacheLogger {}
+          val logger    = new CacheLogger {}
           val fileCache = FileCache[Task]((dir / "cache").toIO).copy(
             pool = pool,
             logger = logger,

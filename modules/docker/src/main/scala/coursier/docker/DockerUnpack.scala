@@ -23,7 +23,7 @@ object DockerUnpack {
       priviledgedArchiveCache.getIfExists(artifact, isSingleFile = false).flatMap {
         case Left(err)        => Task.point(Left(err))
         case Right(Some(dir)) => Task.point(Right(dir))
-        case Right(None) =>
+        case Right(None)      =>
           DockerUtil.blobDigest(artifact.url) match {
             case None =>
               Task.point(Left(new ArtifactError.DownloadError(
@@ -33,7 +33,7 @@ object DockerUnpack {
             case Some(digest) =>
               cache.file(artifact).run.flatMap {
                 case Left(err) => Task.point(Left(err))
-                case Right(f) =>
+                case Right(f)  =>
                   Task.delay(DockerUtil.checkDigest(f, digest))
                     .flatMap(_ => priviledgedArchiveCache.get(artifact))
               }
@@ -50,7 +50,7 @@ object DockerUnpack {
     }
 
     layerDirErrors match {
-      case Seq() =>
+      case Seq()                   =>
       case Seq(first, others @ _*) =>
         val ex = new Exception(first)
         for (other <- others)
