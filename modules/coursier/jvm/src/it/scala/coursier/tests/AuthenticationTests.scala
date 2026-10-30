@@ -41,7 +41,7 @@ object AuthenticationTests extends TestSuite with TestRepositoryServer.Test {
 
   private def defaultCache() = Cache.default match {
     case fc: FileCache[Task] => fc
-    case other =>
+    case other               =>
       sys.error(s"Expected default cache to be a FileCache, got $other")
   }
 
@@ -84,7 +84,7 @@ object AuthenticationTests extends TestSuite with TestRepositoryServer.Test {
 
     test {
       val credentialsStr = s"$testOrigin $user:$password"
-      val credentials = CredentialsParser.parse(credentialsStr) match {
+      val credentials    = CredentialsParser.parse(credentialsStr) match {
         case Left(error) => sys.error(s"Error parsing credentials: $error")
         case Right(c)    => c
       }

@@ -60,11 +60,11 @@ trait CacheJvmBase extends Cache with CsCrossJvmModule with CsMima {
 
   trait CacheJvmBaseTests extends CrossSbtTests {
     def sources = Task {
-      val dest = Task.dest / "CustomLoaderClasspath.scala"
+      val dest            = Task.dest / "CustomLoaderClasspath.scala"
       val customLoaderCp0 = customLoaderCp()
         .map { ref =>
-          val file = ref.path.toIO
-          val uri  = file.toURI.toASCIIString
+          val file       = ref.path.toIO
+          val uri        = file.toURI.toASCIIString
           val normalized =
             if (file.isDirectory && !uri.endsWith("/")) uri + "/"
             else uri

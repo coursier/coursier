@@ -27,7 +27,7 @@ trait CoursierJvmBase extends Coursier with CsCrossJvmModule with CsMima with Sh
     Deps.pprint
   )
   def validNamespaces = Seq("coursier")
-  def shadeRenames = Seq(
+  def shadeRenames    = Seq(
     "fastparse.**"  -> "coursier.internal.shaded.fastparse.@1",
     "geny.**"       -> "coursier.internal.shaded.geny.@1",
     "sourcecode.**" -> "coursier.internal.shaded.sourcecode.@1",

@@ -49,7 +49,7 @@ object InfoFile {
       zf = new ZipFile(f.toFile)
       for {
         descEnt <- Option(zf.getEntry(jsonDescFilePath))
-        desc <- appDescriptor(
+        desc    <- appDescriptor(
           s"$f!$jsonDescFilePath",
           FileUtil.readFully(zf.getInputStream(descEnt))
         ).toOption
@@ -75,7 +75,7 @@ object InfoFile {
 
       entOpt.map { ent =>
         val content = FileUtil.readFully(zf.getInputStream(ent))
-        val e = RawSource.parse(new String(content, StandardCharsets.UTF_8))
+        val e       = RawSource.parse(new String(content, StandardCharsets.UTF_8))
           .left.map(err => new ErrorParsingSource(s"$f!$jsonSourceFilePath", err))
           .flatMap { r =>
             r.source

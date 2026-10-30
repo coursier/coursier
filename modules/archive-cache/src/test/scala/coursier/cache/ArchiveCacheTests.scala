@@ -49,7 +49,7 @@ abstract class ArchiveCacheTests extends TestSuite {
         .future()(archiveCache0.cache.ec)
       val archiveDir = Await.result(future, Duration.Inf).toTry.get
       pathInArchiveOpt match {
-        case None => archiveDir
+        case None                => archiveDir
         case Some(pathInArchive) =>
           val file = new File(archiveDir, pathInArchive.toString)
           assert(file.exists())
@@ -62,7 +62,7 @@ abstract class ArchiveCacheTests extends TestSuite {
   private def defaultCache() =
     Cache.default match {
       case fc: FileCache[Task] => fc
-      case other =>
+      case other               =>
         sys.error(s"Expected default cache to be a FileCache, got $other")
     }
 
@@ -127,7 +127,7 @@ abstract class ArchiveCacheTests extends TestSuite {
     test("detect tgz") {
 
       val repoName = "library/hello-world"
-      val auth = Authentication.byNameBearerToken(
+      val auth     = Authentication.byNameBearerToken(
         DockerTestUtil.token(repoName)
       )
 
@@ -356,7 +356,7 @@ abstract class ArchiveCacheTests extends TestSuite {
         val archiveCache0 = archiveCache(dir / "arc").copy(
           cache = defaultCache().copy(location = (dir / "cache").toIO)
         )
-        val localDir = dir / "local"
+        val localDir           = dir / "local"
         def get(file: os.Path) =
           archiveCache0.get(Artifact(file.toNIO.toUri.toASCIIString)).unsafeRun()(
             archiveCache0.cache.ec

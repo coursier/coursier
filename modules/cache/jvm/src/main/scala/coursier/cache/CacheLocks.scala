@@ -115,7 +115,7 @@ object CacheLocks {
 
       resOpt match {
         case Some(res) => res
-        case None =>
+        case None      =>
           loop()
       }
     }

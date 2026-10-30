@@ -33,7 +33,7 @@ object RemoteArchiveCacheTests extends TestSuite {
     withTmpDir { dir =>
       val cacheDir = dir / "cache"
       withExecutorService(Executors.newCachedThreadPool()) { pool =>
-        val port = freePort()
+        val port   = freePort()
         val server = Undertow.builder()
           .addHttpListener(port, "localhost")
           .setHandler(
