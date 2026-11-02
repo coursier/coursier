@@ -381,8 +381,13 @@ object cli extends Cli {
       coursier.jvm(ScalaVersions.scala3).test
     )
     def mvnDeps = super.mvnDeps() ++ Seq(
+      Deps.asm,
       Deps.ujson
     )
+    def forkArgs = Task {
+      val cliClassPath = cli.runClasspath().map(_.path.toString).mkString(File.pathSeparator)
+      super.forkArgs() ++ Seq(s"-Dcoursier-test.cli-class-path=$cliClassPath")
+    }
   }
 }
 object `cli-tests` extends CliTests
