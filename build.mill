@@ -68,39 +68,22 @@ implicit def millModuleBasePath: ModuleCtx.Nested =
   )
 
 // Modules whose sources use the data-class `@data` / `@since` annotations.
-// On Scala 2, data-class expands those itself (macro annotations). On Scala 3, data-class is
-// replaced by the vendored unroll compiler plugin, and by the `unroll.dataclass` stand-in that
-// defines a no-op `@data` and aliases `@since` to `@com.lihaoyi.unroll` (see modules/unroll/README.md).
+// On Scala 2, data-class expands those itself (macro annotations). On Scala 3, the data-class
+// compiler plugin does.
 trait DataClassModuleBase extends CsScalaModule {
-  // Needed when the build loads (not in a task), to pick the module dependencies below
   protected def dataClassScalaVersion: String
-  def usesUnrollPlugin: Boolean = dataClassScalaVersion.startsWith("3.")
-  def compileMvnDeps = super.compileMvnDeps() ++ {
-    if (usesUnrollPlugin) Seq(Deps.unrollAnnotation)
-    else Seq(Deps.dataClass)
-  }
-  def compileModuleDeps = super.compileModuleDeps ++ {
-    if (usesUnrollPlugin) Seq(unroll.dataclass(dataClassScalaVersion))
+  def usesDataClassPlugin: Boolean = dataClassScalaVersion.startsWith("3.")
+  def compileMvnDeps = super.compileMvnDeps() ++ Seq(
+    // the JVM artifact on Scala.js too: only its annotations are needed, at compile time
+    if (usesDataClassPlugin) Deps.dataClass3 else Deps.dataClass
+  )
+  def scalacPluginMvnDeps = super.scalacPluginMvnDeps() ++ {
+    if (usesDataClassPlugin) Seq(Deps.dataClassPlugin)
     else Nil
   }
-  // Resolved outside of tasks: Mill registers task dependencies regardless of `if` branches,
-  // and there is no unroll plugin module for the Scala 2 cross values.
-  def unrollPlugin: Seq[ScalaModule] =
-    if (usesUnrollPlugin) Seq(unroll.plugin(dataClassScalaVersion))
+  def scalacOptions = super.scalacOptions() ++ {
+    if (usesDataClassPlugin) Seq("-Xplugin-require:data-class")
     else Nil
-  def unrollPluginJars = Task {
-    Task.traverse(unrollPlugin)(_.jar)()
-  }
-  def scalacPluginClasspath = Task {
-    super.scalacPluginClasspath() ++ unrollPluginJars()
-  }
-  // Mill only derives `-Xplugin` options from scalacPluginMvnDeps, so pass the jar explicitly.
-  def scalacOptions = Task {
-    val pluginOpts = unrollPluginJars().map(jar => s"-Xplugin:${jar.path}")
-    val requireOpts =
-      if (usesUnrollPlugin) Seq("-Xplugin-require:unroll")
-      else Nil
-    super.scalacOptions() ++ pluginOpts ++ requireOpts
   }
 }
 
@@ -114,14 +97,6 @@ trait Scala3DataClassModule extends DataClassModuleBase with CsScala3Module {
   protected def dataClassScalaVersion = ScalaVersions.scala3
 }
 
-object unroll extends Module {
-  // Vendored fork of the com-lihaoyi/unroll compiler plugin, see modules/unroll/README.md.
-  // Only built for Scala 3: on Scala 2, data-class expands `@data` / `@since` itself.
-  object plugin extends Cross[UnrollPlugin](Seq(ScalaVersions.scala3))
-  // Scala 3 stand-in for the data-class library: a no-op `@data`, and `@since`
-  // aliased to `@com.lihaoyi.unroll` so that the plugin above picks it up.
-  object dataclass extends Cross[DataClassCompat](Seq(ScalaVersions.scala3))
-}
 object util extends Module {
   object shared extends SharedScalaSources
   object jvm    extends Cross[UtilJvm](ScalaVersions.all)
@@ -425,31 +400,6 @@ trait TestCompatJvm extends TestCompat with CsCrossJvmModule with LatestScala3Mo
 trait TestCompatJs extends TestCompat with CsScalaJsModule with LatestScala3Module {
   def sources = Task(super.sources() ++ `test-compat`.shared.sourcesScala3())
   def mvnDeps = super.mvnDeps() ++ Seq(Deps.dottyCpsAsync)
-}
-
-trait UnrollPlugin extends CrossScalaModule {
-  def artifactName = "unroll-plugin"
-
-  // Compiler plugins are built against exact Scala versions.
-  def crossFullScalaVersion = true
-
-  def sources = Task.Sources(
-    if (crossScalaVersion.startsWith("3.")) os.sub / "src-3"
-    else os.sub / "src-2"
-  )
-
-  def mvnDeps = Seq(
-    Deps.unrollAnnotation,
-    Deps.scalaCompiler(crossScalaVersion)
-  )
-}
-
-trait DataClassCompat extends CrossScalaModule {
-  def artifactName = "dataclass-compat"
-  def sources      = Task.Sources(os.sub / "src")
-  def mvnDeps = Seq(
-    Deps.unrollAnnotation
-  )
 }
 
 trait UtilJvm extends UtilJvmBase with DataClassModule with Scala212SnapshotOnlyPublishModule {
