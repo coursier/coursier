@@ -337,13 +337,20 @@ object interop extends Module {
 }
 
 object exec extends Exec {
-  object test extends JavaTests with CsScalaTests {
+  object test extends JavaTests with CsScalaTests with JvmCiTests {
     def scalaVersion = ScalaVersions.scala213
+    // The tests that need these don't run on Windows, so don't build the native image there
+    private def execveTestArgs: Task[Seq[String]] =
+      if (Properties.isWin) Task.Anon(Seq.empty[String])
+      else
+        Task.Anon {
+          Seq(
+            s"-Dcoursier.execve.test.assembly=${`execve-test`.assembly().path}",
+            s"-Dcoursier.execve.test.native-image=${`execve-test`.nativeImage().path}"
+          )
+        }
     def forkArgs = Task {
-      super.forkArgs() ++ Seq(
-        s"-Dcoursier.execve.test.assembly=${`execve-test`.assembly().path}",
-        s"-Dcoursier.execve.test.native-image=${`execve-test`.nativeImage().path}"
-      )
+      super.forkArgs() ++ execveTestArgs()
     }
   }
 }

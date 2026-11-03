@@ -69,8 +69,10 @@ object ExecveTests extends TestSuite {
       "coursier.execve.test.assembly",
       sys.error("Java property coursier.execve.test.assembly not set")
     )
+    // the java of the test JVM, rather than one from PATH
+    val java = os.Path(sys.props("java.home")) / "bin/java"
     Seq(
-      "java",
+      java.toString,
       "--add-opens",
       "java.base/java.lang=ALL-UNNAMED",
       "-jar",
