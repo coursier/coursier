@@ -15,6 +15,7 @@ import coursier.util.{Sync, Task}
 import coursier.version.Version
 
 import scala.concurrent.duration.Duration
+import scala.jdk.CollectionConverters._
 import scala.util.Properties
 
 object Java extends CoursierCommand[JavaOptions] {
@@ -190,15 +191,12 @@ object Java extends CoursierCommand[JavaOptions] {
       }
       else if (Execve.available()) {
         val extraEnv = envUpdate.transientUpdates()
-        val fullEnv = (sys.env ++ extraEnv)
-          .iterator
-          .map {
-            case (k, v) =>
-              s"$k=$v"
-          }
-          .toArray
-          .sorted
-        Execve.execve(javaBin.getAbsolutePath, (javaBin.getAbsolutePath +: args0).toArray, fullEnv)
+        val fullEnv  = sys.env ++ extraEnv
+        Execve.execve(
+          javaBin.getAbsolutePath,
+          (javaBin.getAbsolutePath +: args0).toArray,
+          fullEnv.asJava
+        )
         System.err.println("should not happen")
         sys.exit(1)
       }
