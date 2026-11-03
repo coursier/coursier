@@ -81,7 +81,6 @@ trait DataClassModuleBase extends CsScalaModule {
     if (usesDataClassPlugin) Seq(Deps.dataClassPlugin)
     else Nil
   }
-  def repositories = super.repositories() ++ Deps.dataClassRepositories
   def scalacOptions = super.scalacOptions() ++ {
     if (usesDataClassPlugin) Seq("-Xplugin-require:data-class")
     else Nil

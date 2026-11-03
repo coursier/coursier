@@ -11,5 +11,4 @@ trait TestsModule extends CsModule {
   def compileMvnDeps = Seq(
     Deps.dataClass
   )
-  def repositories = super.repositories() ++ Deps.dataClassRepositories
 }
