@@ -16,6 +16,11 @@ import scala.util.Properties
 trait CoursierJavaModule extends JavaModule {
   def jvmRelease: String =
     CoursierJavaModule.defaultJvmRelease
+
+  /** Java version of the class files this module compiles to, at least `jvmRelease` */
+  def classFileJvmRelease: T[String] = Task {
+    jvmRelease
+  }
   def javacSystemJvmId = Task {
     if (Properties.isMac && CoursierJavaModule.isArm64) s"zulu:$jvmRelease"
     else if (Properties.isWin && CoursierJavaModule.isArm64) s"liberica:$jvmRelease"

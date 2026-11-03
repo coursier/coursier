@@ -2208,12 +2208,9 @@ lazy val allPublishVersions: Task[Seq[(String, String)]] =
   }
 
 lazy val allPublishJars: Task[Seq[(PathRef, String)]] =
-  Task.traverse(moduleInternal.modules.collect { case m: PublishModule => m }) { m =>
-    val jvmRel = m match {
-      case cjm: CoursierJavaModule => cjm.jvmRelease
-      case _                       => CoursierJavaModule.defaultJvmRelease
-    }
-    Task.Anon((m.jar(), jvmRel))
+  Task.traverse(moduleInternal.modules.collect { case m: PublishModule => m }) {
+    case m: CoursierJavaModule => Task.Anon((m.jar(), m.classFileJvmRelease()))
+    case m                     => Task.Anon((m.jar(), CoursierJavaModule.defaultJvmRelease))
   }
 
 object `class-file-version-check` extends Module {

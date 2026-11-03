@@ -21,16 +21,17 @@ trait CsScalaModule extends ScalaModule with CoursierJavaModule with ScalafixMod
     val scala3Opts =
       if (sv.startsWith("3.")) Seq("-Yfuture-lazy-vals")
       else Nil
-    // Scala 3.8.x only supports Java 17+ output targets; bump the release there.
-    val releaseVersion =
-      if (sv.startsWith("3.") && jvmRelease.toInt < 17) "17"
-      else jvmRelease
     super.scalacOptions() ++ scala212Opts ++ scala213Opts ++ scala2Opts ++ scala3Opts ++ Seq(
       "-deprecation",
       "-feature",
       "--release",
-      releaseVersion
+      classFileJvmRelease()
     )
+  }
+  // Scala 3.8.x only supports Java 17+ output targets; bump the release there.
+  override def classFileJvmRelease = Task {
+    if (scalaVersion().startsWith("3.") && jvmRelease.toInt < 17) "17"
+    else jvmRelease
   }
   // Scalafix finds .scalafix.conf by itself when no config is passed, but Mill doesn't track
   // that, so that selective execution wouldn't re-run `fix` when it changes

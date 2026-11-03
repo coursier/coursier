@@ -45,6 +45,10 @@ jobs:
       run: ./mill -i ci.noEmptyDiscoveredTestClasses --tasks __.discoveredTestClasses
     - name: No class path mixing Scala binary versions
       run: ./mill -i ci.noMixedScalaBinaryVersions --tasks __.resolvedRunMvnDeps
+    # Runs here rather than in the 'test' jobs, as it reads the JARs of all the published modules,
+    # for all Scala versions and platforms, that the steps above already compiled
+    - name: Class file versions of the published JARs
+      run: ./mill -i class-file-version-check.test.testForked
     - run: ./mill -i __.publishLocal
 
   scala-versions:
