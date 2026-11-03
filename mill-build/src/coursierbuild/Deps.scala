@@ -42,7 +42,7 @@ object Deps {
     mvn"com.github.plokhotnyuk.jsoniter-scala::jsoniter-scala-core::${jsoniterScalaVersion(sv)}"
   def jsoniterMacros(sv: String) =
     mvn"com.github.plokhotnyuk.jsoniter-scala::jsoniter-scala-macros:${jsoniterScalaVersion(sv)}"
-  def jsoup          = mvn"org.jsoup:jsoup:1.23.2"
+  def jsoup          = mvn"org.jsoup:jsoup:1.24.1"
   def logbackClassic = mvn"ch.qos.logback:logback-classic:1.6.6"
   def macroParadise  = mvn"org.scalamacros:::paradise:2.1.1"
   def mdoc           = mvn"org.scalameta::mdoc:2.9.2"
