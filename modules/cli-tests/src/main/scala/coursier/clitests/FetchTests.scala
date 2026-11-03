@@ -14,22 +14,34 @@ abstract class FetchTests extends TestSuite {
         val tmpDir = os.Path(tmpDir0, os.pwd)
         val cache  = tmpDir / "cache"
 
-        val res0 =
-          os.proc(launcher, "fetch", "org.scala-lang:scala-compiler:2.13.8", "--cache", cache)
-            .call()
+        // Mirroring repo1.maven.org would also redirect the JAR launcher's own bootstrap
+        // to the Google mirror, which lags behind Central, and can't download freshly released
+        // cli dependencies yet. So we fetch from repo.maven.apache.org, another host of
+        // Maven Central, and only mirror that one.
+        val args = Seq(
+          "--no-default",
+          "-r",
+          "https://repo.maven.apache.org/maven2",
+          "org.scala-lang:scala-compiler:2.13.8",
+          "--cache",
+          cache.toString
+        )
+
+        val res0 = os.proc(launcher, "fetch", args).call()
         val jars0 = res0.out.text()
           .linesIterator
           .toVector
           .map(os.Path(_).relativeTo(cache))
 
-        val centralPrefix = os.rel / "https" / "repo1.maven.org" / "maven2"
+        val centralPrefix = os.rel / "https" / "repo.maven.apache.org" / "maven2"
+        assert(jars0.nonEmpty)
         assert(jars0.forall(_.startsWith(centralPrefix)))
 
         val configContent =
           s"""{
              |  "repositories": {
              |    "mirrors": [
-             |      "https://maven-central.storage-download.googleapis.com/maven2 = https://repo1.maven.org/maven2"
+             |      "https://maven-central.storage-download.googleapis.com/maven2 = https://repo.maven.apache.org/maven2"
              |    ]
              |  }
              |}
@@ -37,9 +49,8 @@ abstract class FetchTests extends TestSuite {
         val configFile = tmpDir / "config.json"
         os.write(configFile, configContent)
 
-        val res1 =
-          os.proc(launcher, "fetch", "org.scala-lang:scala-compiler:2.13.8", "--cache", cache)
-            .call(env = Map("SCALA_CLI_CONFIG" -> configFile.toString))
+        val res1 = os.proc(launcher, "fetch", args)
+          .call(env = Map("SCALA_CLI_CONFIG" -> configFile.toString))
         val jars1 = res1.out.text()
           .linesIterator
           .toVector
@@ -47,6 +58,7 @@ abstract class FetchTests extends TestSuite {
 
         val gcsPrefix =
           os.rel / "https" / "maven-central.storage-download.googleapis.com" / "maven2"
+        assert(jars1.nonEmpty)
         assert(jars1.forall(_.startsWith(gcsPrefix)))
       }
     }
