@@ -1,6 +1,6 @@
 package coursier.install
 
-import dataclass.{data, since => unroll}
+import dataclass.{data, since}
 
 import coursier.core.Repository
 import coursier.parse.{JavaOrScalaDependency, JavaOrScalaModule}
@@ -13,12 +13,12 @@ import coursier.version.{Version, VersionInterval}
   mainClass: Option[String] = None,
   defaultMainClass: Option[String] = None,
   javaProperties: Option[Seq[(String, String)]] = None,
-  @unroll
+  @since
     prebuiltLauncher: Option[String] = None,
   prebuiltBinaries: Option[Map[String, String]] = None,
-  @unroll
+  @since
     launcherType: Option[LauncherType] = None,
-  @unroll
+  @since
     sharedDependencies: Option[Seq[JavaOrScalaModule]] = None
 ) {
   // format: on

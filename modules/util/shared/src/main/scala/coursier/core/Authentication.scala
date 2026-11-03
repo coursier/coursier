@@ -3,7 +3,7 @@ package coursier.core
 import java.nio.charset.StandardCharsets
 import java.util.Base64
 
-import dataclass.{data, since => unroll}
+import dataclass.{data, since}
 
 @data(
   deprecatedSetters = true,
@@ -17,7 +17,7 @@ import dataclass.{data, since => unroll}
   realmOpt: Option[String],
   httpsOnly: Boolean,
   passOnRedirect: Boolean,
-  @unroll
+  @since
   byNameHttpHeaders: Seq[() => Seq[(String, String)]] = Nil
 ) {
 

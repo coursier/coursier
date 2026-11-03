@@ -6,7 +6,7 @@ import java.util.Locale
 import coursier.core.Authentication
 
 import scala.util.Try
-import dataclass.{data, since => unroll}
+import dataclass.{data, since}
 
 @data(
   deprecatedSetters = true,
@@ -16,11 +16,11 @@ import dataclass.{data, since => unroll}
   host: String = "",
   usernameOpt: Option[String] = None,
   passwordOpt: Option[Password[String]] = None,
-  @unroll
+  @since
   realm: Option[String] = None,
-  @unroll
+  @since
   optional: Boolean = DirectCredentials.defaultOptional,
-  @unroll
+  @since
   matchHost: Boolean = DirectCredentials.defaultMatchHost,
   httpsOnly: Boolean = DirectCredentials.defaultHttpsOnly,
   passOnRedirect: Boolean = DirectCredentials.defaultPassOnRedirect

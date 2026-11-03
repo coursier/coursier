@@ -1,6 +1,6 @@
 package coursier.jvm
 
-import dataclass.{data, since => unroll}
+import dataclass.{data, since}
 
 import java.io.{File, IOException}
 import java.nio.file.{Files, Path}
@@ -23,7 +23,7 @@ import coursier.util.Task
   commandOutput: CommandOutput = CommandOutput.default(),
   pathExtensions: Option[Seq[String]] = JavaHome.defaultPathExtensions,
   allowSystem: Boolean = true,
-  @unroll
+  @since
   update: Boolean = false,
   noUpdateCache: Option[JvmCache] = None
 ) {

@@ -1,6 +1,6 @@
 package coursier.jvm
 
-import dataclass.{data, since => unroll}
+import dataclass.{data, since}
 
 import java.io.File
 
@@ -20,7 +20,7 @@ import scala.concurrent.duration.Duration
 
   handleLoggerLifecycle: Boolean = true,
 
-  @unroll
+  @since
   archiveCache: ArchiveCache[Task] = ArchiveCache()
 ) {
   // format: on

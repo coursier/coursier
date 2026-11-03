@@ -13,7 +13,7 @@ import coursier.core.{
 import coursier.params.rule.{Rule, RuleResolution, Strict}
 import coursier.util.ModuleMatchers
 import coursier.version.{ConstraintReconciliation, Version, VersionConstraint}
-import dataclass.{data, since => unroll}
+import dataclass.{data, since}
 
 @data(
   deprecatedSetters = true,
@@ -37,19 +37,19 @@ import dataclass.{data, since => unroll}
   useSystemOsInfo: Boolean = true,
   useSystemJdkVersion: Boolean = true,
   defaultConfiguration: Configuration = Configuration.defaultRuntime,
-  @unroll
+  @since
   overrideFullSuffixOpt: Option[Boolean] = None,
-  @unroll
+  @since
   keepProvidedDependencies: Option[Boolean] = None,
-  @unroll
+  @since
   forceDepMgmtVersions: Option[Boolean] = None,
   enableDependencyOverrides: Option[Boolean] = None,
-  @unroll
+  @since
   defaultVariantAttributes: Option[VariantSelector.AttributesBased] = None,
   renderModuleVersion: Option[(Module, String) => String] = None,
-  @unroll
+  @since
   scalaOrganizationOverride: Option[Organization] = None,
-  @unroll
+  @since
   ignoreOptionalFromDepMgmt: Boolean = false
 ) {
 

@@ -6,7 +6,7 @@ import coursier.cache.server.Model
 import coursier.cache.server.Model.{Artifact => ModelArtifact, _}
 import coursier.paths.CachePath
 import coursier.util.{Artifact, EitherT, Sync, Task, WebPage}
-import dataclass.{data, since => unroll}
+import dataclass.{data, since}
 
 import java.io.{ByteArrayOutputStream, File}
 import java.net.{HttpURLConnection, URI, URL}
@@ -39,7 +39,7 @@ import scala.util.Try
     * Same meaning as `FileCache.ttl`. Servers predating this field ignore it, and use their own
     * TTL.
     */
-  @unroll
+  @since
   ttl: Option[Duration] = CacheDefaults.ttl
 )(implicit
   val sync: Sync[F]

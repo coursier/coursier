@@ -19,7 +19,7 @@ import coursier.core.{
 import coursier.maven.{MavenAttributes, MavenComplete}
 import coursier.util.{Artifact, EitherT, Monad}
 import coursier.version.{Version, VersionParse}
-import dataclass.{data, since => unroll}
+import dataclass.{data, since}
 
 @data(
   deprecatedSetters = true,
@@ -35,7 +35,7 @@ import dataclass.{data, since => unroll}
   // hack for sbt putting infos in properties
   dropInfoAttributes: Boolean = false,
   authentication: Option[Authentication] = None,
-  @unroll
+  @since
   override val versionsCheckHasModule: Boolean = true
 ) extends Repository with Repository.VersionApi {
 

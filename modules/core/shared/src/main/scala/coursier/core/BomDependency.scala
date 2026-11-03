@@ -1,7 +1,7 @@
 package coursier.core
 
 import coursier.version.{VersionConstraint => VersionConstraint0}
-import dataclass.{data, since => unroll}
+import dataclass.{data, since}
 
 @data(
   deprecatedSetters = true,
@@ -11,7 +11,7 @@ import dataclass.{data, since => unroll}
   module: Module,
   versionConstraint: VersionConstraint0,
   config: Configuration = Configuration.empty,
-  @unroll
+  @since
   forceOverrideVersions: Boolean = false
 ) {
   override def toString: String =

@@ -1,6 +1,6 @@
 package coursier.install
 
-import dataclass.{data, since => unroll}
+import dataclass.{data, since}
 
 import java.io.File
 import java.nio.charset.StandardCharsets
@@ -27,9 +27,9 @@ import scala.jdk.CollectionConverters._
   channels: Seq[Channel] = Channels.defaultChannels,
   repositories: Seq[Repository] = coursier.Resolve.defaultRepositories,
   cache: Cache[Task] = Cache.default,
-  @unroll
+  @since
   verbosity: Int = 0,
-  @unroll
+  @since
   logChannelVersion: Boolean = false
 ) {
 

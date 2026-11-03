@@ -1,6 +1,6 @@
 package coursier.launcher
 
-import dataclass.{data, since => unroll}
+import dataclass.{data, since}
 
 import java.io.InputStream
 import java.nio.charset.{Charset, StandardCharsets}
@@ -18,7 +18,7 @@ import scala.util.control.NonFatal
   jarPath: Option[String] = None,
   command: Option[String] = None,
   extraEnv: Map[String, String] = Map.empty,
-  @unroll
+  @since
   jvmOptionFile: Option[String] = None
 ) {
 

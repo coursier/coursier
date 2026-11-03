@@ -12,7 +12,11 @@ object Deps {
   def collectionCompat = mvn"org.scala-lang.modules::scala-collection-compat::2.14.0"
   def concurrentReferenceHashMap =
     mvn"io.github.alexarchambault:concurrent-reference-hash-map:1.1.0"
-  def dataClass    = mvn"io.github.alexarchambault::data-class:0.2.11"
+  def dataClassVersion = "0.3.0"
+  def dataClass        = mvn"io.github.alexarchambault::data-class:$dataClassVersion"
+  def dataClass3       = mvn"io.github.alexarchambault:data-class_3:$dataClassVersion"
+  def dataClassPlugin =
+    mvn"io.github.alexarchambault:::data-class-plugin:$dataClassVersion"
   def dependency   = mvn"io.get-coursier::dependency::0.3.3"
   def directories  = mvn"io.get-coursier.util:directories-jni:0.1.4"
   def diffUtils    = mvn"io.github.java-diff-utils:java-diff-utils:4.18"
@@ -93,13 +97,12 @@ object Deps {
   def svm      = mvn"org.graalvm.nativeimage:svm:25.0.5.0.3"
   // stick to the 2.x line: tika 3.x is compiled for Java 11, and we still support Java 8.
   // Pinned in .scala-steward.conf too, so that it doesn't get bumped back to 3.x.
-  def tika             = mvn"org.apache.tika:tika-core:2.9.4"
-  def undertow         = mvn"io.undertow:undertow-core:2.4.4.Final"
-  def ujson            = mvn"com.lihaoyi::ujson:4.4.3"
-  def unrollAnnotation = mvn"com.lihaoyi::unroll-annotation:0.3.0"
-  def utest            = mvn"com.lihaoyi::utest::0.9.5"
-  def versions         = mvn"io.get-coursier::versions::0.6.1"
-  def windowsAnsi      = mvn"io.github.alexarchambault.windows-ansi:windows-ansi:0.0.6"
+  def tika        = mvn"org.apache.tika:tika-core:2.9.4"
+  def undertow    = mvn"io.undertow:undertow-core:2.4.4.Final"
+  def ujson       = mvn"com.lihaoyi::ujson:4.4.3"
+  def utest       = mvn"com.lihaoyi::utest::0.9.5"
+  def versions    = mvn"io.get-coursier::versions::0.6.1"
+  def windowsAnsi = mvn"io.github.alexarchambault.windows-ansi:windows-ansi:0.0.6"
   def windowsAnsiPs =
     mvn"io.github.alexarchambault.windows-ansi:windows-ansi-ps:${windowsAnsi.version}"
   // plexus-archiver pulls it with the runtime scope, so only at run time: tests creating xz

@@ -1,6 +1,6 @@
 package coursier.util
 
-import dataclass.{data, since => unroll}
+import dataclass.{data, since}
 
 import coursier.core.{Module, ModuleName, Organization, ToStringHelper}
 @data(
@@ -10,7 +10,7 @@ import coursier.core.{Module, ModuleName, Organization, ToStringHelper}
 ) case class ModuleMatchers(
   exclude: Set[ModuleMatcher],
   include: Set[ModuleMatcher] = Set(),
-  @unroll
+  @since
   includeByDefault: Boolean = true
 ) {
 

@@ -4,7 +4,7 @@ import coursier.core.{Resolution, ToStringHelper}
 import coursier.error.conflict.UnsatisfiedRule
 import coursier.graph.Conflict.Conflicted
 import coursier.util.ModuleMatcher
-import dataclass.{data, since => unroll}
+import dataclass.{data, since}
 
 @data(
   deprecatedSetters = true,
@@ -12,11 +12,11 @@ import dataclass.{data, since => unroll}
   deprecatedSettersSince = "2.1.25"
 ) case class Strict(
   include: Set[ModuleMatcher] = Set(ModuleMatcher.all),
-  @unroll
+  @since
   exclude: Set[ModuleMatcher] = Set.empty,
-  @unroll
+  @since
   includeByDefault: Boolean = false,
-  @unroll
+  @since
   ignoreIfForcedVersion: Boolean = true,
   semVer: Boolean = false
 ) extends Rule {

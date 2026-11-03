@@ -1,6 +1,6 @@
 package coursier.maven
 
-import dataclass.{data, since => unroll}
+import dataclass.{data, since}
 
 import coursier.core._
 import coursier.maven.internal.SbtMavenRepositoryHelpers
@@ -175,7 +175,7 @@ object SbtMavenRepository {
   val authentication: Option[Authentication] = None,
   val changing: Option[Boolean] = None,
   override val versionsCheckHasModule: Boolean = true,
-  @unroll
+  @since
   checkModule: Boolean = false
 ) extends MavenRepositoryLike.WithModuleSupport with Repository.VersionApi
     with SbtMavenRepositoryHelpers { self =>

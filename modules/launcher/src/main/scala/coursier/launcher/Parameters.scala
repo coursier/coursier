@@ -1,6 +1,6 @@
 package coursier.launcher
 
-import dataclass.{data, since => unroll}
+import dataclass.{data, since}
 
 import java.io.File
 import java.nio.file.Path
@@ -27,9 +27,9 @@ object Parameters {
     rules: Seq[MergeRule] = MergeRule.default,
     preambleOpt: Option[Preamble] = Some(Preamble()),
     extraZipEntries: Seq[(ZipEntry, Array[Byte])] = Nil,
-    @unroll
+    @since
     baseManifest: Option[Array[Byte]] = None,
-    @unroll
+    @since
     shadingRules: Seq[ShadingRule] = Nil
   ) extends Parameters {
     def withMainClass(mainClass: String): Assembly =
@@ -58,12 +58,12 @@ object Parameters {
     disableJarChecking: Option[Boolean] = None,
     hybridAssembly: Boolean = false,
     extraZipEntries: Seq[(ZipEntry, Array[Byte])] = Nil,
-    @unroll
+    @since
     python: Boolean = false,
-    @unroll
+    @since
     pythonJep: Boolean = false,
     extraContent: Map[String, Seq[ClassLoaderContent]] = Map(),
-    @unroll
+    @since
     rules: Seq[MergeRule] = MergeRule.default
   ) extends Parameters {
 
@@ -156,7 +156,7 @@ object Parameters {
     options: ScalaNative.ScalaNativeOptions = ScalaNative.ScalaNativeOptions(),
     log: String => Unit = s => System.err.println(s),
     verbosity: Int = 0,
-    @unroll
+    @since
     python: Boolean = false
   ) extends Parameters {
     override def isNative: Boolean = true

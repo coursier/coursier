@@ -1,6 +1,6 @@
 package coursier.install
 
-import dataclass.{data, since => unroll}
+import dataclass.{data, since}
 
 import cats.data.{NonEmptyList, Validated, ValidatedNel}
 import cats.implicits._
@@ -43,15 +43,15 @@ import scala.language.implicitConversions
   scalaVersion: Option[String] = None,
   name: Option[String] = None,
   graalvm: Option[RawAppDescriptor.RawGraalvmOptions] = None,
-  @unroll
+  @since
   prebuilt: Option[String] = None,
-  @unroll
+  @since
   jvmOptionFile: Option[String] = None,
-  @unroll
+  @since
   prebuiltBinaries: Map[String, String] = Map.empty,
-  @unroll
+  @since
   jna: List[String] = Nil,
-  @unroll
+  @since
   versionOverrides: List[RawAppDescriptor.RawVersionOverride] = Nil
 ) {
   def isEmpty: Boolean =
@@ -334,12 +334,12 @@ object RawAppDescriptor {
     repositories: Option[List[String]] = None,
     mainClass: Option[String] = None,
     properties: Option[RawAppDescriptor.Properties] = None,
-    @unroll
+    @since
     prebuilt: Option[String] = None,
     prebuiltBinaries: Option[Map[String, String]] = None,
-    @unroll
+    @since
     launcherType: Option[String] = None,
-    @unroll
+    @since
     shared: Option[List[String]] = None
   ) {
     def versionOverride: ValidatedNel[String, VersionOverride] = {

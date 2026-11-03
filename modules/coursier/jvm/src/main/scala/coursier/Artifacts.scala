@@ -13,7 +13,7 @@ import scala.collection.compat._
 import scala.collection.mutable
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, Future}
-import dataclass.{data, since => unroll}
+import dataclass.{data, since}
 
 @data(
   deprecatedSetters = true,
@@ -28,20 +28,20 @@ import dataclass.{data, since => unroll}
   otherCaches: Seq[Cache[F]] = Nil,
   extraArtifactsSeq: Seq[Seq[(Dependency, Publication, Artifact)] => Seq[Artifact]] = Nil,
   classpathOrder: Boolean = true,
-  @unroll
+  @since
   // format: off
   transformArtifacts:
     Seq[Seq[(Dependency, Publication, Artifact)] =>
       Seq[(Dependency, Publication, Artifact)]] =
     Nil,
-  @unroll
+  @since
   // format: off
   transformArtifacts0:
     Seq[Seq[(Dependency, Either[VariantPublication, Publication], Artifact)] =>
       Seq[(Dependency, Either[VariantPublication, Publication], Artifact)]] =
     Nil,
   extraArtifactsSeq0: Seq[Seq[(Dependency, Either[VariantPublication, Publication], Artifact)] => Seq[Artifact]] = Nil,
-  @unroll
+  @since
   attributes: Seq[VariantSelector.AttributesBased] = Nil
   // format: on
 )(implicit

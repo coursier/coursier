@@ -3,7 +3,7 @@ package coursier.cache
 import coursier.paths.CachePath
 import coursier.util.{Artifact, EitherT, Sync, Task}
 import coursier.util.Monad.ops._
-import dataclass.{data, since => unroll}
+import dataclass.{data, since}
 import org.apache.tika.Tika
 
 import java.io.{File, IOException}
@@ -32,7 +32,7 @@ import scala.util.control.NonFatal
   location: File,
   cache: Cache[F],
   unArchiver: UnArchiver = UnArchiver.default(),
-  @unroll
+  @since
   openStream: UnArchiver.OpenStream = UnArchiver.default(),
   /** Set this to a non-empty value, to extract archives in single-level sub-directories under the
     * passed directory

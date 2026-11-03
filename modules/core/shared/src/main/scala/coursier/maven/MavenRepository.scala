@@ -4,7 +4,7 @@ import coursier.core._
 import coursier.maven.internal.MavenRepositoryHelpers
 import coursier.util.{Artifact, EitherT, Monad}
 import coursier.version.{Version => Version0}
-import dataclass.{data, since => unroll}
+import dataclass.{data, since}
 
 object MavenRepository {
 
@@ -40,11 +40,11 @@ object MavenRepository {
 ) case class MavenRepository(
   root: String,
   authentication: Option[Authentication] = None,
-  @unroll
+  @since
   changing: Option[Boolean] = None,
-  @unroll
+  @since
   override val versionsCheckHasModule: Boolean = true,
-  @unroll
+  @since
   override val checkModule: Boolean = false
 ) extends MavenRepositoryLike.WithModuleSupport with Repository.VersionApi
     with MavenRepositoryHelpers {

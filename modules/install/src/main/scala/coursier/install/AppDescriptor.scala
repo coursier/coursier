@@ -1,6 +1,6 @@
 package coursier.install
 
-import dataclass.{data, since => unroll}
+import dataclass.{data, since}
 
 import java.io.File
 
@@ -31,15 +31,15 @@ import coursier.version.{Latest, Version, VersionConstraint, VersionParse}
   scalaVersionOpt: Option[String] = None,
   nameOpt: Option[String] = None,
   graalvmOptions: Option[AppDescriptor.GraalvmOptions] = None,
-  @unroll
+  @since
   prebuiltLauncher: Option[String] = None,
-  @unroll
+  @since
   jvmOptionFile: Option[String] = None,
-  @unroll
+  @since
   prebuiltBinaries: Map[String, String] = Map.empty,
-  @unroll
+  @since
   jna: List[String] = Nil,
-  @unroll
+  @since
   versionOverrides: Seq[VersionOverride] = Nil
 ) {
   def overrideVersion(ver: String): AppDescriptor = {

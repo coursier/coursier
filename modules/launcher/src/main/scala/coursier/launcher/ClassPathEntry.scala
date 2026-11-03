@@ -1,6 +1,6 @@
 package coursier.launcher
 
-import dataclass.{data, since => unroll}
+import dataclass.{data, since}
 
 import java.math.BigInteger
 import java.nio.file.{Files, Path}
@@ -26,7 +26,7 @@ object ClassPathEntry {
     deprecatedSettersSince = "2.1.25"
   ) case class Url(
     url: String,
-    @unroll
+    @since
     sha256: Option[String] = None
   ) extends ClassPathEntry
   @data(
