@@ -300,18 +300,7 @@ object DockerRun {
                    |""".stripMargin
               val scriptPath = workDir / "run.sh"
               maybeSudo.write(scriptPath, script, perms = "rwxr-xr-x")
-              Execve.execve(
-                scriptPath.toString,
-                Array(scriptPath.toString),
-                sys.env
-                  .iterator
-                  .map {
-                    case (k, v) =>
-                      s"$k=$v"
-                  }
-                  .toArray
-                  .sorted
-              )
+              Execve.execve(scriptPath.toString, Array(scriptPath.toString))
               sys.error("Should not happen")
             }
             else {

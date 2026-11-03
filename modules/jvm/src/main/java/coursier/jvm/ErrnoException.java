@@ -1,8 +1,5 @@
 package coursier.jvm;
 
-import com.oracle.svm.core.posix.headers.Errno;
-import org.graalvm.nativeimage.c.type.CTypeConversion;
-
 @Deprecated
 public class ErrnoException extends Exception {
 
@@ -13,7 +10,7 @@ public class ErrnoException extends Exception {
     }
 
     public ErrnoException(int errno, Throwable cause) {
-        super("Errno " + CTypeConversion.toJavaString(Errno.strerror(errno)) + " (" + errno + ")", cause);
+        super(new coursier.exec.ErrnoException(errno).getMessage(), cause);
         errno0 = errno;
     }
 

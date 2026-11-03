@@ -150,16 +150,9 @@ object Launch extends CoursierCommand[LaunchOptions] {
             "Running " + cmd.map("\"" + _.replace("\"", "\\\"") + "\"").mkString(" ")
           )
         if (execve0) {
-          val fullEnv = (sys.env ++ extraEnv.transientUpdates())
-            .iterator
-            .map {
-              case (k, v) =>
-                s"$k=$v"
-            }
-            .toArray
-            .sorted
-          Execve.execve(new File(javaPath).getAbsolutePath, cmd.toArray, fullEnv)
-          // execve should not return
+          val fullEnv = sys.env ++ extraEnv.transientUpdates()
+          Execve.execve(new File(javaPath).getAbsolutePath, cmd.toArray, fullEnv.asJava)
+          // execve only returns by throwing
           sys.error("something went wrong")
         }
         else {

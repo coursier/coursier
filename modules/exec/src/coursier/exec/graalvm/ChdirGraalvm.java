@@ -7,7 +7,6 @@ import coursier.exec.ErrnoException;
 
 import com.oracle.svm.core.annotate.Substitute;
 import com.oracle.svm.core.annotate.TargetClass;
-import com.oracle.svm.core.headers.LibC;
 import org.graalvm.nativeimage.c.type.CTypeConversion;
 import org.graalvm.nativeimage.Platform;
 import org.graalvm.nativeimage.Platforms;
@@ -21,17 +20,18 @@ final class ChdirGraalvm {
     return true;
   }
 
+  // Arguments are checked by Chdir.chdir, that calls this
   @Substitute
-  public static void chdir(String path) throws ErrnoException {
+  private static void chdir0(String path) throws ErrnoException {
     CTypeConversion.CCharPointerHolder path0 = CTypeConversion.toCString(path);
     int ret = GraalvmUnistdExtras.chdir(path0.get());
 
     if (ret != 0) {
-      int n = LibC.errno();
+      int n = GraalvmErrno.errno();
       Throwable cause = null;
       if (n == GraalvmErrnoExtras.ENOENT() || n == GraalvmErrnoExtras.ENOTDIR())
         cause = new FileNotFoundException(path);
-      throw new ErrnoException(n, cause);
+      throw new ErrnoException("chdir " + path, n, cause);
     }
   }
 
