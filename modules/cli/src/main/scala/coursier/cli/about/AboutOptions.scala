@@ -7,10 +7,5 @@ import caseapp.{Help, HelpMessage}
 @HelpMessage(
   "Print details about the current machine and coursier launcher.\n"
 )
-final case class AboutOptions()
+final case class AboutOptions() derives Parser, Help
 // format: on
-
-object AboutOptions {
-  implicit lazy val parser: Parser[AboutOptions] = Parser.derive
-  implicit lazy val help: Help[AboutOptions]     = Help.derive
-}

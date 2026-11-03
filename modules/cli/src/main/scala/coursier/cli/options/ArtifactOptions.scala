@@ -38,7 +38,7 @@ final case class ArtifactOptions(
   @HelpMessage("Fetch artifacts even if the resolution is errored")
     forceFetch: Boolean = false
 
-) {
+) derives Parser, Help {
   // format: on
 
   // to deprecate
@@ -92,9 +92,4 @@ final case class ArtifactOptions(
         previous ++ app.artifactTypes.filterNot(previous.toSet)
       }
     )
-}
-
-object ArtifactOptions {
-  implicit lazy val parser: Parser[ArtifactOptions] = Parser.derive
-  implicit lazy val help: Help[ArtifactOptions]     = Help.derive
 }

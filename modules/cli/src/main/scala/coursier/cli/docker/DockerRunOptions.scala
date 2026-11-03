@@ -13,10 +13,5 @@ final case class DockerRunOptions(
   @Name("i")
     interactive: Option[Boolean] = None,
   exec: Option[Boolean] = None
-)
+) derives Parser, Help
 // format: on
-
-object DockerRunOptions {
-  implicit lazy val parser: Parser[DockerRunOptions] = Parser.derive
-  implicit lazy val help: Help[DockerRunOptions]     = Help.derive
-}

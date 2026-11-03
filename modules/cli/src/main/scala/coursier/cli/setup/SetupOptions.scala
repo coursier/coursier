@@ -50,13 +50,8 @@ final case class SetupOptions(
     tryRevert: Boolean = false,
   @Group(OptionGroup.setup)
     apps: List[String] = Nil
-) {
+) derives Parser, Help {
   // format: on
   def envOptions: EnvOptions =
     EnvOptions(env = env, userHome = userHome)
-}
-
-object SetupOptions {
-  implicit lazy val parser: Parser[SetupOptions] = Parser.derive
-  implicit lazy val help: Help[SetupOptions]     = Help.derive
 }

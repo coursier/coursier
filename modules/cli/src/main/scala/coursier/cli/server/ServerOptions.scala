@@ -36,10 +36,5 @@ final case class ServerOptions(
     allow: List[String] = Nil,
   @HelpMessage("Disallow requests for artifacts whose URL is under these prefixes (comma-separated). Prefixes match like those of --allow")
     disallow: List[String] = Nil
-)
+) derives Parser, Help
 // format: on
-
-object ServerOptions {
-  implicit lazy val parser: Parser[ServerOptions] = Parser.derive
-  implicit lazy val help: Help[ServerOptions]     = Help.derive
-}

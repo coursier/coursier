@@ -15,10 +15,5 @@ final case class SharedDockerPullOptions(
   os: Option[String] = None,
   cpu: Option[String] = None,
   cpuVariant: Option[String] = None
-)
+) derives Parser, Help
 // format: on
-
-object SharedDockerPullOptions {
-  implicit lazy val parser: Parser[SharedDockerPullOptions] = Parser.derive
-  implicit lazy val help: Help[SharedDockerPullOptions]     = Help.derive
-}

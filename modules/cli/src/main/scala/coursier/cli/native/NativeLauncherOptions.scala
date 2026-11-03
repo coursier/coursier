@@ -70,7 +70,7 @@ final case class NativeLauncherOptions(
   @HelpMessage("Don't wipe native compilation target directory (for debug purposes)")
     nativeKeepWorkDir: Boolean = false
 
-) {
+) derives Parser, Help {
   // format: on
 
   def params: ValidatedNel[String, ScalaNativeOptions] = {
@@ -129,9 +129,4 @@ final case class NativeLauncherOptions(
       )
     )
   }
-}
-
-object NativeLauncherOptions {
-  implicit lazy val parser: Parser[NativeLauncherOptions] = Parser.derive
-  implicit lazy val help: Help[NativeLauncherOptions]     = Help.derive
 }

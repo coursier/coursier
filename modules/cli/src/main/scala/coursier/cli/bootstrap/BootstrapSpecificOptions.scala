@@ -82,7 +82,7 @@ final case class BootstrapSpecificOptions(
   @Group(OptionGroup.bootstrap)
   @HelpMessage("Record the SHA-256 of the JARs the launcher downloads at run time, and have the launcher check them, downloaded or already in cache, before using them")
     validateChecksums: Boolean = false
-) {
+) derives Parser, Help {
   // format: on
 
   def addApp(app: RawAppDescriptor, native: Boolean): BootstrapSpecificOptions = {
@@ -116,9 +116,4 @@ final case class BootstrapSpecificOptions(
       )
     )
   }
-}
-
-object BootstrapSpecificOptions {
-  implicit lazy val parser: Parser[BootstrapSpecificOptions] = Parser.derive
-  implicit lazy val help: Help[BootstrapSpecificOptions]     = Help.derive
 }

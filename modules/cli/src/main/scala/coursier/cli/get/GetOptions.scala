@@ -25,10 +25,5 @@ final case class GetOptions(
     authHeader: List[String] = Nil,
   @HelpMessage("URL of reference artifact. If this file exists and is in cache, not-found errors for the main artifact are cached.")
     referenceUrl: Option[String] = None
-)
+) derives Parser, Help
 // format: on
-
-object GetOptions {
-  implicit val parser: Parser[GetOptions]  = Parser.derive
-  implicit lazy val help: Help[GetOptions] = Help.derive
-}

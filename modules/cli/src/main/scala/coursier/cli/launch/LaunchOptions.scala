@@ -93,7 +93,7 @@ final case class LaunchOptions(
   @HelpMessage("Generate flamegraph with async-profiler")
   @ValueDescription("file")
     flameGraph: Option[String] = None
-) {
+) derives Parser, Help {
   // format: on
 
   def addApp(app: RawAppDescriptor): LaunchOptions =
@@ -103,9 +103,4 @@ final case class LaunchOptions(
 
   def app: RawAppDescriptor =
     sharedOptions.app
-}
-
-object LaunchOptions {
-  implicit lazy val parser: Parser[LaunchOptions] = Parser.derive
-  implicit lazy val help: Help[LaunchOptions]     = Help.derive
 }

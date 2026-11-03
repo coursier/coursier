@@ -25,10 +25,5 @@ final case class JavaHomeOptions(
     outputOptions: OutputOptions = OutputOptions(),
   @Recurse
     envOptions: EnvOptions = EnvOptions()
-)
+) derives Parser, Help
 // format: on
-
-object JavaHomeOptions {
-  implicit lazy val parser: Parser[JavaHomeOptions] = Parser.derive
-  implicit lazy val help: Help[JavaHomeOptions]     = Help.derive
-}

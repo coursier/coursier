@@ -32,10 +32,5 @@ final case class OutputOptions(
   @ExtraName("log-jvm-index-version")
     logChannelVersion: Boolean = false
 
-)
+) derives Parser, Help
 // format: on
-
-object OutputOptions {
-  implicit lazy val parser: Parser[OutputOptions] = Parser.derive
-  implicit lazy val help: Help[OutputOptions]     = Help.derive
-}

@@ -25,10 +25,5 @@ final case class VmStartOptions(
     virtualization: Option[Boolean] = None,
   @HelpMessage("Use the default coursier cache rather than the one passed via --cache to download VM files (the one passed via --cache is assumed to hold docker files later on)")
     defaultCacheForVmFiles: Option[Boolean] = None
-)
+) derives Parser, Help
 // format: on
-
-object VmStartOptions {
-  implicit lazy val parser: Parser[VmStartOptions] = Parser.derive
-  implicit lazy val help: Help[VmStartOptions]     = Help.derive
-}

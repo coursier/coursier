@@ -75,13 +75,8 @@ final case class ResolveOptions(
   @Hidden
     attempts: Option[Int] = None
 
-) {
+) derives Parser, Help {
   // format: on
   def addApp(app: RawAppDescriptor): ResolveOptions =
     copy(sharedResolveOptions = sharedResolveOptions.addApp(app))
-}
-
-object ResolveOptions {
-  implicit lazy val parser: Parser[ResolveOptions] = Parser.derive
-  implicit lazy val help: Help[ResolveOptions]     = Help.derive
 }

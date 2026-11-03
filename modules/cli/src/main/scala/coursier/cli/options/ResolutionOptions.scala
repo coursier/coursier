@@ -120,7 +120,7 @@ final case class ResolutionOptions(
   @ExtraName("variant")
     variants: List[String] = Nil
 
-) {
+) derives Parser, Help {
   // format: on
 
   def scalaVersionOrDefault: String =
@@ -282,9 +282,4 @@ final case class ResolutionOptions(
         )
     }
   }
-}
-
-object ResolutionOptions {
-  implicit lazy val parser: Parser[ResolutionOptions] = Parser.derive
-  implicit lazy val help: Help[ResolutionOptions]     = Help.derive
 }

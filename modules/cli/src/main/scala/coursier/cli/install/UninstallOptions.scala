@@ -33,10 +33,5 @@ final case class UninstallOptions(
   @ExtraName("v")
     verbose: Int @@ Counter = Tag.of(0)
 
-)
+) derives Parser, Help
 // format: on
-
-object UninstallOptions {
-  implicit lazy val parser: Parser[UninstallOptions] = Parser.derive
-  implicit lazy val help: Help[UninstallOptions]     = Help.derive
-}

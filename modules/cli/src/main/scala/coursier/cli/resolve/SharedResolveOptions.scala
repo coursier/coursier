@@ -34,7 +34,7 @@ final case class SharedResolveOptions(
   @Recurse
     outputOptions: OutputOptions = OutputOptions()
 
-) {
+) derives Parser, Help {
   // format: on
   def addApp(app: RawAppDescriptor): SharedResolveOptions =
     copy(
@@ -65,9 +65,4 @@ final case class SharedResolveOptions(
         )
       )
     )
-}
-
-object SharedResolveOptions {
-  implicit lazy val parser: Parser[SharedResolveOptions] = Parser.derive
-  implicit lazy val help: Help[SharedResolveOptions]     = Help.derive
 }
