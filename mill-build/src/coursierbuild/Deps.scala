@@ -17,6 +17,11 @@ object Deps {
   def dataClass3   = mvn"io.github.alexarchambault:data-class_3:$dataClassVersion"
   def dataClassPlugin =
     mvn"io.github.alexarchambault:::data-class-plugin:$dataClassVersion"
+  // data-class snapshots are only on Central snapshots
+  def dataClassRepositories =
+    if (dataClassVersion.endsWith("SNAPSHOT"))
+      Seq("https://central.sonatype.com/repository/maven-snapshots")
+    else Nil
   def dependency   = mvn"io.get-coursier::dependency::0.3.3"
   def directories  = mvn"io.get-coursier.util:directories-jni:0.1.4"
   def diffUtils    = mvn"io.github.java-diff-utils:java-diff-utils:4.18"
