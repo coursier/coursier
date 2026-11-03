@@ -73,7 +73,6 @@ implicit def millModuleBasePath: ModuleCtx.Nested =
 trait DataClassModuleBase extends CsScalaModule {
   protected def dataClassScalaVersion: String
   def usesDataClassPlugin: Boolean = dataClassScalaVersion.startsWith("3.")
-  def repositories = super.repositories() ++ Deps.dataClassRepositories
   def compileMvnDeps = super.compileMvnDeps() ++ Seq(
     // the JVM artifact on Scala.js too: only its annotations are needed, at compile time
     if (usesDataClassPlugin) Deps.dataClass3 else Deps.dataClass
@@ -82,6 +81,7 @@ trait DataClassModuleBase extends CsScalaModule {
     if (usesDataClassPlugin) Seq(Deps.dataClassPlugin)
     else Nil
   }
+  def repositories = super.repositories() ++ Deps.dataClassRepositories
   def scalacOptions = super.scalacOptions() ++ {
     if (usesDataClassPlugin) Seq("-Xplugin-require:data-class")
     else Nil

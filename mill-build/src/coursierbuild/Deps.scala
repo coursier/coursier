@@ -13,8 +13,8 @@ object Deps {
   def concurrentReferenceHashMap =
     mvn"io.github.alexarchambault:concurrent-reference-hash-map:1.1.0"
   def dataClassVersion = "0.2.12-SNAPSHOT"
-  def dataClass    = mvn"io.github.alexarchambault::data-class:$dataClassVersion"
-  def dataClass3   = mvn"io.github.alexarchambault:data-class_3:$dataClassVersion"
+  def dataClass        = mvn"io.github.alexarchambault::data-class:$dataClassVersion"
+  def dataClass3       = mvn"io.github.alexarchambault:data-class_3:$dataClassVersion"
   def dataClassPlugin =
     mvn"io.github.alexarchambault:::data-class-plugin:$dataClassVersion"
   // data-class snapshots are only on Central snapshots
@@ -102,12 +102,12 @@ object Deps {
   def svm      = mvn"org.graalvm.nativeimage:svm:25.0.5.0.3"
   // stick to the 2.x line: tika 3.x is compiled for Java 11, and we still support Java 8.
   // Pinned in .scala-steward.conf too, so that it doesn't get bumped back to 3.x.
-  def tika             = mvn"org.apache.tika:tika-core:2.9.4"
-  def undertow         = mvn"io.undertow:undertow-core:2.4.4.Final"
-  def ujson            = mvn"com.lihaoyi::ujson:4.4.3"
-  def utest            = mvn"com.lihaoyi::utest::0.9.5"
-  def versions         = mvn"io.get-coursier::versions::0.6.1"
-  def windowsAnsi      = mvn"io.github.alexarchambault.windows-ansi:windows-ansi:0.0.6"
+  def tika        = mvn"org.apache.tika:tika-core:2.9.4"
+  def undertow    = mvn"io.undertow:undertow-core:2.4.4.Final"
+  def ujson       = mvn"com.lihaoyi::ujson:4.4.3"
+  def utest       = mvn"com.lihaoyi::utest::0.9.5"
+  def versions    = mvn"io.get-coursier::versions::0.6.1"
+  def windowsAnsi = mvn"io.github.alexarchambault.windows-ansi:windows-ansi:0.0.6"
   def windowsAnsiPs =
     mvn"io.github.alexarchambault.windows-ansi:windows-ansi-ps:${windowsAnsi.version}"
   // plexus-archiver pulls it with the runtime scope, so only at run time: tests creating xz
