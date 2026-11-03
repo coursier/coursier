@@ -1,6 +1,6 @@
 package coursier.install
 
-import dataclass.{data, since => unroll}
+import dataclass.{data, since}
 
 import java.io.{File, InputStream, OutputStream}
 import java.nio.file.attribute.FileTime
@@ -33,9 +33,9 @@ import scala.util.matching.Regex
   deprecatedSettersSince = "2.1.25"
 ) case class InstallDir(
   baseDir: Path = InstallDir.defaultDir,
-  @unroll
+  @since
   cache: Cache[Task] = Cache.default,
-  @unroll
+  @since
   verbosity: Int = 0,
   graalvmParamsOpt: Option[GraalvmParams] = None,
   coursierRepositories: Seq[Repository] = Nil,
@@ -47,12 +47,12 @@ import scala.util.matching.Regex
   onlyPrebuilt: Boolean = false,
   preferPrebuilt: Boolean = true,
   basePreamble: Preamble = Preamble(),
-  @unroll
+  @since
   overrideProguardedBootstraps: Option[Boolean] = None,
-  @unroll
+  @since
   archiveCache: ArchiveCache[Task] = ArchiveCache(),
   // whether bootstrap launchers record the SHA-256 of the JARs they download, and check them
-  @unroll
+  @since
   validateChecksums: Boolean = false
 ) {
 

@@ -2,7 +2,7 @@ package coursier.core
 
 import coursier.core.Validation._
 import coursier.version.{VersionConstraint => VersionConstraint0}
-import dataclass.{data, since => unroll}
+import dataclass.{data, since}
 
 import java.util.concurrent.ConcurrentMap
 
@@ -27,19 +27,19 @@ import java.util.concurrent.ConcurrentMap
   // Maven-specific
   optional0: Option[Boolean],
   transitive: Boolean,
-  @unroll
+  @since
   @deprecated("Use overridesMap instead", "2.1.23")
   overrides: DependencyManagement.Map =
     Map.empty[DependencyManagement.Key, DependencyManagement.Values],
-  @unroll
+  @since
   @deprecated("Use bomDependencies instead", "2.1.19")
   boms: Seq[(Module, String)] = Nil,
-  @unroll
+  @since
   bomDependencies: Seq[BomDependency] = Nil,
-  @unroll
+  @since
   overridesMap: Overrides =
     Overrides.empty,
-  @unroll
+  @since
   endorseStrictVersions: Boolean = false
 ) {
   assertValid(versionConstraint.asString, "version")

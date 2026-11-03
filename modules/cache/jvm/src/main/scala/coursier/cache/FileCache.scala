@@ -29,7 +29,7 @@ import coursier.credentials.{Credentials, DirectCredentials, FileCredentials}
 import coursier.paths.CachePath
 import coursier.util.{Artifact, EitherT, Sync, Task, WebPage}
 import coursier.util.Monad.ops._
-import dataclass.{data, since => unroll}
+import dataclass.{data, since}
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.{Duration, FiniteDuration}
@@ -55,33 +55,33 @@ import scala.util.control.NonFatal
   hostnameVerifierOpt: Option[HostnameVerifier] = None,
   retry: Int = CacheDefaults.retryCount,
   bufferSize: Int = CacheDefaults.bufferSize,
-  @unroll
+  @since
     classLoaders: Seq[ClassLoader] = Nil,
-  @unroll
+  @since
     clock: Clock = Clock.systemDefaultZone(),
-  @unroll
+  @since
     retryBackoffInitialDelay: FiniteDuration = CacheDefaults.retryBackoffInitialDelay,
-  @unroll
+  @since
     retryBackoffMultiplier: Double = CacheDefaults.retryBackoffMultiplier,
-  @unroll
+  @since
     retryBackoffMaxDelay: Option[FiniteDuration] = CacheDefaults.retryBackoffMaxDelay,
     retryPollMaxDelay: Option[FiniteDuration] = CacheDefaults.retryPollMaxDelay,
     connectTimeout: Option[FiniteDuration] = CacheDefaults.connectTimeout,
     readTimeout: Option[FiniteDuration] = CacheDefaults.readTimeout,
-  @unroll
+  @since
     userAgent: Option[String] = None,
     hostThrottle: HostThrottle = CacheDefaults.hostThrottle,
     maxThrottleWait: Option[FiniteDuration] = CacheDefaults.maxThrottleWait,
-  @unroll
+  @since
     // the realm the server is assumed to ask for, see withAuthRealm
     authRealmOpt: Option[String] = None,
     // whether to fail on HTTP 203 responses rather than cache their body, see ArtifactError.NonAuthoritative
     rejectNonAuthoritativeResponses: Boolean = false,
-  @unroll
+  @since
     // backoff after a server answered with an error worth retrying (a 503, a 408, …)
     httpRetryBackoffInitialDelay: FiniteDuration = CacheDefaults.httpRetryBackoffInitialDelay,
     httpRetryBackoffMaxDelay: Option[FiniteDuration] = CacheDefaults.httpRetryBackoffMaxDelay,
-  @unroll
+  @since
     // whether to go through the cache server the environment points at, see remoteCacheSubstitute
     allowCacheSubstitution: Boolean = true
 )(implicit

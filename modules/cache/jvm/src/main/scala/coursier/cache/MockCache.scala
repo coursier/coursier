@@ -11,7 +11,7 @@ import coursier.cache.internal.MockCacheEscape
 import coursier.paths.Util
 import coursier.util.{Artifact, EitherT, Sync, WebPage}
 import coursier.util.Monad.ops._
-import dataclass.{data, since => unroll}
+import dataclass.{data, since}
 
 import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success, Try}
@@ -24,9 +24,9 @@ import scala.util.{Failure, Success, Try}
   pool: ExecutorService,
   S: Sync[F],
   dummyArtifact: Artifact => Boolean = _ => false,
-  @unroll
+  @since
     proxy: Option[java.net.Proxy] = None,
-  @unroll
+  @since
     // FIXME Needs to be a sub-directory of base
     baseChangingOpt: Option[Path] = None,
   replaceByNames: Artifact => Boolean = _ => false,

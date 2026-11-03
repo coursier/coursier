@@ -4,7 +4,7 @@ import coursier.version.{
   VersionConstraint => VersionConstraint0,
   VersionInterval => VersionInterval0
 }
-import dataclass.{data, since => unroll}
+import dataclass.{data, since}
 
 import scala.collection.mutable
 
@@ -68,7 +68,7 @@ object DependencyManagement {
     versionConstraint: VersionConstraint0,
     minimizedExclusions: MinimizedExclusions,
     optional0: Option[Boolean],
-    @unroll
+    @since
     global: Boolean = false
   ) {
 

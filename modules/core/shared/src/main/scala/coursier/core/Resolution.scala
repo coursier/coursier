@@ -8,7 +8,7 @@ import coursier.version.{
   Version => Version0,
   VersionConstraint => VersionConstraint0
 }
-import dataclass.{data, since => unroll}
+import dataclass.{data, since}
 
 import java.util.concurrent.ConcurrentHashMap
 import scala.annotation.tailrec
@@ -1275,22 +1275,22 @@ object Resolution {
   extraProperties: Seq[(String, String)] = Nil,
   forceProperties: Map[String, String] = Map.empty, // FIXME Make that a seq too?
   defaultConfiguration: Configuration = Configuration.defaultRuntime,
-  @unroll
+  @since
   keepProvidedDependencies: Boolean = false,
-  @unroll
+  @since
   forceDepMgmtVersions: Boolean = false,
   enableDependencyOverrides: Boolean = Resolution.enableDependencyOverridesDefault,
   @deprecated("Use boms instead", "2.1.18")
   bomDependencies: Seq[Dependency] = Nil,
-  @unroll
+  @since
   @deprecated("Use boms instead", "2.1.19")
   bomModuleVersions: Seq[(Module, String)] = Nil,
-  @unroll
+  @since
   boms: Seq[BomDependency] = Nil,
-  @unroll
+  @since
   defaultVariantAttributes: VariantSelector.AttributesBased =
     VariantSelector.AttributesBased.empty,
-  @unroll
+  @since
   ignoreOptionalFromDepMgmt: Boolean = false
 ) {
 

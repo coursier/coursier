@@ -5,7 +5,7 @@ import coursier.core.Validation._
 import coursier.error.VariantError
 import coursier.util.Artifact
 import coursier.version.{Version => Version0, VersionConstraint => VersionConstraint0}
-import dataclass.{data, since => unroll}
+import dataclass.{data, since}
 import scala.util.hashing.MurmurHash3
 
 final case class Organization(value: String) extends AnyVal {
@@ -1076,7 +1076,7 @@ object Publication {
 ) case class VariantPublication(
   name: String,
   url: String,
-  @unroll
+  @since
   classifier: Option[Classifier] = None
 )
 

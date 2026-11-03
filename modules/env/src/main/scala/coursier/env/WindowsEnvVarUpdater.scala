@@ -4,7 +4,7 @@ import java.io.IOException
 import java.nio.file.{Files, InvalidPathException, Path, Paths}
 import java.util.Locale
 
-import dataclass.{data, since => unroll}
+import dataclass.{data, since}
 
 import scala.jdk.CollectionConverters._
 
@@ -15,7 +15,7 @@ import scala.jdk.CollectionConverters._
 ) case class WindowsEnvVarUpdater(
   powershellRunner: PowershellRunner = PowershellRunner(),
   target: String = "User",
-  @unroll
+  @since
   useJni: Option[Boolean] = None
 ) extends EnvVarUpdater {
 

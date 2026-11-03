@@ -1,6 +1,6 @@
 package coursier
 
-import dataclass.{data, since => unroll}
+import dataclass.{data, since}
 
 import java.util.concurrent.ConcurrentHashMap
 
@@ -44,25 +44,25 @@ import scala.language.higherKinds
   resolutionParams: ResolutionParams = ResolutionParams(),
   throughOpt: Option[F[Resolution] => F[Resolution]] = None,
   transformFetcherOpt: Option[ResolutionProcess.Fetch0[F] => ResolutionProcess.Fetch0[F]] = None,
-  @unroll
+  @since
     initialResolution: Option[Resolution] = None,
-  @unroll
+  @since
   @deprecated("For mirrors, use Resolve.confFileMirrors and set mirrors instead; for repositories, use Resolve.confFileRepositories and set repositories", "2.1.25")
     confFiles: Seq[Resolve.Path] = Nil,
   @deprecated("Unused now, repositories from default config files are read by Resolve.defaultRepositories. Use Resolve.confFileRepositories and set repositories to adjust the default repositories via config files", "2.1.25")
   preferConfFileDefaultRepositories: Boolean = true,
-  @unroll
+  @since
   @deprecated("Workaround for former uses of Resolution.mapDependencies, prefer relying on ResolutionParams", "2.1.12")
     mapDependenciesOpt: Option[Dependency => Dependency] = None,
-  @unroll
+  @since
   @deprecated("Use boms instead", "2.1.18")
     bomDependencies: Seq[Dependency] = Nil,
-  @unroll
+  @since
   @deprecated("Use boms instead", "2.1.19")
     bomModuleVersions: Seq[(Module, String)] = Nil,
-  @unroll
+  @since
     boms: Seq[BomDependency] = Nil,
-  @unroll
+  @since
     gradleModuleSupport: Option[Boolean] = None
 )(implicit
   val sync: Sync[F]

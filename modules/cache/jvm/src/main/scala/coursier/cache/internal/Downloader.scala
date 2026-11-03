@@ -19,7 +19,7 @@ import coursier.credentials.DirectCredentials
 import coursier.paths.{CachePath, Util}
 import coursier.util.{Artifact, EitherT, Sync, WebPage}
 import coursier.util.Monad.ops._
-import dataclass.{data, since => unroll}
+import dataclass.{data, since}
 
 import scala.annotation.tailrec
 import scala.concurrent.duration.{Duration, FiniteDuration}
@@ -46,29 +46,29 @@ import scala.util.control.NonFatal
   sslSocketFactoryOpt: Option[SSLSocketFactory] = None,
   hostnameVerifierOpt: Option[HostnameVerifier] = None,
   bufferSize: Int = CacheDefaults.bufferSize,
-  @unroll
+  @since
     classLoaders: Seq[ClassLoader] = Nil,
-  @unroll
+  @since
     clock: Clock = Clock.systemDefaultZone(),
-  @unroll
+  @since
     retryCount: Int = CacheDefaults.retryCount,
-  @unroll
+  @since
     retryBackoffInitialDelay: FiniteDuration = CacheDefaults.retryBackoffInitialDelay,
-  @unroll
+  @since
     retryBackoffMultiplier: Double = CacheDefaults.retryBackoffMultiplier,
-  @unroll
+  @since
     retryBackoffMaxDelay: Option[FiniteDuration] = CacheDefaults.retryBackoffMaxDelay,
     retryPollMaxDelay: Option[FiniteDuration] = CacheDefaults.retryPollMaxDelay,
     connectTimeout: Option[FiniteDuration] = CacheDefaults.connectTimeout,
     readTimeout: Option[FiniteDuration] = CacheDefaults.readTimeout,
-  @unroll
+  @since
     userAgentOpt: Option[String] = None,
     hostThrottle: HostThrottle = CacheDefaults.hostThrottle,
     maxThrottleWait: Option[FiniteDuration] = CacheDefaults.maxThrottleWait,
-  @unroll
+  @since
     authRealmOpt: Option[String] = None,
     rejectNonAuthoritativeResponses: Boolean = false,
-  @unroll
+  @since
     httpRetryBackoffInitialDelay: FiniteDuration = CacheDefaults.httpRetryBackoffInitialDelay,
     httpRetryBackoffMaxDelay: Option[FiniteDuration] = CacheDefaults.httpRetryBackoffMaxDelay
 )(implicit

@@ -7,7 +7,7 @@ import coursier.params.{Mirror, MirrorConfFile}
 import coursier.util.{Sync, Task}
 import coursier.util.Monad.ops._
 import coursier.version.Version
-import dataclass.{data, since => unroll}
+import dataclass.{data, since}
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.concurrent.Await
@@ -21,7 +21,7 @@ import scala.concurrent.duration.Duration
   cache: Cache[F],
   moduleOpt: Option[Module] = None,
   repositories: Seq[Repository] = Resolve.defaultRepositories,
-  @unroll
+  @since
   mirrorConfFiles: Seq[MirrorConfFile] = Resolve.defaultMirrorConfFiles,
   mirrors: Seq[Mirror] = Nil
 )(implicit
