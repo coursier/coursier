@@ -835,7 +835,10 @@ trait ProxyTests extends CrossSbtModule with CsModule {
     Deps.dockerClient,
     Deps.slf4JNop
   )
-  object it extends CrossSbtTests with CsTests with LatestScala3Module {
+  object it extends CrossSbtTests with CsTests with CsResourcesTests with LatestScala3Module {
+    def testDataDir             = tests.shared.testDataDir
+    def testHandmadeMetadataDir = tests.handmadeMetadata
+    def testMetadataDir         = tests.metadata
     def sources = Task.Sources(
       os.sub / "src/it/scala",
       os.sub / "src/it/java"
@@ -847,7 +850,6 @@ trait ProxyTests extends CrossSbtModule with CsModule {
       "coursier.tests.CustomFramework"
     }
   }
-  // sharedTestResources
 }
 
 trait ScalazJvm extends Scalaz with CsCrossJvmModule with CsMima {
@@ -2208,12 +2210,9 @@ lazy val allPublishVersions: Task[Seq[(String, String)]] =
   }
 
 lazy val allPublishJars: Task[Seq[(PathRef, String)]] =
-  Task.traverse(moduleInternal.modules.collect { case m: PublishModule => m }) { m =>
-    val jvmRel = m match {
-      case cjm: CoursierJavaModule => cjm.jvmRelease
-      case _                       => CoursierJavaModule.defaultJvmRelease
-    }
-    Task.Anon((m.jar(), jvmRel))
+  Task.traverse(moduleInternal.modules.collect { case m: PublishModule => m }) {
+    case m: CoursierJavaModule => Task.Anon((m.jar(), m.classFileJvmRelease()))
+    case m                     => Task.Anon((m.jar(), CoursierJavaModule.defaultJvmRelease))
   }
 
 object `class-file-version-check` extends Module {

@@ -65,8 +65,15 @@ object Deps {
     if (sv.startsWith("2.12"))
       mvn"org.virtuslab.scala-cli::config:1.1.3"
     else
-      mvn"org.virtuslab.scala-cli:config_3:1.18.0"
+      scalaCliConfig3(sv)
         .exclude(("com.github.plokhotnyuk.jsoniter-scala", "jsoniter-scala-core_3"))
+  // The Scala 2.13 modules still support Java 8, and config_3 1.18.0 and later target Java 17,
+  // so they stay at the last release with Java 8 class files (the interface module shades it).
+  // The Scala 3 modules use the same artifact, so a pin in .scala-steward.conf would block them
+  // too.
+  private def scalaCliConfig3(sv: String) =
+    if (sv.startsWith("2.13")) mvn"org.virtuslab.scala-cli:config_3:1.17.1" // scala-steward:off
+    else mvn"org.virtuslab.scala-cli:config_3:1.18.0"
   def scala3Library(sv: String) = mvn"org.scala-lang::scala3-library:$sv"
   def scalaCompiler(sv: String) =
     if (sv.startsWith("3.")) mvn"org.scala-lang::scala3-compiler:$sv"

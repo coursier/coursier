@@ -45,6 +45,10 @@ jobs:
       run: ./mill -i ci.noEmptyDiscoveredTestClasses --tasks __.discoveredTestClasses
     - name: No class path mixing Scala binary versions
       run: ./mill -i ci.noMixedScalaBinaryVersions --tasks __.resolvedRunMvnDeps
+    # Runs here rather than in the 'test' jobs, as it reads the JARs of all the published modules,
+    # for all Scala versions and platforms, that the steps above already compiled
+    - name: Class file versions of the published JARs
+      run: ./mill -i class-file-version-check.test.testForked
     - run: ./mill -i __.publishLocal
 
   scala-versions:
@@ -112,19 +116,27 @@ jobs:
     #   if: runner.os != 'Windows'
     # The tests of the cross-built modules run in the jobs of their Scala version, the other JVM
     # tests and the Docker ones (which don't depend on the job's Scala version) in the Scala 2.13
-    # jobs only, see JvmCiTests in mill-build
+    # jobs only, see JvmCiTests in mill-build. The proxy tests start containers (Nexus, proxies)
+    # via a Docker daemon, that only the Linux x86-64 runners have.
     - name: Select tests
       run: |
         jvm_tests="__[$SCALA_VERSION].__:CrossJvmCiTests"
         docker_tests=""
         if [ "$SCALA_VERSION" = "$SCALA213" ]; then
-          jvm_tests="{$jvm_tests,__:JvmCiTests}"
+          jvm_tests="$jvm_tests,__:JvmCiTests"
           docker_tests="docker[_].test.testForked"
         fi
+        if [ "$OS" = "ubuntu-latest" ]; then
+          jvm_tests="$jvm_tests,proxy-tests[$SCALA_VERSION].it"
+        fi
+        case "$jvm_tests" in
+          *,*) jvm_tests="{$jvm_tests}" ;;
+        esac
         echo "JVM_TESTS=$jvm_tests.testForked" >> "$GITHUB_ENV"
         echo "DOCKER_TESTS=$docker_tests" >> "$GITHUB_ENV"
       shell: bash
       env:
+        OS: ${{ matrix.OS }}
         SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
         SCALA213: ${{ needs.scala-versions.outputs.scala213 }}
     # On pull requests, only the tests affected by the changes run, see the script
