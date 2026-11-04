@@ -11,7 +11,15 @@ import mill.javalib.CoursierModule
   * `CoursierJavaModule`.
   */
 trait MavenSnapshotsRepo extends CoursierModule {
-  def repositories = super.repositories() ++ Seq(
-    "central:maven-snapshots"
-  )
+  def repositories = super.repositories() ++ MavenSnapshotsRepo.repositories
+}
+
+object MavenSnapshotsRepo {
+
+  /** The repositories the dependencies of the published modules need, on top of Central
+    *
+    * Also passed to `cs bootstrap` when generating JAR launchers, which resolves those dependencies
+    * from the published POMs.
+    */
+  def repositories: Seq[String] = Seq("central:maven-snapshots")
 }
