@@ -17,7 +17,7 @@ object Deps {
   def dataClass3       = mvn"io.github.alexarchambault:data-class_3:$dataClassVersion"
   def dataClassPlugin =
     mvn"io.github.alexarchambault:::data-class-plugin:$dataClassVersion"
-  def dependency   = mvn"io.get-coursier::dependency::0.3.3"
+  def dependency   = mvn"io.get-coursier::dependency::0.3.4"
   def directories  = mvn"io.get-coursier.util:directories-jni:0.1.4"
   def diffUtils    = mvn"io.github.java-diff-utils:java-diff-utils:4.18"
   def dockerClient = mvn"com.spotify:docker-client:8.16.0"
@@ -108,7 +108,7 @@ object Deps {
   def undertow    = mvn"io.undertow:undertow-core:2.4.4.Final"
   def ujson       = mvn"com.lihaoyi::ujson:4.4.3"
   def utest       = mvn"com.lihaoyi::utest::0.9.5"
-  def versions    = mvn"io.get-coursier::versions::0.6.1"
+  def versions    = mvn"io.get-coursier::versions::0.7.0"
   def windowsAnsi = mvn"io.github.alexarchambault.windows-ansi:windows-ansi:0.0.6"
   def windowsAnsiPs =
     mvn"io.github.alexarchambault.windows-ansi:windows-ansi-ps:${windowsAnsi.version}"
