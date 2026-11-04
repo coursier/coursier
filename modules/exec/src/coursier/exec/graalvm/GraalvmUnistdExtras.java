@@ -22,4 +22,13 @@ public class GraalvmUnistdExtras {
     @CFunction
     public static native int umask(int mask);
 
+    // fcntl is variadic: this declaration is only fine on Linux, or for commands ignoring
+    // their third argument (see coursier.exec.Libc.Functions#fcntl)
+    @CFunction
+    static native int fcntl(int fd, int cmd, int arg);
+
+    // same values on Linux and macOS
+    static final int F_GETFD = 1;
+    static final int F_SETFD = 2;
+
 }

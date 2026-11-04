@@ -78,6 +78,32 @@ object ExecveTests extends TestSuite {
       os.remove(outputFile)
   }
 
+  // Runs the test app in "fds" mode, and checks the exec'd command only inherited
+  // the descriptors 0, 1, 2, and the one passed explicitly
+  private def runFdsAndCheck(command: String*): Unit = {
+    val outputFile = os.temp(prefix = "coursier-fds-test", suffix = ".txt")
+    val tmpDir     = os.temp.dir(prefix = "coursier-fds-test")
+    try {
+      os.proc(command, "fds", outputFile, tmpDir).call(stdin = os.Inherit, stdout = os.Inherit)
+      val lines = os.read.lines(outputFile)
+      val inheritedFd = lines
+        .collectFirst { case s"inherited-fd=$fd" => fd.toInt }
+        .getOrElse(sys.error(s"No inherited-fd line in $lines"))
+      val fds = lines.filter(_.forall(_.isDigit)).map(_.toInt).toSet
+      // the descriptors of ls, that listed /dev/fd: those it inherited, plus the one
+      // of the directory it lists
+      val unexpectedFds = fds -- Set(0, 1, 2, inheritedFd)
+      assert(fds.contains(inheritedFd))
+      assert(unexpectedFds.size <= 1)
+      assert(os.read.lines(tmpDir / "inherited") == Seq("inherited"))
+      assert(lines.filter(_.startsWith("hook-")).sorted == Seq("hook-1", "hook-2"))
+    }
+    finally {
+      os.remove(outputFile)
+      os.remove.all(tmpDir)
+    }
+  }
+
   private def assemblyCommand = {
     val assembly = sys.props.getOrElse(
       "coursier.execve.test.assembly",
@@ -146,8 +172,31 @@ object ExecveTests extends TestSuite {
           runMissingAndCheck("chdir-missing", "chdir", nativeImage)
         }
 
+        test("fds-assembly") {
+          runFdsAndCheck(assemblyCommand: _*)
+        }
+
+        test("fds-native-image") {
+          runFdsAndCheck(nativeImage)
+        }
+
         // These run in the test JVM: they must not get to the point where shutdown hooks run
         // or the working directory changes
+
+        test("execve-invalid-fds") {
+          // way above any descriptor limit
+          val ex = assertThrows[ErrnoException] {
+            Execve.execve("/bin/sh", Array("sh"), Array.empty[String], Array(100000000))
+          }
+          assert(ex.value() == 9)
+          assert(ex.getMessage == "fcntl 100000000: Bad file descriptor (errno 9)")
+          assertThrows[IllegalArgumentException] {
+            Execve.execve("/bin/sh", Array("sh"), Array.empty[String], Array(-1))
+          }
+          assertThrows[NullPointerException] {
+            Execve.execve("/bin/sh", Array("sh"), Array.empty[String], null: Array[Int])
+          }
+        }
 
         test("chdir-missing-in-process") {
           val tmpDir  = os.temp.dir(prefix = "coursier-chdir-test")

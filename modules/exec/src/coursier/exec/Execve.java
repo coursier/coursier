@@ -36,6 +36,17 @@ import java.util.Objects;
  *
  * <p>The shutdown hooks of the current process are run right before the system call, so that
  * they're not lost (see {@link #runShutdownHooks()}).
+ *
+ * <p>Like with {@link ProcessBuilder}, the new program only inherits the standard input /
+ * output / error (file descriptors 0, 1, and 2) of the current process. The other file
+ * descriptors of the current process, such as opened files or sockets, including the ones
+ * the JVM opens itself, are closed when the new program starts. Pass {@code inheritedFds} to
+ * {@link #execve(String, String[], String[], int[])} to keep some of them open:
+ *
+ * <pre>{@code
+ * // the new program can write to its file descriptor 5
+ * Execve.execve(command[0], command, System.getenv(), new int[] {5});
+ * }</pre>
  */
 public final class Execve {
 
@@ -133,10 +144,46 @@ public final class Execve {
    *                              (checked before running the shutdown hooks)
    */
   public static void execve(String path, String[] command, String[] env) throws ErrnoException {
+    execve(path, command, env, new int[0]);
+  }
+
+  /**
+   * Replaces the current process by another program, that inherits some file descriptors of
+   * the current process
+   *
+   * <p>See {@link #execve(String, String[], String[])} for more details.
+   *
+   * <p>The file descriptors in {@code inheritedFds} are open in the new program, with the same
+   * numbers, even if they were opened with the close-on-exec flag. All the other descriptors,
+   * but 0, 1, and 2, are closed. If the system call fails, the descriptors of the current
+   * process are left open, but the ones that weren't in {@code inheritedFds} are then marked
+   * close-on-exec.
+   *
+   * @param path         path to the executable to run
+   * @param command      arguments of the new program, starting with its name, usually
+   *                     {@code path} itself, that becomes its {@code argv[0]}
+   * @param env          environment of the new program, as {@code "NAME=value"} entries
+   * @param inheritedFds file descriptors, other than 0, 1, and 2 (that are always inherited),
+   *                     that the new program inherits
+   * @throws ErrnoException           if the system call fails, or if one of
+   *                                  {@code inheritedFds} isn't open (checked before
+   *                                  running the shutdown hooks). This method never returns
+   *                                  normally.
+   * @throws IllegalArgumentException if one of {@code inheritedFds} is negative
+   * @throws NullPointerException     if any of the arguments, or any of their elements, is null
+   *                                  (checked before running the shutdown hooks)
+   */
+  public static void execve(
+    String path,
+    String[] command,
+    String[] env,
+    int[] inheritedFds
+  ) throws ErrnoException {
     Objects.requireNonNull(path, "path");
     checkNoNullElements(command, "command");
     checkNoNullElements(env, "env");
-    execve0(path, command, env);
+    Objects.requireNonNull(inheritedFds, "inheritedFds");
+    execve0(path, command, env, inheritedFds);
   }
 
   /**
@@ -156,6 +203,33 @@ public final class Execve {
     String[] command,
     Map<String, String> env
   ) throws ErrnoException {
+    execve(path, command, env, new int[0]);
+  }
+
+  /**
+   * Replaces the current process by another program, that inherits some file descriptors of
+   * the current process
+   *
+   * <p>See {@link #execve(String, String[], String[], int[])} for more details.
+   *
+   * @param path         path to the executable to run
+   * @param command      arguments of the new program, starting with its name, usually
+   *                     {@code path} itself, that becomes its {@code argv[0]}
+   * @param env          environment of the new program, such as {@link System#getenv()}
+   * @param inheritedFds file descriptors, other than 0, 1, and 2, that the new program
+   *                     inherits
+   * @throws ErrnoException           if the system call fails, or if one of
+   *                                  {@code inheritedFds} isn't open. This method never
+   *                                  returns normally.
+   * @throws IllegalArgumentException if one of {@code inheritedFds} is negative
+   * @throws NullPointerException     if any of the arguments, or any of their elements, is null
+   */
+  public static void execve(
+    String path,
+    String[] command,
+    Map<String, String> env,
+    int[] inheritedFds
+  ) throws ErrnoException {
     Objects.requireNonNull(env, "env");
     String[] env0 = new String[env.size()];
     int i = 0;
@@ -166,7 +240,7 @@ public final class Execve {
       i++;
     }
     Arrays.sort(env0);
-    execve(path, command, env0);
+    execve(path, command, env0, inheritedFds);
   }
 
   /**
@@ -191,15 +265,39 @@ public final class Execve {
       Objects.requireNonNull(array[i], name + "[" + i + "]");
   }
 
+  private static void execve0(
+    String path,
+    String[] command,
+    String[] env,
+    int[] inheritedFds
+  ) throws ErrnoException {
+    // Loading the C library and checking the descriptors before running the shutdown hooks,
+    // so that these are only run if we can call execve
+    Libc.load();
+    int[] inheritedFds0 = Descriptors.check(inheritedFds);
+    runShutdownHooks0();
+    int errno;
+    if (Libc.isMacOs())
+      // posix_spawn closes the descriptors itself, and doesn't need fcntl, that we can't call
+      // reliably on macOS ARM64 (see Libc.Functions#fcntl)
+      errno = Libc.spawnExec(
+        path,
+        command,
+        env,
+        Descriptors.spawnInheritedFds(inheritedFds0)
+      );
+    else {
+      // After the shutdown hooks, that may open descriptors themselves
+      Descriptors.prepareExecve(inheritedFds0);
+      errno = Libc.execve(path, command, env);
+    }
+    // these only return on error
+    throw Libc.exception("execve " + path, path, errno);
+  }
+
   // Substituted in native images, see coursier.exec.graalvm.ExecveGraalvm
-  private static void execve0(String path, String[] command, String[] env) throws ErrnoException {
-    // Loading the C library before running the shutdown hooks, so that these are only run
-    // if we can call execve
-    Libc.Functions libc = Libc.functions();
+  private static void runShutdownHooks0() {
     runShutdownHooks();
-    libc.execve(path, command, env);
-    // execve only returns on error
-    throw Libc.exception("execve " + path, path, Native.getLastError());
   }
 
 }
