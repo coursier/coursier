@@ -28,7 +28,7 @@ final case class SharedLoaderOptions(
   @ExtraName("isolateTarget") // former deprecated name
     sharedTarget: List[String] = Nil
 
-) {
+) derives Parser, Help {
   def addApp(app: RawAppDescriptor): SharedLoaderOptions =
     copy(
       shared = {
@@ -38,8 +38,3 @@ final case class SharedLoaderOptions(
     )
 }
 // format: on
-
-object SharedLoaderOptions {
-  implicit lazy val parser: Parser[SharedLoaderOptions] = Parser.derive
-  implicit lazy val help: Help[SharedLoaderOptions]     = Help.derive
-}

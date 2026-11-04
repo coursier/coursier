@@ -1,6 +1,5 @@
 package coursier.cli
 
-import caseapp.core.Scala3Helpers._
 import caseapp.core.app.CommandsEntryPoint
 import caseapp.core.help.HelpFormat
 import caseapp.RemainingArgs
@@ -145,5 +144,5 @@ object Coursier extends CommandsEntryPoint {
 
   override def helpFormat: HelpFormat =
     HelpFormat.default()
-      .withSortedCommandGroups(Some(CommandGroup.order))
+      .copy(sortedCommandGroups = Some(CommandGroup.order))
 }

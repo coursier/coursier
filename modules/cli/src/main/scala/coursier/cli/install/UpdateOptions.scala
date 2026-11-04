@@ -38,10 +38,5 @@ final case class UpdateOptions(
   @ExtraName("f")
     force: Boolean = false
 
-)
+) derives Parser, Help
 // format: on
-
-object UpdateOptions {
-  implicit lazy val parser: Parser[UpdateOptions] = Parser.derive
-  implicit lazy val help: Help[UpdateOptions]     = Help.derive
-}

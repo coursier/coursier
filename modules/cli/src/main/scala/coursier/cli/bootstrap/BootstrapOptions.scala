@@ -28,7 +28,7 @@ final case class BootstrapOptions(
     channelOptions: SharedChannelOptions = SharedChannelOptions(),
   @Recurse
     options: BootstrapSpecificOptions = BootstrapSpecificOptions()
-) {
+) derives Parser, Help {
   def addApp(app: RawAppDescriptor): BootstrapOptions =
     copy(
       jvmOptionFile = jvmOptionFile.orElse(app.jvmOptionFile),
@@ -37,8 +37,3 @@ final case class BootstrapOptions(
     )
 }
 // format: on
-
-object BootstrapOptions {
-  implicit lazy val parser: Parser[BootstrapOptions] = Parser.derive
-  implicit lazy val help: Help[BootstrapOptions]     = Help.derive
-}

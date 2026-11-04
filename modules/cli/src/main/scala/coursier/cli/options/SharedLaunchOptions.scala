@@ -43,7 +43,7 @@ final case class SharedLaunchOptions(
 
   @Recurse
     artifactOptions: ArtifactOptions = ArtifactOptions()
-) {
+) derives Parser, Help {
   // format: on
 
   def addApp(app: RawAppDescriptor): SharedLaunchOptions =
@@ -101,9 +101,4 @@ final case class SharedLaunchOptions(
         else if (python.getOrElse(false)) List("python")
         else Nil
     )
-}
-
-object SharedLaunchOptions {
-  implicit lazy val parser: Parser[SharedLaunchOptions] = Parser.derive
-  implicit lazy val help: Help[SharedLaunchOptions]     = Help.derive
 }

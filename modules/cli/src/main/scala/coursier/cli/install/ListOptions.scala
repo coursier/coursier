@@ -18,10 +18,5 @@ final case class ListOptions(
   @Group(OptionGroup.install)
   @HelpMessage("Show version of installed applications (can be disabled with --versions=false)")
     versions: Boolean = true,
-)
+) derives Parser, Help
 // format: on
-
-object ListOption {
-  implicit lazy val parser: Parser[ListOptions] = Parser.derive
-  implicit lazy val help: Help[ListOptions]     = Help.derive
-}

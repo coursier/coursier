@@ -13,10 +13,5 @@ final case class CatOptions(
   @Recurse
     output: OutputOptions,
   changing: Option[Boolean] = None
-)
+) derives Parser, Help
 // format: on
-
-object CatOptions {
-  implicit val parser: Parser[CatOptions]  = Parser.derive
-  implicit lazy val help: Help[CatOptions] = Help.derive
-}

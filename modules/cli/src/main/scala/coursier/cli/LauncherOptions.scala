@@ -11,10 +11,5 @@ final case class LauncherOptions(
 
   @Hidden
     require: Option[String] = None
-)
+) derives Parser, Help
 // format: on
-
-object LauncherOptions {
-  implicit lazy val parser: Parser[LauncherOptions] = Parser.derive
-  implicit lazy val help: Help[LauncherOptions]     = Help.derive
-}

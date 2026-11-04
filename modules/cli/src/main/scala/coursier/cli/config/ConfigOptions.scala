@@ -20,10 +20,5 @@ final case class ConfigOptions(
   @Group("Config")
   @HelpMessage("Config file path")
     configFile: Option[String] = None
-)
+) derives Parser, Help
 // format: on
-
-object ConfigOptions {
-  implicit lazy val parser: Parser[ConfigOptions] = Parser.derive
-  implicit lazy val help: Help[ConfigOptions]     = Help.derive
-}

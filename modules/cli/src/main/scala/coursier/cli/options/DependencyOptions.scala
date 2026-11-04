@@ -57,10 +57,5 @@ final case class DependencyOptions(
   @ExtraName("bom")
     bomDependencies: List[String] = Nil
 
-)
+) derives Parser, Help
 // format: on
-
-object DependencyOptions {
-  implicit lazy val parser: Parser[DependencyOptions] = Parser.derive
-  implicit lazy val help: Help[DependencyOptions]     = Help.derive
-}

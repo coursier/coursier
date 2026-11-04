@@ -28,16 +28,11 @@ final case class CompleteOptions(
   @ExtraName("e")
     scalaVersion: Option[String] = None
 
-) {
+) derives Parser, Help {
   // format: on
 
   lazy val scalaBinaryVersion: Option[String] =
     scalaVersion
       .filter(_.nonEmpty)
       .map(coursier.complete.Complete.scalaBinaryVersion)
-}
-
-object CompleteOptions {
-  implicit lazy val parser: Parser[CompleteOptions] = Parser.derive
-  implicit lazy val help: Help[CompleteOptions]     = Help.derive
 }

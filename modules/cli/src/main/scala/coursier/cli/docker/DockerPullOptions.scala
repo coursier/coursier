@@ -10,10 +10,5 @@ final case class DockerPullOptions(
     sharedPullOptions: SharedDockerPullOptions = SharedDockerPullOptions(),
   @Recurse
     sharedVmSelectOptions: SharedVmSelectOptions = SharedVmSelectOptions()
-)
+) derives Parser, Help
 // format: on
-
-object DockerPullOptions {
-  implicit lazy val parser: Parser[DockerPullOptions] = Parser.derive
-  implicit lazy val help: Help[DockerPullOptions]     = Help.derive
-}

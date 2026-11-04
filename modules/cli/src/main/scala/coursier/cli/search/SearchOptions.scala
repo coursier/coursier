@@ -26,10 +26,5 @@ final case class SearchOptions(
 
   @Recurse
     outputOptions: OutputOptions = OutputOptions()
-)
+) derives Parser, Help
 // format: on
-
-object SearchOptions {
-  implicit lazy val parser: Parser[SearchOptions] = Parser.derive
-  implicit lazy val help: Help[SearchOptions]     = Help.derive
-}

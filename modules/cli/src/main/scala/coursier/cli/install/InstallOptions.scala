@@ -52,10 +52,5 @@ final case class InstallOptions(
   @ExtraName("f")
     force: Boolean = false
 
-)
+) derives Parser, Help
 // format: on
-
-object InstallOptions {
-  implicit lazy val parser: Parser[InstallOptions] = Parser.derive
-  implicit lazy val help: Help[InstallOptions]     = Help.derive
-}

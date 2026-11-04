@@ -84,7 +84,7 @@ final case class CacheOptions(
   @ValueDescription("user agent")
     userAgent: Option[String] = None
 
-) {
+) derives Parser, Help {
   // format: on
 
   def params: ValidatedNel[String, CacheParams] =
@@ -191,9 +191,4 @@ final case class CacheOptions(
           .withRejectNonAuthoritativeResponses(rejectNonAuthoritativeResponses)
     }
   }
-}
-
-object CacheOptions {
-  implicit lazy val parser: Parser[CacheOptions] = Parser.derive
-  implicit lazy val help: Help[CacheOptions]     = Help.derive
 }

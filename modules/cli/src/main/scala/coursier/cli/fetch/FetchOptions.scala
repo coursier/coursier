@@ -46,7 +46,7 @@ final case class FetchOptions(
   @Recurse
     channelOptions: SharedChannelOptions = SharedChannelOptions()
 
-) {
+) derives Parser, Help {
   // format: on
 
   def addApp(app: RawAppDescriptor): FetchOptions =
@@ -54,9 +54,4 @@ final case class FetchOptions(
       resolveOptions = resolveOptions.addApp(app),
       artifactOptions = artifactOptions.addApp(app)
     )
-}
-
-object FetchOptions {
-  implicit lazy val parser: Parser[FetchOptions] = Parser.derive
-  implicit lazy val help: Help[FetchOptions]     = Help.derive
 }

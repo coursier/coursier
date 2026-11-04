@@ -23,10 +23,5 @@ final case class ChannelOptions(
     list: Boolean = false,
   @Recurse
     outputOptions: OutputOptions = OutputOptions()
-)
+) derives Parser, Help
 // format: on
-
-object ChannelOptions {
-  implicit lazy val parser: Parser[ChannelOptions] = Parser.derive
-  implicit lazy val help: Help[ChannelOptions]     = Help.derive
-}

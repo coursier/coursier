@@ -33,10 +33,5 @@ final case class RepositoryOptions(
   @Name("enableModules")
     enableGradleModules: Boolean = false
 
-)
+) derives Parser, Help
 // format: on
-
-object RepositoryOptions {
-  implicit lazy val parser: Parser[RepositoryOptions] = Parser.derive
-  implicit lazy val help: Help[RepositoryOptions]     = Help.derive
-}

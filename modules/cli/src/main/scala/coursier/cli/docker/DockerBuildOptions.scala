@@ -14,10 +14,5 @@ final case class DockerBuildOptions(
   @Name("f")
   @Name("dockerfile")
     dockerFile: Option[String] = None
-)
+) derives Parser, Help
 // format: on
-
-object DockerBuildOptions {
-  implicit lazy val parser: Parser[DockerBuildOptions] = Parser.derive
-  implicit lazy val help: Help[DockerBuildOptions]     = Help.derive
-}
