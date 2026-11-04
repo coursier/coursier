@@ -13,7 +13,7 @@ import java.util.Locale
 
 import scala.util.Properties
 
-trait CoursierJavaModule extends JavaModule with MavenSnapshotsRepo {
+trait CoursierJavaModule extends JavaModule {
   def jvmRelease: String =
     CoursierJavaModule.defaultJvmRelease
 

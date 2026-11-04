@@ -113,7 +113,7 @@ object cache extends Module {
   object js     extends CacheJs
 }
 object `archive-cache` extends Cross[ArchiveCache](ScalaVersions.allButScala212)
-object `benchmark` extends ScalaModule with JmhModule with MavenSnapshotsRepo {
+object `benchmark` extends ScalaModule with JmhModule {
   def scalaVersion: mill.api.Task.Simple[String] = ScalaVersions.scala213
   def moduleDeps = Seq(
     coursier.jvm(ScalaVersions.scala213),
@@ -1285,8 +1285,7 @@ trait Cli extends CsModule
         assembly = assembly,
         // no default repositories: a stale ~/.ivy2/local copy of the same snapshot version
         // (like the one `__.publishLocal` leaves) would shadow the freshly published one
-        repositories =
-          Seq("central", repo.toNIO.toUri.toASCIIString) ++ MavenSnapshotsRepo.repositories,
+        repositories = Seq("central", repo.toNIO.toUri.toASCIIString),
         defaultRepositories = false
       ),
       cwd = dest / os.up,
@@ -1704,12 +1703,10 @@ def jarLauncherArgs(
     Seq("-o", dest, "-f", s"$mavenOrg::coursier-cli:$version", "--scala", ScalaVersions.scala3Cli)
 
 /** The repositories to pass `cs bootstrap` along the default ones, for the coursier-cli `version`
-  * and its dependencies to be found (snapshots aren't on Central proper)
+  * to be found (snapshots aren't on Central proper)
   */
-def jarLauncherRepositories(version: String): Seq[String] = {
-  val forVersion = if (version.endsWith("SNAPSHOT")) Seq("central:maven-snapshots") else Nil
-  (forVersion ++ MavenSnapshotsRepo.repositories).distinct
-}
+def jarLauncherRepositories(version: String): Seq[String] =
+  if (version.endsWith("SNAPSHOT")) Seq("central:maven-snapshots") else Nil
 
 /** Runs a resolution with a freshly generated JAR launcher, so that a launcher failing at run time
   * doesn't get released: the 2.1.25 ones resolved nothing (see #3865), with `--help` and `version`
@@ -1847,7 +1844,7 @@ def updateCsDockerVersion(
 }
 
 private val docScalaVersion = ScalaVersions.scala213
-object `doc-deps` extends ScalaModule with MavenSnapshotsRepo {
+object `doc-deps` extends ScalaModule {
   def scalaVersion = docScalaVersion
   def moduleDeps = Seq(
     coursier.jvm(docScalaVersion),
@@ -2248,7 +2245,7 @@ object `build-util` extends Module {
 }
 
 // copied from https://github.com/alexarchambault/case-app/blob/fd9e3fcb7d628f166cd0a532addacde49629632a/build.sc#L453-L549
-object docs extends ScalaModule with MavenSnapshotsRepo {
+object docs extends ScalaModule {
   private def sv   = ScalaVersions.scala213
   def scalaVersion = sv
   def moduleDeps = Seq(
