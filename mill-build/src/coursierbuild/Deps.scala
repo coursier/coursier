@@ -33,12 +33,8 @@ object Deps {
   def jimfs             = mvn"com.google.jimfs:jimfs:1.3.2"
   def jna               = mvn"net.java.dev.jna:jna:5.19.1"
   def jniUtils          = mvn"io.get-coursier.jniutils:windows-jni-utils:${Versions.jniUtils}"
-  def jniUtilsBootstrap =
-    mvn"io.get-coursier.jniutils:windows-jni-utils-bootstrap:${Versions.jniUtils}"
-  def jniUtilsCoursierApi =
-    mvn"io.get-coursier.jniutils:windows-jni-utils-coursierapi:${Versions.jniUtils}"
-  def jol  = mvn"org.openjdk.jol:jol-core:0.17"
-  def jsch = mvn"com.github.mwiede:jsch:2.28.8"
+  def jol               = mvn"org.openjdk.jol:jol-core:0.17"
+  def jsch              = mvn"com.github.mwiede:jsch:2.28.8"
   // The Scala 2 and Scala 3 modules use different jsoniter-scala versions, see Versions.scala
   private def jsoniterScalaVersion(sv: String) =
     if (sv.startsWith("3.")) Versions.jsoniterScala else Versions.jsoniterScalaScala2
@@ -50,6 +46,8 @@ object Deps {
   def logbackClassic = mvn"ch.qos.logback:logback-classic:1.6.6"
   def macroParadise  = mvn"org.scalamacros:::paradise:2.1.1"
   def mdoc           = mvn"org.scalameta::mdoc:2.9.2"
+  def nativeTerminal =
+    mvn"io.github.alexarchambault.native-terminal:native-terminal:${Versions.nativeTerminal}"
   def noCrcZis       = mvn"io.github.alexarchambault.scala-cli.tmp:zip-input-stream:0.1.1"
   def osLib          = mvn"com.lihaoyi::os-lib:0.11.10"
   def plexusArchiver = mvn"org.codehaus.plexus:plexus-archiver:4.15.0"
@@ -104,14 +102,11 @@ object Deps {
   def svm      = mvn"org.graalvm.nativeimage:svm:25.0.5.0.3"
   // stick to the 2.x line: tika 3.x is compiled for Java 11, and we still support Java 8.
   // Pinned in .scala-steward.conf too, so that it doesn't get bumped back to 3.x.
-  def tika        = mvn"org.apache.tika:tika-core:2.9.4"
-  def undertow    = mvn"io.undertow:undertow-core:2.4.4.Final"
-  def ujson       = mvn"com.lihaoyi::ujson:4.4.3"
-  def utest       = mvn"com.lihaoyi::utest::0.9.5"
-  def versions    = mvn"io.get-coursier::versions::0.7.0"
-  def windowsAnsi = mvn"io.github.alexarchambault.windows-ansi:windows-ansi:0.0.6"
-  def windowsAnsiPs =
-    mvn"io.github.alexarchambault.windows-ansi:windows-ansi-ps:${windowsAnsi.version}"
+  def tika     = mvn"org.apache.tika:tika-core:2.9.4"
+  def undertow = mvn"io.undertow:undertow-core:2.4.4.Final"
+  def ujson    = mvn"com.lihaoyi::ujson:4.4.3"
+  def utest    = mvn"com.lihaoyi::utest::0.9.5"
+  def versions = mvn"io.get-coursier::versions::0.7.0"
   // plexus-archiver pulls it with the runtime scope, so only at run time: tests creating xz
   // archives need it at compile time, keep the version in sync with plexus-archiver's
   def xz      = mvn"org.tukaani:xz:1.12"

@@ -35,7 +35,7 @@ public class Bootstrap {
             if (useJni)
                 coursier.jniutils.WindowsAnsiTerminal.enableAnsiOutput();
             else
-                io.github.alexarchambault.windowsansi.WindowsAnsiPs.setup();
+                io.github.alexarchambault.nativeterm.TerminalScriptFallbacks.setupAnsi();
         } catch (InterruptedException | IOException e) {
             boolean doThrow = Boolean.getBoolean("coursier.bootstrap.windows-ansi.throw-exception");
             if (doThrow || Boolean.getBoolean("coursier.bootstrap.windows-ansi.verbose"))

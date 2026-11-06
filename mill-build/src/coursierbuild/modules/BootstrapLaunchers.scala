@@ -18,7 +18,11 @@ trait BootstrapLauncher extends CsModule {
   def scalaVersion = ScalaVersions.scala213
   def mvnDeps = super.mvnDeps() ++ Seq(
     Deps.directories,
-    Deps.jniUtilsBootstrap
+    Deps.jniUtils,
+    // Only for TerminalScriptFallbacks, that sets up the Windows terminal via PowerShell when JNI
+    // is disabled. It doesn't use jline-native, whose native libraries would make up most of the
+    // launcher size, and that proguard can't strip (they're resources).
+    Deps.nativeTerminal.exclude("org.jline" -> "jline-native")
   )
   def mainClass = Some("coursier.bootstrap.launcher.Launcher")
 
@@ -82,7 +86,6 @@ trait BootstrapLauncher extends CsModule {
     import java.util.regex.Pattern
     import coursier.launcher.MergeRule._
     Seq(
-      ExcludePattern("^" + Pattern.quote("META-INF/services/coursier.jniutils.NativeApi")),
       ExcludePattern("^" + Pattern.quote("META-INF/native-image/") + ".*"),
       ExcludePattern("^" + Pattern.quote("META-INF/MANIFEST.MF") + "$")
     )

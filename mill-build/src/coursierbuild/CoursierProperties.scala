@@ -37,6 +37,7 @@ object CoursierProperties {
     "coursier.ivy.home",
     "coursier.jni",
     "coursier.jni.check.throw",
+    "coursier.jniutils.dll-dir",
     "coursier.jvm.cache",
     "coursier.maven-settings",
     "coursier.max-http-retry-after",

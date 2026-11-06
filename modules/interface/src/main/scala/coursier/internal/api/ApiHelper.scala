@@ -30,6 +30,13 @@ import scala.collection.JavaConverters._
 
 object ApiHelper {
 
+  // Once shaded, the native methods of the default jni-utils NativeApi implementation can't be
+  // bound, so the interface uses its own one, ApiInternalNativeApi (whose package isn't relocated,
+  // and whose sources come from jni-utils, see the jni-utils-sources module in build.mill). All
+  // the interface code calling jni-utils goes through this object, and checks
+  // coursier.paths.Util.useJni() beforehand, which caches its result.
+  coursier.paths.Util.useJni(() => coursierapi.internal.jniutils.ApiInternalNativeApi.setup())
+
   private[this] final case class ApiRepo(repo: Repository) extends coursierapi.Repository
 
   def defaultRepositories(): Array[coursierapi.Repository] =

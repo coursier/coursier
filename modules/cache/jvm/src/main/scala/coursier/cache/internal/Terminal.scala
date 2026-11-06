@@ -74,7 +74,7 @@ object Terminal {
           (size.getWidth, size.getHeight)
         }
         else {
-          val size = io.github.alexarchambault.windowsansi.WindowsAnsi.terminalSize()
+          val size = io.github.alexarchambault.nativeterm.NativeTerminal.getSize()
           (size.getWidth, size.getHeight)
         }
       }
