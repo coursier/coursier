@@ -1,7 +1,7 @@
 package coursier.testcache
 
 import java.io.{IOException, InputStream}
-import java.net.{ServerSocket, URL}
+import java.net.{ServerSocket, URI}
 import java.nio.file.Paths
 import java.util.concurrent.{TimeUnit, TimeoutException}
 
@@ -79,7 +79,7 @@ object TestRepositoryServer {
     def url: String = s"http://$host:$port"
 
     def healthCheck(): Boolean = {
-      val url0            = new URL(s"$url/com/abc/test/0.1/test-0.1.pom.sha1")
+      val url0            = new URI(s"$url/com/abc/test/0.1/test-0.1.pom.sha1").toURL
       var is: InputStream = null
       try {
         is = url0.openStream()
