@@ -61,8 +61,11 @@ Prefer minimal, local, reversible changes and follow existing patterns.
 - Mill doesn't track the CI configuration and scripts: the script runs all tests when the Mill
   launchers, itself, or the paths in the job's `SELECTIVE_TESTS_EXTRA_PATHS` change, or when
   the parts of `ci.yml` that matter to the job do (its own definition, the jobs it transitively
-  `needs`, the workflow-level settings; comments aside). Changes to other jobs of `ci.yml`, like
-  the release-only ones, don't disable selective execution.
+  `needs`, the workflow-level settings). Changes to other jobs of `ci.yml`, like the release-only
+  ones, don't disable selective execution. Comments and blank lines count (they can be part of a
+  `run: |` script), and those preceding a job count as part of the job before it: put comments
+  about a job inside it, and insert new jobs where no comment precedes the next one.
+  `.github/scripts/selective-tests-test.sh` tests that logic (CI job `test-selective-tests-script`).
   Add any new script or file a selective job uses to that variable, or to the `extra-paths`
   input of the `selective-affected` action for the jobs using it (other `.github` changes don't
   disable selective execution).

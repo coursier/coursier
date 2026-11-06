@@ -27,10 +27,10 @@
 # Mill tracks the files the build reads through `Task.Source(s)` (sources, test resources, the
 # test-metadata submodules, …) and the build code, but not the CI configuration or the scripts it
 # runs. So `prepare` falls back to running everything when one of these changed:
-# - the definition of the current job (`GITHUB_JOB`) in the workflow file, the jobs it
-#   transitively `needs`, or the workflow-level settings (everything before `jobs:`), comments
-#   and blank lines aside - changes to the other jobs, like the release-only ones, don't matter
-#   (the whole workflow file is compared when `GITHUB_JOB` isn't set),
+# - the definition of the current job (`GITHUB_JOB`) in the workflow file, of the jobs it
+#   transitively `needs`, or the workflow-level settings (everything but the jobs) - changes to
+#   the other jobs, like the release-only ones, don't matter (the whole workflow file is compared
+#   when `GITHUB_JOB` isn't set, see workflow_part for the details),
 # - the paths of `always_relevant_paths` below, that matter to every job,
 # - the paths listed in `SELECTIVE_TESTS_EXTRA_PATHS`, that the job running `prepare` sets to
 #   the other files it uses, like the scripts its steps run.
@@ -87,17 +87,22 @@ always_relevant_paths=(
 
 workflow=.github/workflows/ci.yml
 
-# Prints a part of the workflow file read from stdin, without comments and blank lines:
+# Prints a part of the workflow file read from stdin:
 # - `workflow_part header`: the workflow-level settings, everything but the jobs,
 # - `workflow_part job <id>`: the definition of job <id>, empty if there's no such job.
-# Relies on the layout of ci.yml: top-level keys at column 0, job ids indented by 2 spaces.
+# Lines are kept as is, comments and blank lines included: inside block scalars (`run: |`), they
+# can be part of the value, like the body of a heredoc, and so can lines of quoted scalars
+# spanning several lines (which some YAML parsers accept even when under-indented). So a comment
+# or blank line preceding a job is part of the definition of the job before it.
+# Relies on the layout of ci.yml: top-level keys at column 0, job ids indented by 2 spaces, and no
+# other non-comment lines at these indentation levels (checked by selective-tests-test.sh).
 workflow_part() {
   awk -v mode="$1" -v job="${2:-}" -v quotes="[\"']" '
-    /^[[:space:]]*#/ || /^[[:space:]]*$/ { next }
     /^jobs:/ { in_jobs = 1; next }
-    /^[^ ]/ { in_jobs = 0 }
+    # the comments and blank lines of the jobs section stay with the job they follow
+    in_jobs && /^[^ #]/ { in_jobs = 0 }
     !in_jobs { if (mode == "header") print; next }
-    /^  [^ ]/ {
+    /^  [^ #]/ {
       current = $0
       sub(/^  /, "", current)
       sub(/:.*/, "", current)
@@ -108,29 +113,39 @@ workflow_part() {
 }
 
 # Prints the ids of the jobs that the job definition read from stdin `needs`, one per line.
-# Handles `needs: a`, `needs: [a, b]`, and `needs:` followed by a `- a` list.
+# Handles `needs: a`, `needs: [a, b]` (on one line or several), and `needs:` followed by a
+# `- a` list.
 job_needs() {
   awk -v quotes="[\"']" '
+    function print_ids(value) {
+      gsub(/\[/, " ", value)
+      gsub(/\]/, " ", value)
+      gsub(/,/, " ", value)
+      gsub(quotes, "", value)
+      print value
+    }
+    /^[[:space:]]*#/ || /^[[:space:]]*$/ { next }
     { sub(/[[:space:]]+#.*/, "") }
+    in_flow {
+      print_ids($0)
+      if (index($0, "]")) in_flow = 0
+      next
+    }
     /^    needs:/ {
       value = $0
       sub(/^    needs:[[:space:]]*/, "", value)
       if (value == "") {
         in_list = 1
       } else {
-        gsub(/\[/, " ", value)
-        gsub(/\]/, " ", value)
-        gsub(/,/, " ", value)
-        gsub(quotes, "", value)
-        print value
+        if (index(value, "[") && !index(value, "]")) in_flow = 1
+        print_ids(value)
       }
       next
     }
     in_list && /^ +- / {
       value = $0
       sub(/^ +- */, "", value)
-      gsub(quotes, "", value)
-      print value
+      print_ids(value)
       next
     }
     { in_list = 0 }
@@ -151,18 +166,21 @@ workflow_relevant_part() {
       *" $job "*) continue ;;
     esac
     seen="$seen$job "
-    block="$(workflow_part job "$job" <<< "$content")"
+    # the trailing `x` keeps the trailing blank lines of the job, that `$(…)` would strip
+    block="$(workflow_part job "$job" <<< "$content"; echo x)"
+    block="${block%x}"
     echo "# job $job"
     if [ -z "$block" ]; then
       echo "# no such job"
       continue
     fi
-    echo "$block"
+    printf '%s' "$block"
     for need in $(job_needs <<< "$block"); do
       pending="$pending $need"
     done
     pending="${pending# }"
   done
+  echo "# end"
 }
 
 # Tells whether the parts of the workflow file that matter to the current job changed between
@@ -178,10 +196,14 @@ workflow_changed() {
     return 0
   fi
   local base_content head_content base_part head_part
-  if ! base_content="$(git show "$base:$workflow")"; then
+  # the trailing `x` keeps the trailing blank lines of the file, that `$(…)` would strip
+  if ! base_content="$(git show "$base:$workflow" && echo x)"; then
+    echo "Could not read $workflow at the base commit"
     return 0
   fi
-  head_content="$(cat "$workflow")"
+  head_content="$(cat "$workflow" && echo x)"
+  base_content="${base_content%x}"
+  head_content="${head_content%x}"
   base_part="$(workflow_relevant_part "$base_content" "$job")"
   head_part="$(workflow_relevant_part "$head_content" "$job")"
   if [ "$base_part" = "$head_part" ]; then
@@ -351,25 +373,32 @@ affected() {
   fi
 }
 
-case "${1:-}" in
-  prepare)
-    shift
-    if [ "$#" -eq 0 ]; then
-      echo "Usage: $0 prepare <selector>..." >&2
+main() {
+  case "${1:-}" in
+    prepare)
+      shift
+      if [ "$#" -eq 0 ]; then
+        echo "Usage: $0 prepare <selector>..." >&2
+        exit 1
+      fi
+      prepare "$@"
+      ;;
+    run)
+      shift
+      run "$@"
+      ;;
+    affected)
+      shift
+      affected "$@"
+      ;;
+    *)
+      echo "Usage: $0 prepare <selector>... | run [Mill option]... <selector> [-- <task argument>...] | affected <selector>" >&2
       exit 1
-    fi
-    prepare "$@"
-    ;;
-  run)
-    shift
-    run "$@"
-    ;;
-  affected)
-    shift
-    affected "$@"
-    ;;
-  *)
-    echo "Usage: $0 prepare <selector>... | run [Mill option]... <selector> [-- <task argument>...] | affected <selector>" >&2
-    exit 1
-    ;;
-esac
+      ;;
+  esac
+}
+
+# selective-tests-test.sh sources this script to test its functions
+if [ "${BASH_SOURCE[0]}" = "$0" ]; then
+  main "$@"
+fi
