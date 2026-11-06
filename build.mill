@@ -1187,6 +1187,9 @@ trait Cli extends CsModule
     )
   }
   def mainClass = Some("coursier.cli.Coursier")
+  // Picked by the launchers the build generates (`launcher`, `assembly`), so that the tests running
+  // them on JDK 24+ (like the ubuntu-latest JVM in PATH) don't print sun.misc.Unsafe warnings
+  def forkArgs = Task(super.forkArgs() ++ cliJavaOpts)
   def finalMainClassOpt = Task {
     Right("coursier.cli.Coursier"): Either[String, String]
   }
@@ -1709,6 +1712,15 @@ def updateBrewFormula(version: String = "", dryRun: Boolean = false) = Task.Comm
   )
 }
 
+/** Java options of the JVM launchers of the CLI: the released ones (see [[jarLauncherArgs]]), and
+  * those the build generates for tests (`cli.launcher`, `cli.assembly`)
+  *
+  * Scala 3 lazy vals compiled before 3.8 (in our modules and in dependencies like case-app) go
+  * through sun.misc.Unsafe, which JDK 24+ warns about on stderr (JEP 498). Unlike
+  * --sun-misc-unsafe-memory-access=allow, the property form doesn't make JDK < 23 refuse to start.
+  */
+def cliJavaOpts: Seq[String] = Seq("-Dsun.misc.unsafe.memory.access=allow")
+
 /** Arguments of the `cs bootstrap` command generating a JAR launcher of the CLI for `version`: the
   * `coursier` bootstrap (a JAR fetching its dependencies at first run), or `coursier.jar`, an
   * assembly, with `assembly`. The launchers are generated from the published coursier-cli artifact
@@ -1727,10 +1739,7 @@ def jarLauncherArgs(
     (if (bat) Seq("--bat") else Nil) ++
     (if (defaultRepositories) Nil else Seq("--no-default")) ++
     repositories.flatMap(repo => Seq("-r", repo)) ++
-    // Scala 3 lazy vals compiled before 3.8 (in our modules and in dependencies like case-app)
-    // go through sun.misc.Unsafe, which JDK 24+ warns about on stderr (JEP 498). Unlike
-    // --sun-misc-unsafe-memory-access=allow, the property form doesn't make JDK < 23 refuse to start.
-    Seq("--java-opt", "-Dsun.misc.unsafe.memory.access=allow") ++
+    cliJavaOpts.flatMap(opt => Seq("--java-opt", opt)) ++
     Seq("-o", dest, "-f", s"$mavenOrg::coursier-cli:$version", "--scala", ScalaVersions.scala3Cli)
 
 /** The repositories to pass `cs bootstrap` along the default ones, for the coursier-cli `version`
