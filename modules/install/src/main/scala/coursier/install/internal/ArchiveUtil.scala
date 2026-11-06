@@ -7,6 +7,7 @@ import org.apache.commons.compress.archivers.{
   ArchiveStreamFactory
 }
 import org.apache.commons.compress.compressors.CompressorStreamFactory
+import org.apache.commons.compress.compressors.xz.XZCompressorInputStream
 
 import java.io.{BufferedInputStream, File, InputStream}
 import java.nio.file.Files
@@ -102,16 +103,25 @@ object ArchiveUtil {
         throw new NoSuchElementException(s"$pathInArchive not found in $archive")
     }
 
-  def withGzipContent[T](gzFile: File)(f: InputStream => T): T = {
-    var fis: InputStream      = null
-    var gzis: GZIPInputStream = null
+  def withGzipContent[T](gzFile: File)(f: InputStream => T): T =
+    withCompressedContent(gzFile, ArchiveType.Gzip)(f)
+
+  def withCompressedContent[T](
+    file: File,
+    archiveType: ArchiveType.Compressed
+  )(f: InputStream => T): T = {
+    var fis: InputStream = null
+    var is: InputStream  = null
     try {
-      fis = Files.newInputStream(gzFile.toPath)
-      gzis = new GZIPInputStream(fis)
-      f(gzis)
+      fis = Files.newInputStream(file.toPath)
+      is = archiveType match {
+        case ArchiveType.Gzip => new GZIPInputStream(fis)
+        case ArchiveType.Xz   => new XZCompressorInputStream(fis)
+      }
+      f(is)
     }
     finally {
-      if (gzis != null) gzis.close()
+      if (is != null) is.close()
       if (fis != null) fis.close()
     }
   }

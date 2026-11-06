@@ -1005,7 +1005,9 @@ trait Install extends CsModule
     )
     def mvnDeps = super.mvnDeps() ++ Seq(
       Deps.pprint,
-      Deps.ujson
+      Deps.ujson,
+      // only a run-time dependency of archive-cache, ArchiveUtilTests creates xz files
+      Deps.xz
     )
     def forkArgs = Task {
       val httpServerCp = `test-cache`.jvm(ScalaVersions.scala3).httpServerClassPath()
