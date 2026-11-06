@@ -1442,7 +1442,7 @@ abstract class BootstrapTests extends TestSuite with LauncherOptions {
           appSource,
           s"""//> using scala "2.13.10"
              |//> using jvm "17"
-             |//> using lib "io.get-coursier.jniutils:windows-jni-utils:${TestUtil.jniUtilsVersion}"
+             |//> using dep "io.get-coursier.jniutils:windows-jni-utils:${TestUtil.jniUtilsVersion}"
              |//> using publish.organization "io.get-coursier.tests"
              |//> using publish.name "test-app"
              |//> using publish.version "0.1.0"
