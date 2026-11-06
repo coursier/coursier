@@ -1427,27 +1427,6 @@ abstract class BootstrapTests extends TestSuite with LauncherOptions {
       }
     }
 
-    test("jni-utils from bootstrap") {
-      if (Properties.isWin)
-        jniUtilFromBootstrapTest()
-      else
-        "disabled"
-    }
-
-    test("jni-utils from hybrid bootstrap") {
-      if (Properties.isWin)
-        jniUtilFromBootstrapTest("--hybrid")
-      else
-        "disabled"
-    }
-
-    test("jni-utils from standalone bootstrap") {
-      if (Properties.isWin)
-        jniUtilFromBootstrapTest("--standalone")
-      else
-        "disabled"
-    }
-
     def jniUtilFromBootstrapTest(extraOpts: String*): Unit = {
       TestUtil.withTempDir("jni-cs") { tmpDir0 =>
         val tmpDir = os.Path(tmpDir0, os.pwd)
@@ -1516,6 +1495,27 @@ abstract class BootstrapTests extends TestSuite with LauncherOptions {
         os.proc("java", "-Dcoursier.jni.check.throw=true", "-jar", appLauncher)
           .call(cwd = tmpDir, stdin = os.Inherit, stdout = os.Inherit)
       }
+    }
+
+    test("jni-utils from bootstrap") {
+      if (Properties.isWin)
+        jniUtilFromBootstrapTest()
+      else
+        "disabled"
+    }
+
+    test("jni-utils from hybrid bootstrap") {
+      if (Properties.isWin)
+        jniUtilFromBootstrapTest("--hybrid")
+      else
+        "disabled"
+    }
+
+    test("jni-utils from standalone bootstrap") {
+      if (Properties.isWin)
+        jniUtilFromBootstrapTest("--standalone")
+      else
+        "disabled"
     }
   }
 }

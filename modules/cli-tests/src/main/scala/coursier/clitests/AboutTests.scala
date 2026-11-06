@@ -34,15 +34,6 @@ abstract class AboutTests extends TestSuite with LauncherOptions {
       assert(lines.contains(expectedLine))
     }
 
-    test("alpine-linux") {
-      if (hasDocker)
-        if (isNativeStatic) alpineLinuxTest(isNative = true)
-        else if (!isNative && !isStandalone) alpineLinuxTest(isNative = false)
-        else "Docker test disabled (native non-static launcher)"
-      else
-        "Docker test disabled (docker unavailable)"
-    }
-
     def alpineLinuxTest(isNative: Boolean): Unit = {
 
       TestUtil.withTempDir { tmpDir0 =>
@@ -82,6 +73,15 @@ abstract class AboutTests extends TestSuite with LauncherOptions {
         val expectedLine = "OS: linux-musl"
         assert(output.contains(expectedLine))
       }
+    }
+
+    test("alpine-linux") {
+      if (hasDocker)
+        if (isNativeStatic) alpineLinuxTest(isNative = true)
+        else if (!isNative && !isStandalone) alpineLinuxTest(isNative = false)
+        else "Docker test disabled (native non-static launcher)"
+      else
+        "Docker test disabled (docker unavailable)"
     }
   }
 
