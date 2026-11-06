@@ -391,7 +391,8 @@ import java.util.concurrent.ConcurrentMap
     transitive
   )
 
-  private def deprecatedBoms = DependencyInternals.deprecatedBoms(this)
+  private def deprecatedBoms      = DependencyInternals.deprecatedBoms(this)
+  private def deprecatedOverrides = DependencyInternals.deprecatedOverrides(this)
 
   def mavenPrefix: String =
     Dependency.mavenPrefix(module, attributes)
@@ -561,7 +562,7 @@ import java.util.concurrent.ConcurrentMap
     Publication(publication.name, attributes.`type`, publication.ext, attributes.classifier),
     optional0,
     transitive,
-    overrides,
+    deprecatedOverrides,
     deprecatedBoms,
     bomDependencies,
     overridesMap,
@@ -603,9 +604,9 @@ import java.util.concurrent.ConcurrentMap
       lines += "optional"
     if (!transitive)
       lines += "non-transitive"
-    if (overrides.nonEmpty)
+    if (deprecatedOverrides.nonEmpty)
       lines += "overrides (deprecated): non-empty"
-    if (boms.nonEmpty)
+    if (deprecatedBoms.nonEmpty)
       lines += "boms (deprecated): non-empty"
     if (bomDependencies.nonEmpty) {
       lines += "BOM deps:"

@@ -9,4 +9,7 @@ private[core] object DependencyInternals {
   @nowarn
   def deprecatedBoms(dep: Dependency) =
     dep.boms
+  @nowarn
+  def deprecatedOverrides(dep: Dependency) =
+    dep.overrides
 }
