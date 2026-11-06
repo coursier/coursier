@@ -517,12 +517,14 @@ object AppDescriptor {
     }
 
     availableScalaVersions0.map { availableScalaVersions =>
-
-      if (verbosity >= 2) {
-        System.err.println(s"Found ${availableScalaVersions.size} scala versions:")
+      // Only list them all from -v -v -v on: there are hundreds of them
+      if (verbosity >= 2)
+        System.err.println(
+          s"Found ${availableScalaVersions.size} scala versions" + (if (verbosity >= 3) ":" else "")
+        )
+      if (verbosity >= 3)
         for (v <- availableScalaVersions.toVector.map(Version(_)).sorted)
           System.err.println(s"  ${v.repr}")
-      }
 
       // FIXME Throw if scalaModules.nonEmpty && availableScalaVersions.isEmpty?
 
