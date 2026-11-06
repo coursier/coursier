@@ -359,6 +359,29 @@ jobs:
       env:
         COURSIER_JNI: force
 
+  test-selective-tests-script:
+    # The logic deciding which parts of this file matter to a job, in selective-tests.sh, is plain
+    # bash and awk, whose versions differ between OSes (bash 3.2 and BSD awk on macOS)
+    name: ${{ matrix.OS }} selective-tests.sh
+    runs-on: ${{ matrix.OS }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        OS: ["ubuntu-latest", "macos-15", "windows-latest"]
+    steps:
+    - name: Don't convert LF to CRLF during checkout
+      if: runner.os == 'Windows'
+      run: |
+        git config --global core.autocrlf false
+        git config --global core.eol lf
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+    - run: .github/scripts/selective-tests-test.sh
+      shell: bash
+      env:
+        # the Linux runners have yq, so that the layout of ci.yml is checked at least there
+        SELECTIVE_TESTS_TEST_REQUIRE_YAML_PARSER: ${{ runner.os == 'Linux' && 'true' || '' }}
+
   format:
     runs-on: ubuntu-latest
     steps:

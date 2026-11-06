@@ -27,6 +27,10 @@
 # Mill tracks the files the build reads through `Task.Source(s)` (sources, test resources, the
 # test-metadata submodules, …) and the build code, but not the CI configuration or the scripts it
 # runs. So `prepare` falls back to running everything when one of these changed:
+# - the definition of the current job (`GITHUB_JOB`) in the workflow file, of the jobs it
+#   transitively `needs`, or the workflow-level settings (everything but the jobs) - changes to
+#   the other jobs, like the release-only ones, don't matter (the whole workflow file is compared
+#   when `GITHUB_JOB` isn't set, see workflow_part for the details),
 # - the paths of `always_relevant_paths` below, that matter to every job,
 # - the paths listed in `SELECTIVE_TESTS_EXTRA_PATHS`, that the job running `prepare` sets to
 #   the other files it uses, like the scripts its steps run.
@@ -50,6 +54,7 @@
 #                                whose changes disable selective execution in this job, on top of
 #                                `always_relevant_paths`
 #   GITHUB_EVENT_NAME            set by GitHub Actions, selective execution is used for pull_request only
+#   GITHUB_JOB                   set by GitHub Actions, id of the current job in the workflow file
 #   SCALA_VERSION, CI, …         read by build.mill, must be the same for `prepare` and `run`
 
 set -euo pipefail
@@ -71,14 +76,143 @@ snapshot="$out_dir/mill-selective-execution.json"
 # our own copy of it, so that several `run`s can follow a single `prepare`
 saved_snapshot="$out_dir/ci-selective-execution.json"
 
-# Files Mill doesn't track that drive how the tests of every job run: the Mill launchers, the CI
-# configuration, and this script. Jobs add their own files via SELECTIVE_TESTS_EXTRA_PATHS.
+# Files Mill doesn't track that drive how the tests of every job run: the Mill launchers and this
+# script. Jobs add their own files via SELECTIVE_TESTS_EXTRA_PATHS. The workflow file is checked
+# separately, see workflow_relevant_part.
 always_relevant_paths=(
   mill
   mill.bat
-  .github/workflows/ci.yml
   .github/scripts/selective-tests.sh
 )
+
+workflow=.github/workflows/ci.yml
+
+# Prints a part of the workflow file read from stdin:
+# - `workflow_part header`: the workflow-level settings, everything but the jobs,
+# - `workflow_part job <id>`: the definition of job <id>, empty if there's no such job.
+# Lines are kept as is, comments and blank lines included: inside block scalars (`run: |`), they
+# can be part of the value, like the body of a heredoc, and so can lines of quoted scalars
+# spanning several lines (which some YAML parsers accept even when under-indented). So a comment
+# or blank line preceding a job is part of the definition of the job before it.
+# Relies on the layout of ci.yml: top-level keys at column 0, job ids indented by 2 spaces, and no
+# other non-comment lines at these indentation levels (checked by selective-tests-test.sh).
+workflow_part() {
+  awk -v mode="$1" -v job="${2:-}" -v quotes="[\"']" '
+    /^jobs:/ { in_jobs = 1; next }
+    # the comments and blank lines of the jobs section stay with the job they follow
+    in_jobs && /^[^ #]/ { in_jobs = 0 }
+    !in_jobs { if (mode == "header") print; next }
+    /^  [^ #]/ {
+      current = $0
+      sub(/^  /, "", current)
+      sub(/:.*/, "", current)
+      gsub(quotes, "", current)
+    }
+    mode == "job" && current == job { print }
+  '
+}
+
+# Prints the ids of the jobs that the job definition read from stdin `needs`, one per line.
+# Handles `needs: a`, `needs: [a, b]` (on one line or several), and `needs:` followed by a
+# `- a` list.
+job_needs() {
+  awk -v quotes="[\"']" '
+    function print_ids(value) {
+      gsub(/\[/, " ", value)
+      gsub(/\]/, " ", value)
+      gsub(/,/, " ", value)
+      gsub(quotes, "", value)
+      print value
+    }
+    /^[[:space:]]*#/ || /^[[:space:]]*$/ { next }
+    { sub(/[[:space:]]+#.*/, "") }
+    in_flow {
+      print_ids($0)
+      if (index($0, "]")) in_flow = 0
+      next
+    }
+    /^    needs:/ {
+      value = $0
+      sub(/^    needs:[[:space:]]*/, "", value)
+      if (value == "") {
+        in_list = 1
+      } else {
+        if (index(value, "[") && !index(value, "]")) in_flow = 1
+        print_ids(value)
+      }
+      next
+    }
+    in_list && /^ +- / {
+      value = $0
+      sub(/^ +- */, "", value)
+      print_ids(value)
+      next
+    }
+    { in_list = 0 }
+  '
+}
+
+# Prints the parts of the workflow file content $1 that matter to job $2: the workflow-level
+# settings, the definition of the job, and those of the jobs it transitively needs (whose outputs
+# it can read).
+workflow_relevant_part() {
+  local content="$1" pending="$2" seen=" " job block need
+  workflow_part header <<< "$content"
+  while [ -n "$pending" ]; do
+    job="${pending%% *}"
+    pending="${pending#"$job"}"
+    pending="${pending# }"
+    case "$seen" in
+      *" $job "*) continue ;;
+    esac
+    seen="$seen$job "
+    # the trailing `x` keeps the trailing blank lines of the job, that `$(…)` would strip
+    block="$(workflow_part job "$job" <<< "$content"; echo x)"
+    block="${block%x}"
+    echo "# job $job"
+    if [ -z "$block" ]; then
+      echo "# no such job"
+      continue
+    fi
+    printf '%s' "$block"
+    for need in $(job_needs <<< "$block"); do
+      pending="$pending $need"
+    done
+    pending="${pending# }"
+  done
+  echo "# end"
+}
+
+# Tells whether the parts of the workflow file that matter to the current job changed between
+# commit $1 and the working tree (and prints how when they did)
+workflow_changed() {
+  local base="$1"
+  local job="${GITHUB_JOB:-}"
+  if [ -z "$job" ]; then
+    if git diff --quiet "$base" -- "$workflow"; then
+      return 1
+    fi
+    echo "$workflow changed since the base commit"
+    return 0
+  fi
+  local base_content head_content base_part head_part
+  # the trailing `x` keeps the trailing blank lines of the file, that `$(…)` would strip
+  if ! base_content="$(git show "$base:$workflow" && echo x)"; then
+    echo "Could not read $workflow at the base commit"
+    return 0
+  fi
+  head_content="$(cat "$workflow" && echo x)"
+  base_content="${base_content%x}"
+  head_content="${head_content%x}"
+  base_part="$(workflow_relevant_part "$base_content" "$job")"
+  head_part="$(workflow_relevant_part "$head_content" "$job")"
+  if [ "$base_part" = "$head_part" ]; then
+    return 1
+  fi
+  echo "The definition of job $job in $workflow, of the jobs it needs, or the workflow settings changed:"
+  diff <(echo "$base_part") <(echo "$head_part") || true
+  return 0
+}
 
 # Joins selectors into a single `{a,b,c}` one: the `selective.*` commands only take
 # their first positional argument into account, extra ones are silently dropped.
@@ -143,6 +277,10 @@ prepare() {
   if [ -n "$changed_paths" ]; then
     echo "Files that Mill doesn't track changed since the base commit, all tests will run:"
     echo "$changed_paths"
+    return
+  fi
+  if workflow_changed "$base"; then
+    echo "All tests will run"
     return
   fi
 
@@ -235,25 +373,32 @@ affected() {
   fi
 }
 
-case "${1:-}" in
-  prepare)
-    shift
-    if [ "$#" -eq 0 ]; then
-      echo "Usage: $0 prepare <selector>..." >&2
+main() {
+  case "${1:-}" in
+    prepare)
+      shift
+      if [ "$#" -eq 0 ]; then
+        echo "Usage: $0 prepare <selector>..." >&2
+        exit 1
+      fi
+      prepare "$@"
+      ;;
+    run)
+      shift
+      run "$@"
+      ;;
+    affected)
+      shift
+      affected "$@"
+      ;;
+    *)
+      echo "Usage: $0 prepare <selector>... | run [Mill option]... <selector> [-- <task argument>...] | affected <selector>" >&2
       exit 1
-    fi
-    prepare "$@"
-    ;;
-  run)
-    shift
-    run "$@"
-    ;;
-  affected)
-    shift
-    affected "$@"
-    ;;
-  *)
-    echo "Usage: $0 prepare <selector>... | run [Mill option]... <selector> [-- <task argument>...] | affected <selector>" >&2
-    exit 1
-    ;;
-esac
+      ;;
+  esac
+}
+
+# selective-tests-test.sh sources this script to test its functions
+if [ "${BASH_SOURCE[0]}" = "$0" ]; then
+  main "$@"
+fi
