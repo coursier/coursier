@@ -72,7 +72,8 @@ object Deps {
   private def scalaCliConfig3(sv: String) =
     if (sv.startsWith("2.13")) mvn"org.virtuslab.scala-cli:config_3:1.17.1" // scala-steward:off
     else mvn"org.virtuslab.scala-cli:config_3:1.18.0"
-  def scala3Library(sv: String) = mvn"org.scala-lang::scala3-library:$sv"
+  // a platform dependency, so that Scala.js modules get the Scala.js one
+  def scala3Library(sv: String) = mvn"org.scala-lang::scala3-library::$sv"
   def scalaCompiler(sv: String) =
     if (sv.startsWith("3.")) mvn"org.scala-lang::scala3-compiler:$sv"
     else mvn"org.scala-lang:scala-compiler:$sv"
@@ -116,8 +117,8 @@ object Deps {
     *
     * scala-async is a Scala 2-only macro library. On Scala 3, [[shimScalaAsync]] provides the same
     * `scala.async.Async` object, backed by dotty-cps-async. That shim is only published for the
-    * JVM, so the Scala.js Scala 3 cross values get the same alias from the `async-compat` module of
-    * the build instead (hence `Nil` here).
+    * JVM, so the Scala.js modules (that are Scala 3 only) get the same alias from the `test-compat`
+    * module of the build instead, and don't use this.
     */
   def asyncMvnDeps(scalaVersion: String) =
     if (!scalaVersion.startsWith("3.")) Seq(scalaAsync)

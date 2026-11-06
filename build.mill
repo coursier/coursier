@@ -758,7 +758,6 @@ trait CoursierJs extends Coursier with CsScalaJsModule with Scala3DataClassModul
       `test-cache`.js,
       `test-compat`.js
     )
-    def mvnDeps = super.mvnDeps() ++ Deps.asyncMvnDeps(ScalaVersions.scala3)
     def jsEnvConfig = Task {
       JsTests.jsEnvConfig(super.jsEnvConfig(), forkEnv())
     }
@@ -854,7 +853,6 @@ trait TestsJs extends TestsModule with CsScalaJsModule {
       `test-cache`.js,
       `test-compat`.js
     )
-    def mvnDeps = super.mvnDeps() ++ Deps.asyncMvnDeps(ScalaVersions.scala3)
     def jsEnvConfig = Task {
       JsTests.jsEnvConfig(super.jsEnvConfig(), forkEnv())
     }
