@@ -163,9 +163,10 @@ import coursier.version.{Latest, Version, VersionConstraint, VersionParse}
           case Left(ex)    => throw new Exception(ex)
           case Right(res0) => res0
         }
-        val l = coursier.Artifacts.artifacts(
+        val l = coursier.Artifacts.artifacts0(
           subRes,
           classifiers,
+          Nil,
           Some(mainArtifacts),
           Some(artifactTypes),
           classpathOrder = true

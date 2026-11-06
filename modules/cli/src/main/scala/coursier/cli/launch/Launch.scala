@@ -249,9 +249,10 @@ object Launch extends CoursierCommand[LaunchOptions] {
             scalaVersionOpt.getOrElse(""),
             platformOpt.getOrElse("")
           ))).toTry.get
-          val artifacts = coursier.Artifacts.artifacts(
+          val artifacts = coursier.Artifacts.artifacts0(
             subRes,
             artifactParams.classifiers,
+            artifactParams.attributes,
             Option(artifactParams.mainArtifacts).map(x => x),
             Option(artifactParams.artifactTypes),
             classpathOrder
