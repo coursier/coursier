@@ -5,7 +5,7 @@ import mill.javalib.CoursierModule
 
 /** Adds the Maven Central snapshot repository to the ones dependencies are resolved from.
   *
-  * Needed as long as `Deps.directories` points at a snapshot version, which isn't published on
+  * Needed as long as `Deps.directories` points at a (timestamped) snapshot version, which isn't on
   * Maven Central proper. `CoursierJavaModule` mixes it in, which covers most modules, and their
   * test modules along with them (those inherit `repositoriesTask` from their outer module). Mix it
   * in explicitly in the few modules that depend on the coursier ones without extending
