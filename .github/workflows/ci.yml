@@ -1043,6 +1043,27 @@ jobs:
           --ref main \
           -f version="${TAG#v}"
 
+  update-cache-action:
+    name: Update cache-action Coursier version
+    needs:
+      - upload-launchers
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    # for GH_TOKEN
+    environment: release
+    steps:
+    # coursier/cache-action has a workflow of its own opening a PR bumping the coursier version
+    # of the cs launcher script its tests use, we only trigger it here
+    - name: Trigger the workflow bumping the Coursier version in coursier/cache-action
+      env:
+        GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        TAG: ${{ github.ref_name }}
+      run: |
+        gh workflow run update-coursier.yml \
+          --repo coursier/cache-action \
+          --ref main \
+          -f version="${TAG#v}"
+
   update-sbt-coursier:
     name: Update sbt-coursier version
     needs:
