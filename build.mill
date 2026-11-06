@@ -41,11 +41,10 @@ import mill.util.Tasks
 
 import java.io.File
 import java.util.Locale
-import java.util.zip.ZipFile
 
 import scala.concurrent.duration._
 import scala.jdk.CollectionConverters.*
-import scala.util.{Properties, Using}
+import scala.util.Properties
 
 def mavenOrg = "io.get-coursier"
 
@@ -193,6 +192,52 @@ object `scalafix-rules` extends SbtModule {
   def compileMvnDeps = Seq(Deps.scalafixCore)
 }
 
+/** Sources of jni-utils
+  *
+  * jni-utils doesn't publish its helper modules, that provide `NativeApi` implementations for
+  * projects shading jni-utils (whose native methods are implemented by the DLL of the
+  * windows-jni-utils JAR, along with the default ones). We compile their sources in the modules
+  * shading jni-utils instead.
+  */
+object `jni-utils-sources` extends Module {
+  def checkout = Task {
+    val tag = s"v${Versions.jniUtils}"
+    val url = s"https://github.com/coursier/jni-utils/archive/refs/tags/$tag.zip"
+    // pinned to a release tag, so that the zip in the coursier cache doesn't get stale
+    val zip = {
+      import _root_.coursier.cache.FileCache
+      import _root_.coursier.util.{Artifact, Task => CsTask}
+      val cache = FileCache[CsTask]()
+      cache.file(Artifact(url)).run
+        .unsafeRun(wrapExceptions = true)(using cache.ec)
+        .fold(e => throw e, f => os.Path(f.getAbsolutePath))
+    }
+    val extracted = Task.dest / "extracted"
+    os.unzip(zip, extracted)
+    // GitHub puts everything under a single top-level directory (jni-utils-0.5.0 for v0.5.0)
+    val dest = os.list(extracted) match {
+      case Seq(dir) if os.isDir(dir) => dir
+      case other => sys.error(s"Expected a single directory in $url, found ${other.map(_.last)}")
+    }
+    PathRef(dest)
+  }
+  private def helperDir(module: String, dir: String) = Task.Anon {
+    val path = checkout().path / os.SubPath(module) / "src/main" / dir
+    if (!os.isDir(path))
+      sys.error(s"$path not found in jni-utils ${Versions.jniUtils}")
+    PathRef(path)
+  }
+
+  /** `coursier.bootstrap.launcher.jniutils.BootstrapNativeApi`, for the bootstrap launcher */
+  def bootstrapSources = Task(helperDir("windows-jni-utils-bootstrap", "java")())
+
+  /** `coursierapi.internal.jniutils.ApiInternalNativeApi`, for the interface */
+  def coursierApiSources = Task(helperDir("windows-jni-utils-coursierapi", "java")())
+
+  /** GraalVM native-image metadata of `ApiInternalNativeApi`, for the interface */
+  def coursierApiResources = Task(helperDir("windows-jni-utils-coursierapi", "resources")())
+}
+
 object `bootstrap-launcher` extends BootstrapLauncher { self =>
   def moduleDeps = Seq(
     paths
@@ -212,24 +257,10 @@ object `bootstrap-launcher` extends BootstrapLauncher { self =>
       }
     Seq(PathRef(dest))
   }
-  def windowsAnsiPsSources = Task {
-    val jars = defaultResolver().classpath(
-      Seq(Deps.windowsAnsiPs.exclude("*" -> "*")),
-      sources = true
-    )
-    for (jar <- jars)
-      Using.resource(new ZipFile(jar.path.toIO)) { zf =>
-        for (ent <- zf.entries().asScala if !ent.getName.endsWith("/")) {
-          val b = zf.getInputStream(ent).readAllBytes()
-          os.write(Task.dest / ent.getName.split("/"), b, createFolders = true)
-        }
-      }
-    Seq(PathRef(Task.dest))
-  }
   def sources = Task {
     super.sources() ++
       proxySources() ++
-      windowsAnsiPsSources()
+      Seq(`jni-utils-sources`.bootstrapSources())
   }
   def resources = Task {
     super.resources().flatMap { ref =>
@@ -494,7 +525,7 @@ trait CacheJvm extends CacheJvmBase with DataClassModule with Scala212SnapshotOn
     // required alongside scalaCliConfig, given we exclude its version of jsoniter-scala
     Deps.jsoniterCore(scalaVersion()),
     Deps.scalaCliConfig(scalaVersion()),
-    Deps.windowsAnsi
+    Deps.nativeTerminal
   )
   def compileMvnDeps = super.compileMvnDeps() ++ Seq(
     Deps.jsoniterMacros(scalaVersion()),
@@ -2465,9 +2496,15 @@ trait Interface extends SbtModule with CsModule {
     jvm(sv)
   )
   def mvnDeps = super.mvnDeps() ++ Seq(
-    Deps.jniUtilsCoursierApi,
+    Deps.jniUtils,
     Deps.slf4jApi // no need to shade that one…
   )
+  def sources = Task {
+    super.sources() ++ Seq(`jni-utils-sources`.coursierApiSources())
+  }
+  def resources = Task {
+    super.resources() ++ Seq(`jni-utils-sources`.coursierApiResources())
+  }
   // coursier-jvm pulls JNA via coursier-exec. JNA embeds native libraries, which cannot be
   // shaded, and nothing here calls the coursier-exec API. Mill refers to the modules of this
   // build with the (hardcoded here) mill-internal:$moduleName:0+mill-internal coordinates.
@@ -2512,6 +2549,7 @@ trait InterfaceProguarded extends JavaModule with InterfacePublishModule {
         }
         else
           Nil
+      val jniUtilsResources = `jni-utils-sources`.coursierApiResources().path
       val classPathOptions = interface
         .runClasspath()
         .map(_.path)
@@ -2523,7 +2561,10 @@ trait InterfaceProguarded extends JavaModule with InterfacePublishModule {
             Seq("-libraryjars", path.toString)
           else {
             val filterOpt =
-              if (os.isDir(path))
+              if (path == jniUtilsResources)
+                // native-image metadata of ApiInternalNativeApi, like windows-jni-utils' own one
+                None
+              else if (os.isDir(path))
                 // classes / resources directories of the modules of this build
                 Some("!META-INF/**,!coursier.properties,!coursier/coursier.properties")
               else
@@ -2580,7 +2621,8 @@ trait InterfaceProguarded extends JavaModule with InterfacePublishModule {
       rename("coursier.**", "coursierapi.shaded.coursier.@1"),
       rename("dependency.**", "coursierapi.shaded.dependency.@1"),
       rename("org.fusesource.**", "coursierapi.shaded.org.fusesource.@1"),
-      rename("io.github.alexarchambault.windowsansi.**", "coursierapi.shaded.windowsansi.@1"),
+      rename("io.github.alexarchambault.nativeterm.**", "coursierapi.shaded.nativeterm.@1"),
+      rename("org.jline.nativ.**", "coursierapi.shaded.jlinenative.@1"),
       rename("concurrentrefhashmap.**", "coursierapi.shaded.concurrentrefhashmap.@1"),
       rename("org.apache.commons.codec.**", "coursierapi.shaded.commonscodec.@1"),
       rename("org.apache.commons.compress.**", "coursierapi.shaded.commonscompress.@1"),
@@ -2615,9 +2657,8 @@ trait InterfaceProguarded extends JavaModule with InterfacePublishModule {
   }
 
   def cleanedUpJar = Task {
-    val input            = proguardedAndShadedJar().path
-    val intermediaryDest = Task.dest / "intermediary.jar"
-    val dest             = Task.dest / "interface.jar"
+    val input = proguardedAndShadedJar().path
+    val dest  = Task.dest / "interface.jar"
     val toBeRemoved = Set(
       "LICENSE",
       "NOTICE",
@@ -2629,20 +2670,9 @@ trait InterfaceProguarded extends JavaModule with InterfacePublishModule {
     assert(directoriesToBeRemoved.forall(_.endsWith("/")))
     ZipUtil.removeFromZip(
       input,
-      intermediaryDest,
+      dest,
       name =>
         toBeRemoved(name) || directoriesToBeRemoved.exists(dir => name.startsWith(dir))
-    )
-    val serviceName = "META-INF/services/coursier.jniutils.NativeApi"
-    val serviceContent = ZipUtil.zipEntryContent(proguardedJar().path, serviceName).getOrElse {
-      sys.error(s"$serviceName not found in ${proguardedJar().path}")
-    }
-    ZipUtil.addOrOverwriteInZip(
-      intermediaryDest,
-      dest,
-      Seq(
-        "META-INF/services/coursierapi.shaded.coursier.jniutils.NativeApi" -> serviceContent
-      )
     )
     PathRef(dest)
   }

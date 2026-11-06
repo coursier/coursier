@@ -97,7 +97,7 @@ object Coursier extends CommandsEntryPoint {
       try if (useJni)
           coursier.jniutils.WindowsAnsiTerminal.enableAnsiOutput()
         else
-          io.github.alexarchambault.windowsansi.WindowsAnsi.setup()
+          io.github.alexarchambault.nativeterm.NativeTerminal.setupAnsi()
       catch {
         case NonFatal(e) =>
           val doThrow = java.lang.Boolean.getBoolean("coursier.windows-ansi.throw-exception")

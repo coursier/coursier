@@ -1,12 +1,13 @@
 package coursierbuild
 
 object Versions {
-  def cats          = "2.13.0"
-  def http4s        = "0.23.38"
-  def jniUtils      = "0.4.0"
-  def jsoniterScala = "2.42.2"
-  def junit         = "4.13.2"
-  def scalaz        = "7.2.36"
+  def cats           = "2.13.0"
+  def http4s         = "0.23.38"
+  def jniUtils       = "0.5.0"
+  def jsoniterScala  = "2.42.2"
+  def junit          = "4.13.2"
+  def nativeTerminal = "0.1.0"
+  def scalaz         = "7.2.36"
 
   // The Scala 2 modules still support Java 8, and jsoniter-scala 2.13.9 and later target Java 11,
   // so they stay at the last release with Java 8 class files. The Scala 3 modules only support
