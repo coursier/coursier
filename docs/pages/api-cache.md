@@ -25,7 +25,7 @@ import coursier.cache.FileCache
 import coursier.cache.loggers.RefreshLogger
 import coursier.util.Artifact
 val logger = RefreshLogger.create()
-val cache = FileCache().withLogger(logger)
+val cache = FileCache().copy(logger = logger)
 val artifact = Artifact("https://repo1.maven.org/maven2/org/scala-lang/scala-library/2.13.16/scala-library-2.13.16.jar")
 val file = logger.using(cache.file(artifact).run).unsafeRun()(cache.ec) // java.io.File
 // alternatively
@@ -44,10 +44,10 @@ import coursier.cache.FileCache
 
 The coursier cache runs downloads in parallel (up to 6 in parallel by default). It does
 so by using a thread pool with at most 6 threads, that it runs downloads from. To pass
-an alternative thread pool to the coursier cache, call `withPool` on it, like
+an alternative thread pool to the coursier cache, set its `pool` field, like
 ```scala mdoc:compile-only
 import java.util.concurrent.ExecutorService
-val cache = FileCache().withPool(??? : ExecutorService)
+val cache = FileCache().copy(pool = ??? : ExecutorService)
 ```
 
 Get the currently used pool with
@@ -71,7 +71,7 @@ cache.location // java.io.File
 Override it with
 ```scala mdoc:compile-only
 import java.io.File
-val cache = FileCache().withLocation(??? : File)
+val cache = FileCache().copy(location = ??? : File)
 ```
 
 ## Other parameters
