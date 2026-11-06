@@ -65,7 +65,8 @@ import scala.util.control.NonFatal
   private def S = sync
 
   private def localDir(artifact: Artifact): (File, Seq[String]) = {
-    val Array(mainUrl, subPaths @ _*) = artifact.url.split("\\!", -1)
+    // split never returns an empty array
+    val Array(mainUrl, subPaths @ _*) = artifact.url.split("\\!", -1): @unchecked
     val dir = CachePath.localFile(
       mainUrl,
       location,

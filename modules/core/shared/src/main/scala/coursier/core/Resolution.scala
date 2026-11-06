@@ -162,8 +162,11 @@ object Resolution {
     properties: PropertiesWrapper
   ): Option[DependencyManagement.Map] =
     map match {
-      case im: scala.collection.immutable.Map[DependencyManagement.Key, DependencyManagement.Values]
-          if !map.keysIterator.exists(_.hasProperties) =>
+      // GenericMap only has these type arguments
+      case im: scala.collection.immutable.Map[
+            DependencyManagement.Key @unchecked,
+            DependencyManagement.Values @unchecked
+          ] if !map.keysIterator.exists(_.hasProperties) =>
         var changed = false
         val b = im.transform { (k, v) =>
           val v0 = withProperties(v, properties)
@@ -1338,7 +1341,6 @@ object Resolution {
         case ConstraintReconciliation.Relaxed => Reconciliation.Relaxed
         case ConstraintReconciliation.Strict  => Reconciliation.Strict
         case ConstraintReconciliation.SemVer  => Reconciliation.SemVer
-        case _                                => sys.error("Cannot happen")
       }
     }
   @deprecated("Use withReconciliation0 instead", "2.1.25")
