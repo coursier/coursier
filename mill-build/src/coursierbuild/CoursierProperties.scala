@@ -25,6 +25,8 @@ object CoursierProperties {
     "coursier.data-dir",
     "coursier.digest-based.cache",
     "coursier.directories.powershell-debug",
+    "coursier.directories.powershell-timeout",
+    "coursier.directories.xdg-debug",
     "coursier.exception-retry",
     "coursier.exception-retry-backoff-initial-delay",
     "coursier.exception-retry-backoff-max-delay",
