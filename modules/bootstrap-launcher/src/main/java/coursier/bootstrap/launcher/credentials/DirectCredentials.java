@@ -31,6 +31,8 @@ public final class DirectCredentials extends Credentials {
   private final boolean matchHost;
   private final boolean httpsOnly;
   private final boolean passOnRedirect;
+  // whether these match any host, like the default entry of netrc files - host is ignored then
+  private final boolean anyHost;
 
   private DirectCredentials(
     String host,
@@ -40,7 +42,8 @@ public final class DirectCredentials extends Credentials {
     boolean optional,
     boolean matchHost,
     boolean httpsOnly,
-    boolean passOnRedirect
+    boolean passOnRedirect,
+    boolean anyHost
   ) {
     this.host = (host != null) ? host : DEFAULT_HOST;
     this.usernameOpt = username;
@@ -50,6 +53,7 @@ public final class DirectCredentials extends Credentials {
     this.matchHost = matchHost;
     this.httpsOnly = httpsOnly;
     this.passOnRedirect = passOnRedirect;
+    this.anyHost = anyHost;
   }
 
   public DirectCredentials(
@@ -70,7 +74,8 @@ public final class DirectCredentials extends Credentials {
       optional,
       matchHost,
       httpsOnly,
-      passOnRedirect);
+      passOnRedirect,
+      false);
   }
 
   public DirectCredentials(
@@ -143,6 +148,10 @@ public final class DirectCredentials extends Credentials {
     return passOnRedirect;
   }
 
+  public boolean isAnyHost() {
+    return anyHost;
+  }
+
   private static final Pattern HOST_PATTERN =
     Pattern.compile("(?:([a-zA-Z][a-zA-Z0-9+.-]*)://)?(\\[[^\\]/]*\\]|[^:/\\[\\]]*)(?::([0-9]+))?/?");
 
@@ -188,9 +197,12 @@ public final class DirectCredentials extends Credentials {
     int port = (url.getPort() >= 0) ? url.getPort() : defaultPort(scheme);
     int expectedPort = (hostPort >= 0) ? hostPort : ((hostScheme == null) ? -1 : defaultPort(hostScheme));
 
-    return schemeMatches &&
-      hostName.equals(url.getHost()) &&
-      (expectedPort < 0 || expectedPort == port);
+    // host names are case-insensitive
+    return schemeMatches && (
+      anyHost ||
+        hostName.equalsIgnoreCase(url.getHost()) &&
+        (expectedPort < 0 || expectedPort == port)
+    );
   }
 
   public DirectCredentials withHost(String host) {
@@ -202,7 +214,8 @@ public final class DirectCredentials extends Credentials {
       this.optional,
       this.matchHost,
       this.httpsOnly,
-      this.passOnRedirect
+      this.passOnRedirect,
+      this.anyHost
     );
   }
 
@@ -215,7 +228,8 @@ public final class DirectCredentials extends Credentials {
       this.optional,
       this.matchHost,
       this.httpsOnly,
-      this.passOnRedirect
+      this.passOnRedirect,
+      this.anyHost
     );
   }
 
@@ -227,12 +241,13 @@ public final class DirectCredentials extends Credentials {
     return new DirectCredentials(
       this.host,
       this.usernameOpt,
-      password,
+      (password != null) ? new Password<>(password) : null,
       this.realmOpt,
       this.optional,
       this.matchHost,
       this.httpsOnly,
-      this.passOnRedirect
+      this.passOnRedirect,
+      this.anyHost
     );
   }
 
@@ -249,7 +264,8 @@ public final class DirectCredentials extends Credentials {
       this.optional,
       this.matchHost,
       this.httpsOnly,
-      this.passOnRedirect
+      this.passOnRedirect,
+      this.anyHost
     );
   }
 
@@ -266,7 +282,8 @@ public final class DirectCredentials extends Credentials {
       optional,
       this.matchHost,
       this.httpsOnly,
-      this.passOnRedirect
+      this.passOnRedirect,
+      this.anyHost
     );
   }
 
@@ -279,7 +296,8 @@ public final class DirectCredentials extends Credentials {
       this.optional,
       matchHost,
       this.httpsOnly,
-      this.passOnRedirect
+      this.passOnRedirect,
+      this.anyHost
     );
   }
 
@@ -292,7 +310,8 @@ public final class DirectCredentials extends Credentials {
       this.optional,
       this.matchHost,
       httpsOnly,
-      this.passOnRedirect
+      this.passOnRedirect,
+      this.anyHost
     );
   }
 
@@ -305,7 +324,22 @@ public final class DirectCredentials extends Credentials {
       this.optional,
       this.matchHost,
       this.httpsOnly,
-      passOnRedirect
+      passOnRedirect,
+      this.anyHost
+    );
+  }
+
+  public DirectCredentials withAnyHost(boolean anyHost) {
+    return new DirectCredentials(
+      this.host,
+      this.usernameOpt,
+      this.passwordOpt,
+      this.realmOpt,
+      this.optional,
+      this.matchHost,
+      this.httpsOnly,
+      this.passOnRedirect,
+      anyHost
     );
   }
 
@@ -326,6 +360,7 @@ public final class DirectCredentials extends Credentials {
             httpsOnly +
             ", " +
             passOnRedirect +
+            (anyHost ? ", anyHost" : "") +
             ")";
   }
 
@@ -338,6 +373,7 @@ public final class DirectCredentials extends Credentials {
     result = prime * result + (matchHost ? 1231 : 1237);
     result = prime * result + (optional ? 1231 : 1237);
     result = prime * result + (passOnRedirect ? 1231 : 1237);
+    result = prime * result + (anyHost ? 1231 : 1237);
     result = prime * result + ((passwordOpt == null) ? 0 : passwordOpt.hashCode());
     result = prime * result + ((realmOpt == null) ? 0 : realmOpt.hashCode());
     result = prime * result + ((usernameOpt == null) ? 0 : usernameOpt.hashCode());
@@ -357,6 +393,7 @@ public final class DirectCredentials extends Credentials {
     if (matchHost != other.matchHost) return false;
     if (optional != other.optional) return false;
     if (passOnRedirect != other.passOnRedirect) return false;
+    if (anyHost != other.anyHost) return false;
     if (passwordOpt == null) {
       if (other.passwordOpt != null) return false;
     } else if (!passwordOpt.equals(other.passwordOpt)) return false;

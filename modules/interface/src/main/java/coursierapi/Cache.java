@@ -17,6 +17,9 @@ public final class Cache {
     private Logger logger;
     private List<Credentials> credentials;
     private List<String> credentialFiles;
+    private boolean netrc;
+    private String netrcFile;
+    private boolean netrcOptional;
 
     private Cache() {
         pool = ApiHelper.defaultPool();
@@ -24,6 +27,9 @@ public final class Cache {
         logger = null;
         credentials = Collections.emptyList();
         credentialFiles = Collections.emptyList();
+        netrc = false;
+        netrcFile = null;
+        netrcOptional = true;
     }
 
     public static Cache create() {
@@ -42,14 +48,20 @@ public final class Cache {
                     this.location.equals(other.location) &&
                     Objects.equals(this.logger, other.logger) &&
                     this.credentials.equals(other.credentials) &&
-                    this.credentialFiles.equals(other.credentialFiles);
+                    this.credentialFiles.equals(other.credentialFiles) &&
+                    this.netrc == other.netrc &&
+                    Objects.equals(this.netrcFile, other.netrcFile) &&
+                    this.netrcOptional == other.netrcOptional;
         }
         return false;
     }
 
     @Override
     public int hashCode() {
-        return 37 * (37 * (37 * (37 * (17 + pool.hashCode()) + location.hashCode()) + Objects.hashCode(logger)) + credentials.hashCode()) + credentialFiles.hashCode();
+        int h = 37 * (37 * (37 * (37 * (17 + pool.hashCode()) + location.hashCode()) + Objects.hashCode(logger)) + credentials.hashCode()) + credentialFiles.hashCode();
+        if (netrc)
+            h = 37 * (37 * (37 * h + 1) + Objects.hashCode(netrcFile)) + Boolean.hashCode(netrcOptional);
+        return h;
     }
 
     @Override
@@ -69,6 +81,12 @@ public final class Cache {
         if (!credentialFiles.isEmpty()) {
             b.append(", credentialFiles=");
             b.append(credentialFiles.toString());
+        }
+        if (netrc) {
+            b.append(", netrc=");
+            b.append(netrcFile == null ? "default" : netrcFile);
+            if (!netrcOptional)
+                b.append(" (mandatory)");
         }
         b.append(")");
         return b.toString();
@@ -117,6 +135,39 @@ public final class Cache {
         return addFileCredentials(file.getAbsolutePath());
     }
 
+    /**
+     * Whether to read credentials from a netrc file, the way curl does (off by default)
+     *
+     * <p>Like curl, netrc entries only look at the host, not the scheme nor the port, the
+     * {@code default} entry matches any host, and the first matching entry wins. They come after
+     * the other credentials of this cache. The file is the one passed to {@link #withNetrcFile},
+     * or else the one the {@code COURSIER_NETRC} or {@code NETRC} environment variables point at,
+     * or else {@code ~/.netrc} ({@code ~/_netrc} too on Windows).
+     */
+    public Cache withNetrc(boolean netrc) {
+        this.netrc = netrc;
+        return this;
+    }
+
+    /** The netrc file to read, if {@link #withNetrc} is enabled (null: the default one) */
+    public Cache withNetrcFile(String netrcFile) {
+        this.netrcFile = netrcFile;
+        return this;
+    }
+
+    public Cache withNetrcFile(File netrcFile) {
+        return withNetrcFile(netrcFile == null ? null : netrcFile.getAbsolutePath());
+    }
+
+    /**
+     * Whether a missing netrc file, and what follows a syntax error in it, are ignored (the
+     * default, like {@code curl --netrc-optional}), or errors (like {@code curl --netrc})
+     */
+    public Cache withNetrcOptional(boolean netrcOptional) {
+        this.netrcOptional = netrcOptional;
+        return this;
+    }
+
     public ExecutorService getPool() {
         return pool;
     }
@@ -135,5 +186,17 @@ public final class Cache {
 
     public List<String> getCredentialFiles() {
         return Collections.unmodifiableList(credentialFiles);
+    }
+
+    public boolean isNetrc() {
+        return netrc;
+    }
+
+    public String getNetrcFile() {
+        return netrcFile;
+    }
+
+    public boolean isNetrcOptional() {
+        return netrcOptional;
     }
 }
