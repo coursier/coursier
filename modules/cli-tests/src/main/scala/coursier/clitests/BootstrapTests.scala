@@ -24,6 +24,8 @@ import coursier.util.StringInterpolators._
 import utest._
 import scala.util.Using
 
+import BootstrapTests.CredentialsSource
+
 abstract class BootstrapTests extends TestSuite with LauncherOptions {
 
   def assembly: os.Path
@@ -1244,13 +1246,16 @@ abstract class BootstrapTests extends TestSuite with LauncherOptions {
     }
 
     test("credentials from properties") {
-      credentialsTest(useConfig = false)
+      credentialsTest(CredentialsSource.Properties)
     }
     test("credentials from config") {
-      credentialsTest(useConfig = true)
+      credentialsTest(CredentialsSource.Config)
+    }
+    test("credentials from netrc") {
+      credentialsTest(CredentialsSource.Netrc)
     }
 
-    def credentialsTest(useConfig: Boolean): Unit = {
+    def credentialsTest(source: CredentialsSource): Unit = {
       val user     = "alex"
       val password = "secure1234"
       val realm    = "therealm"
@@ -1263,8 +1268,8 @@ abstract class BootstrapTests extends TestSuite with LauncherOptions {
       TestUtil.withTempDir("credentialstest") { root0 =>
         val root = os.Path(root0)
 
-        val credentialsEnv =
-          if (useConfig) {
+        val credentialsEnv = source match {
+          case CredentialsSource.Config =>
 
             val binDir = root / "bin"
             putLauncherIn(binDir)
@@ -1293,8 +1298,12 @@ abstract class BootstrapTests extends TestSuite with LauncherOptions {
             val configFile = root / "credentials.json"
             os.write(configFile, configContent)
             Map("SCALA_CLI_CONFIG" -> configFile.toString, pathKey -> fullPath)
-          }
-          else {
+          case CredentialsSource.Netrc =>
+            // no realm, and nothing about the scheme or port: netrc entries only look at the host
+            val netrcFile = root / "netrc"
+            os.write(netrcFile, s"machine $host login $user password $password\n")
+            Map("COURSIER_NETRC" -> netrcFile.toString)
+          case CredentialsSource.Properties =>
             val propertiesContent =
               s"""simple.username=$user
                  |simple.password=$password
@@ -1306,7 +1315,7 @@ abstract class BootstrapTests extends TestSuite with LauncherOptions {
             val propertiesFile = root / "credentials.properties"
             os.write(propertiesFile, propertiesContent)
             Map("COURSIER_CREDENTIALS" -> propertiesFile.toNIO.toUri.toString)
-          }
+        }
 
         val propsDep    = "io.get-coursier:props:1.0.7"
         val firstCache  = root / "cache"
@@ -1517,5 +1526,16 @@ abstract class BootstrapTests extends TestSuite with LauncherOptions {
           .call(cwd = tmpDir, stdin = os.Inherit, stdout = os.Inherit)
       }
     }
+  }
+}
+
+object BootstrapTests {
+
+  /** Where the credentials of `credentialsTest` come from */
+  sealed abstract class CredentialsSource extends Product with Serializable
+  object CredentialsSource {
+    case object Properties extends CredentialsSource
+    case object Config     extends CredentialsSource
+    case object Netrc      extends CredentialsSource
   }
 }
