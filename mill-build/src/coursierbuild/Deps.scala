@@ -18,7 +18,7 @@ object Deps {
   def dataClassPlugin =
     mvn"io.github.alexarchambault:::data-class-plugin:$dataClassVersion"
   def dependency   = mvn"io.get-coursier::dependency::0.3.4"
-  def directories  = mvn"io.get-coursier.util:directories-jni:0.1.5-20261106.220115-8"
+  def directories  = mvn"io.get-coursier.util:directories-jni:0.2.0"
   def diffUtils    = mvn"io.github.java-diff-utils:java-diff-utils:4.18"
   def dockerClient = mvn"com.spotify:docker-client:8.16.0"
   // Backs `shimScalaAsync` below; used directly by the `async-compat` module, for Scala.js

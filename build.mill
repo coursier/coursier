@@ -112,7 +112,7 @@ object cache extends Module {
   object js     extends CacheJs
 }
 object `archive-cache` extends Cross[ArchiveCache](ScalaVersions.allButScala212)
-object `benchmark` extends ScalaModule with JmhModule with MavenSnapshotsRepo {
+object `benchmark` extends ScalaModule with JmhModule {
   def scalaVersion: mill.api.Task.Simple[String] = ScalaVersions.scala213
   def moduleDeps = Seq(
     coursier.jvm(ScalaVersions.scala213),
@@ -1316,8 +1316,7 @@ trait Cli extends CsModule
         assembly = assembly,
         // no default repositories: a stale ~/.ivy2/local copy of the same snapshot version
         // (like the one `__.publishLocal` leaves) would shadow the freshly published one
-        // central:maven-snapshots for directories-jni, see MavenSnapshotsRepo
-        repositories = Seq("central", "central:maven-snapshots", repo.toNIO.toUri.toASCIIString),
+        repositories = Seq("central", repo.toNIO.toUri.toASCIIString),
         defaultRepositories = false
       ),
       cwd = dest / os.up,
@@ -1876,7 +1875,7 @@ def updateCsDockerVersion(
 }
 
 private val docScalaVersion = ScalaVersions.scala213
-object `doc-deps` extends ScalaModule with MavenSnapshotsRepo {
+object `doc-deps` extends ScalaModule {
   def scalaVersion = docScalaVersion
   def moduleDeps = Seq(
     coursier.jvm(docScalaVersion),
@@ -2277,7 +2276,7 @@ object `build-util` extends Module {
 }
 
 // copied from https://github.com/alexarchambault/case-app/blob/fd9e3fcb7d628f166cd0a532addacde49629632a/build.sc#L453-L549
-object docs extends ScalaModule with MavenSnapshotsRepo {
+object docs extends ScalaModule {
   private def sv   = ScalaVersions.scala213
   def scalaVersion = sv
   def moduleDeps = Seq(
