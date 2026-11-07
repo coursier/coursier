@@ -5,21 +5,7 @@ import dataclass.{data, since}
 import java.util.concurrent.ConcurrentHashMap
 
 import coursier.cache.{Cache, CacheLogger}
-import coursier.core.{
-  Activation,
-  BomDependency,
-  Configuration,
-  Dependency,
-  DependencySet,
-  MinimizedExclusions,
-  Module,
-  ModuleName,
-  Organization,
-  Repository,
-  Resolution,
-  ResolutionProcess,
-  VariantSelector
-}
+import coursier.core.{Activation, Configuration, DependencySet, MinimizedExclusions}
 import coursier.error.ResolutionError
 import coursier.error.conflict.UnsatisfiedRule
 import coursier.internal.Typelevel
@@ -28,7 +14,7 @@ import coursier.params.{Mirror, MirrorConfFile, ResolutionParams}
 import coursier.params.rule.{Rule, RuleResolution}
 import coursier.util._
 import coursier.util.Monad.ops._
-import coursier.version.{ConstraintReconciliation, VersionConstraint, VersionParse}
+import coursier.version.{ConstraintReconciliation, VersionParse}
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.language.higherKinds

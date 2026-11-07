@@ -1,7 +1,6 @@
 package coursier
 
 import coursier.cache.CacheEnv
-import coursier.core.Repository
 import coursier.maven.MavenSettings
 import coursier.params.{MavenSettingsMirror, Mirror, MirrorConfFile}
 import coursier.parse.RepositoryParser

@@ -1,7 +1,6 @@
 package coursier
 
 import coursier.cache.Cache
-import coursier.core.{Module, Repository}
 import coursier.error.CoursierError
 import coursier.params.{Mirror, MirrorConfFile}
 import coursier.util.{Sync, Task}

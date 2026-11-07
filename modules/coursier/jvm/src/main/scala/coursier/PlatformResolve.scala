@@ -3,7 +3,6 @@ package coursier
 import scala.cli.config.{ConfigDb, Keys}
 
 import coursier.cache.CacheEnv
-import coursier.core.Repository
 import coursier.params.{Mirror, MirrorConfFile}
 import coursier.paths.CoursierPaths
 import coursier.proxy.SetupProxy
