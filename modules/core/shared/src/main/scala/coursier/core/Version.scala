@@ -24,7 +24,7 @@ import scala.collection.compat.immutable.LazyList
 
 object Version {
 
-  private[coursier] val zero = Version("0")
+  private[coursier] val zero = VersionInternals.zero
 
   sealed abstract class Item extends Ordered[Item] {
     def compare(other: Item): Int =

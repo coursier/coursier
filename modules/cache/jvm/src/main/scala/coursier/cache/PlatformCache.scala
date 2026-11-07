@@ -39,7 +39,8 @@ abstract class PlatformCache[F[_]] {
 
   def loggerOpt: Option[CacheLogger] =
     this match {
-      case withLogger: Cache.WithLogger[_, _] =>
+      // WithLogger is defined in a class, but Cache is its only instance
+      case withLogger: Cache.WithLogger[_, _] @unchecked =>
         Some(withLogger.logger)
       case _ =>
         None

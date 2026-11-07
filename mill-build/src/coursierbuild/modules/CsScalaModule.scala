@@ -16,10 +16,11 @@ trait CsScalaModule extends ScalaModule with CoursierJavaModule with ScalafixMod
     val scala2Opts =
       if (sv.startsWith("2.")) Seq("-Xasync")
       else Nil
-    // Use the JDK 25+ compatible lazy vals implementation (the default from Scala 3.8 on).
-    // It requires an explicit output version, which the `--release` option below provides.
+    // Use the JDK 25+ compatible lazy vals implementation. It requires an explicit output
+    // version, which the `--release` option below provides. It's the default from Scala 3.8 on,
+    // where the option is gone (scalac warns about it as a bad option).
     val scala3Opts =
-      if (sv.startsWith("3.")) Seq("-Yfuture-lazy-vals")
+      if (sv.startsWith("3.") && CsScalaModule.scala3Minor(sv) < 8) Seq("-Yfuture-lazy-vals")
       else Nil
     super.scalacOptions() ++ scala212Opts ++ scala213Opts ++ scala2Opts ++ scala3Opts ++ Seq(
       "-deprecation",
@@ -51,4 +52,11 @@ trait CsScalaModule extends ScalaModule with CoursierJavaModule with ScalafixMod
       else Nil
     super.scalacPluginMvnDeps() ++ scala212Plugins
   }
+}
+
+object CsScalaModule {
+  private[modules] def scala3Minor(scalaVersion: String): Int =
+    scalaVersion.split('.').lift(1).flatMap(_.toIntOption).getOrElse(
+      sys.error(s"Malformed Scala version: $scalaVersion")
+    )
 }

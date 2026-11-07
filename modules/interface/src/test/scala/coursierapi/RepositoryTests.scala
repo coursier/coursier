@@ -2,7 +2,7 @@ package coursierapi
 
 import coursier.{LocalRepositories, Repositories}
 import coursier.internal.api.ApiHelper
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import utest._
 
 object RepositoryTests extends TestSuite {

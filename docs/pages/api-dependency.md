@@ -82,7 +82,7 @@ Fetch()
   .withRepositories(
     Fetch().repositories.map {
       case m: MavenRepository =>
-        m.withCheckModule(true)
+        m.copy(checkModule = true)
       case other => other
     }
   )

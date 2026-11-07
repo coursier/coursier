@@ -25,8 +25,7 @@ import coursier.params.ResolutionParams
 import coursier.util.{Artifact, Task}
 import coursier.version.{VersionConstraint => VersionConstraint0}
 
-import scala.collection.JavaConverters
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 object ApiHelper {
 
@@ -575,17 +574,16 @@ object ApiHelper {
       }
     )
 
-    val classifiers = JavaConverters.setAsJavaSet(
-      fetch
-        .classifiers
-        .map(_.value)
-    )
+    val classifiers = fetch
+      .classifiers
+      .map(_.value)
+      .asJava
 
     val params = resolutionParams(fetch.resolutionParams)
 
     val artifactTypesOpt = fetch
       .artifactTypesOpt
-      .map(s => JavaConverters.setAsJavaSet(s.map(_.value)))
+      .map(s => s.map(_.value).asJava)
 
     coursierapi.Fetch.create()
       .withDependencies(dependencies: _*)
@@ -698,14 +696,14 @@ object ApiHelper {
 
     // FIXME Exceptions should be translated from coursier.* stuff to coursierapi.error.* ones
 
-    coursierapi.CompleteResult.of(res._1, JavaConverters.seqAsJavaList(res._2))
+    coursierapi.CompleteResult.of(res._1, res._2.asJava)
   }
 
   def versionListing(versions: coursier.core.Versions): coursierapi.VersionListing =
     coursierapi.VersionListing.of(
       versions.latest,
       versions.release,
-      JavaConverters.seqAsJavaList(versions.available),
+      versions.available.asJava,
       versions
         .lastUpdated
         .map { dt =>
@@ -792,8 +790,8 @@ object ApiHelper {
     }
 
     coursierapi.VersionsResult.of(
-      JavaConverters.seqAsJavaList(errors),
-      JavaConverters.seqAsJavaList(listings),
+      errors.asJava,
+      listings.asJava,
       versionListing(res.versions)
     )
   }

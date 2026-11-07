@@ -6,6 +6,7 @@ import coursier.Versions
 import utest.{TestSuite, Tests, test}
 
 import coursier.tests.AssertCompat.assert
+import scala.annotation.nowarn
 import scala.async.Async.{async, await}
 import scala.concurrent.ExecutionContextExecutorService
 
@@ -27,6 +28,8 @@ object VersionTests extends TestSuite {
               .result()
               .future()
           }.versions
+        // checks the deprecated API against the new one
+        @nowarn("cat=deprecation")
         val legacyLatest: Option[String] =
           versions.latest(coursier.core.Latest.Stable)
         val newLatest: Option[String] =

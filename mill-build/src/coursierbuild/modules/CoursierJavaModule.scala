@@ -54,7 +54,10 @@ trait CoursierJavaModule extends JavaModule {
     val extraOpts =
       if (hasModules) Seq("--system", javaHome.toString)
       else Seq("-bootclasspath", rtJar.toString)
-    Seq("-source", jvmRelease, "-target", jvmRelease) ++ extraOpts
+    // The Java 8 class files are on purpose: don't have javac warn that it's an obsolete target
+    // in every module
+    val lintOpts = if (jvmRelease == "8") Seq("-Xlint:-options") else Nil
+    Seq("-source", jvmRelease, "-target", jvmRelease) ++ extraOpts ++ lintOpts
   }
   def javacOptions = Task {
     super.javacOptions() ++ maybeJdkJavacOpt() ++ Seq(

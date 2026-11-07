@@ -25,8 +25,8 @@ import coursier.cache.{ArchiveCache, FileCache}
 import coursier.cache.loggers.RefreshLogger
 import coursier.util.Artifact
 val logger = RefreshLogger.create()
-val cache = FileCache().withLogger(logger)
-val archiveCache = ArchiveCache().withCache(cache)
+val cache = FileCache().copy(logger = logger)
+val archiveCache = ArchiveCache().copy(cache = cache)
 val dir = logger.using(archiveCache.get(Artifact("https://cosmo.zip/pub/cosmocc/cosmocc-3.9.7.zip"))).unsafeRun()(archiveCache.cache.ec) // java.io.File
 ```
 
@@ -49,10 +49,10 @@ Set the directory under which all archives are extracted with
 Override it with
 ```scala mdoc:compile-only
 import java.io.File
-val archiveCache = ArchiveCache().withLocation(??? : File)
+val archiveCache = ArchiveCache().copy(location = ??? : File)
 ```
 
 Note that this only changes the directory under which archives are *extracted*, not
 the directory where these are *downloaded*. To change the latter too,
 [create a standard cache instance with a custom location](api-cache.md#cache-location),
-and pass it to the `ArchiveCache` with `withCache` like above.
+and pass it to the `ArchiveCache` via its `cache` field like above.
