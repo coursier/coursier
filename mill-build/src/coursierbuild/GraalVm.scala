@@ -56,29 +56,29 @@ object GraalVm {
   }
 
   private def releaseUrl =
-    "https://github.com/bell-sw/LibericaNIK/releases/download/25.0.4.1+1-25.0.4.1+2/bellsoft-liberica-vm-openjdk25.0.4.1+2-25.0.4.1+1"
+    "https://github.com/bell-sw/LibericaNIK/releases/download/25.0.5.0.3+1-25.0.5.0.3+6/bellsoft-liberica-vm-openjdk25.0.5.0.3+6-25.0.5.0.3+1"
 
   /** Archives per (OS, architecture), using the JVM index naming */
   def archives: Map[(String, String), PinnedArchive] = Map(
     ("linux", "amd64") -> PinnedArchive(
       s"$releaseUrl-linux-amd64.tar.gz",
-      "66f1fb47df32c7c81e0a1adca5546ddcf208b31311d95638e2fc38e8fa610a21"
+      "127bba6fbec0e106325d7c5b9124a16bfdf6a2c787624273c145a08e65f6889d"
     ),
     ("linux", "arm64") -> PinnedArchive(
       s"$releaseUrl-linux-aarch64.tar.gz",
-      "9ebc5f8b6fbd3a17b762e416ea267f3b239b0c91ff020572d1c6753aaaaa696b"
+      "ac01657375e09552e26344e1b90068ad21161cc50cd4dc6d578e2dbf2894e843"
     ),
     ("darwin", "amd64") -> PinnedArchive(
       s"$releaseUrl-macos-amd64.zip",
-      "7fed7a19c0a6f17191550f4af3b4c472abae92e41bbfbc9e7d29b98c0d3907e1"
+      "a8d185dbe877695928fb6f06ccaa79159ad124103c78f5e61fb95d56938cf8c0"
     ),
     ("darwin", "arm64") -> PinnedArchive(
       s"$releaseUrl-macos-aarch64.zip",
-      "725f56436c1299e4af8314f439727cab396764877b3d9c8c8063ac9c5d72b6eb"
+      "28a427448f574b3d547f3be8a2039d49b96ebfded88d30f55c0970a8fbc175d0"
     ),
     ("windows", "amd64") -> PinnedArchive(
       s"$releaseUrl-windows-amd64.zip",
-      "c0ab78a75a3416240d559c5ee58532b71e4f856146b13d6270da6b3beca8cf2f"
+      "555c5c70864c03757f5b2322a08b30ca6c813126ede4c8ac8310bc92e041d088"
     )
   )
 
