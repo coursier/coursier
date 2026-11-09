@@ -184,6 +184,12 @@ object Launchers {
 
   trait Launchers extends CsModule {
 
+    /** Unlocks experimental native-image options, so that native-image doesn't warn about them */
+    private def experimental(options: String*): Seq[String] =
+      if (options.isEmpty) Nil
+      else
+        Seq("-H:+UnlockExperimentalVMOptions") ++ options ++ Seq("-H:-UnlockExperimentalVMOptions")
+
     trait CliNativeImage extends CsJniNativeImage {
 
       def nativeImageClassPath = runClasspath()
@@ -199,15 +205,15 @@ object Launchers {
       def nativeImageOptions = Task {
         val zstdOpt =
           if (Properties.isWin && (arch == "x86_64" || arch == "amd64"))
-            Seq(s"-H:IncludeResources=win/amd64/libzstd-jni-.*\\.dll")
+            experimental(s"-H:IncludeResources=win/amd64/libzstd-jni-.*\\.dll")
           else if (Properties.isMac && (arch == "x86_64" || arch == "amd64"))
-            Seq(s"-H:IncludeResources=darwin/x86_64/libzstd-jni-.*\\.dylib")
+            experimental(s"-H:IncludeResources=darwin/x86_64/libzstd-jni-.*\\.dylib")
           else if (Properties.isMac && arch == "aarch64")
-            Seq(s"-H:IncludeResources=darwin/aarch64/libzstd-jni-.*\\.dylib")
+            experimental(s"-H:IncludeResources=darwin/aarch64/libzstd-jni-.*\\.dylib")
           else if (Properties.isLinux && (arch == "x86_64" || arch == "amd64"))
-            Seq(s"-H:IncludeResources=linux/amd64/libzstd-jni-.*\\.so")
+            experimental(s"-H:IncludeResources=linux/amd64/libzstd-jni-.*\\.so")
           else if (Properties.isLinux && arch == "aarch64")
-            Seq(s"-H:IncludeResources=linux/aarch64/libzstd-jni-.*\\.so")
+            experimental(s"-H:IncludeResources=linux/aarch64/libzstd-jni-.*\\.so")
           else {
             System.err.println("Warning: not sure which zstd-jni library to embed")
             Nil
@@ -226,9 +232,10 @@ object Launchers {
           if (Properties.isLinux && arch == "aarch64")
             Seq(
               // required on the Linux / ARM64 CI in particular (not sure why)
-              "-Djdk.lang.Process.launchMechanism=vfork", // https://mbien.dev/blog/entry/custom-java-runtimes-with-jlink
-              "-H:PageSize=65536" // Make sure binary runs on kernels with page size set to 4k, 16 and 64k
-            )
+              "-Djdk.lang.Process.launchMechanism=vfork" // https://mbien.dev/blog/entry/custom-java-runtimes-with-jlink
+            ) ++
+              // Make sure binary runs on kernels with page size set to 4k, 16 and 64k
+              experimental("-H:PageSize=65536")
           else
             Nil
         super.nativeImageOptions() ++
@@ -368,7 +375,7 @@ object Launchers {
     }
 
     object `container-image` extends CliNativeImage {
-      def nativeImageOptions = super.nativeImageOptions() ++ Seq(
+      def nativeImageOptions = super.nativeImageOptions() ++ experimental(
         "-H:-UseContainerSupport"
       )
     }
@@ -376,7 +383,7 @@ object Launchers {
     // Same as container-image, but built from docker to avoid glibc version issues
     object `container-image-from-docker` extends CliNativeImage {
       def nativeImageDockerParams = `linux-docker-image`.nativeImageDockerParams()
-      def nativeImageOptions = super.nativeImageOptions() ++ Seq(
+      def nativeImageOptions = super.nativeImageOptions() ++ experimental(
         "-H:-UseContainerSupport"
       )
     }
