@@ -6,6 +6,9 @@ object `package` extends MillBuildRootModule {
   def mvnDeps = Seq(
     mvn"com.github.lolgab:mill-mima_mill1_3:0.2.2",
     mvn"com.goyeau:mill-scalafix_mill1_3:0.6.2",
+    // mill-scalafix 0.6.2 pulls scalafix-interfaces 0.14.7, whose version decides the Scalafix
+    // version that runs: keep it in sync with scalafixCore in Deps.scala
+    mvn"ch.epfl.scala:scalafix-interfaces:0.14.10",
     mvn"io.get-coursier.util:get-cs_2.13:0.1.1",
     mvn"com.softwaremill.sttp.client4::core:4.1.1",
     mvn"io.get-coursier:coursier-launcher_2.13:2.1.26",
