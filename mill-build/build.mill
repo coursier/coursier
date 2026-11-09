@@ -3,9 +3,16 @@ import mill.meta.MillBuildRootModule
 import mill.scalalib.*
 
 object `package` extends MillBuildRootModule {
+  // Scalafix version that runs (decided by the scalafix-interfaces version here, which bumps the
+  // 0.14.7 that mill-scalafix 0.6.2 pulls), passed to the build below as
+  // coursierbuild.ScalafixVersion, so that modules/scalafix-rules compiles against the same
+  // scalafix-core
+  def scalafixVersion = "0.14.10"
+
   def mvnDeps = Seq(
     mvn"com.github.lolgab:mill-mima_mill1_3:0.2.2",
     mvn"com.goyeau:mill-scalafix_mill1_3:0.6.2",
+    mvn"ch.epfl.scala:scalafix-interfaces:$scalafixVersion",
     mvn"io.get-coursier.util:get-cs_2.13:0.1.1",
     mvn"com.softwaremill.sttp.client4::core:4.1.1",
     mvn"io.get-coursier:coursier-launcher_2.13:2.1.26",
@@ -14,4 +21,20 @@ object `package` extends MillBuildRootModule {
     mvn"com.lihaoyi::mill-contrib-jmh:${mill.api.BuildInfo.millVersion}",
     mvn"org.apache.commons:commons-compress:1.28.0"
   )
+
+  def scalafixVersionSource = Task {
+    val dir = Task.dest / "scalafix-version"
+    os.write(
+      dir / "coursierbuild" / "ScalafixVersion.scala",
+      s"""package coursierbuild
+         |
+         |object ScalafixVersion {
+         |  def version = "$scalafixVersion"
+         |}
+         |""".stripMargin,
+      createFolders = true
+    )
+    PathRef(dir)
+  }
+  def generatedSources = super.generatedSources() ++ Seq(scalafixVersionSource())
 }

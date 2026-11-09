@@ -77,8 +77,8 @@ object Deps {
   def scalaCompiler(sv: String) =
     if (sv.startsWith("3.")) mvn"org.scala-lang::scala3-compiler:$sv"
     else mvn"org.scala-lang:scala-compiler:$sv"
-  // has to match the scalafix-interfaces version that mill-scalafix pulls
-  def scalafixCore             = mvn"ch.epfl.scala::scalafix-core:0.14.9"
+  // the Scalafix version that runs, see mill-build/build.mill
+  def scalafixCore             = mvn"ch.epfl.scala::scalafix-core:${ScalafixVersion.version}"
   def scalaJsDom               = mvn"org.scala-js::scalajs-dom::2.8.1"
   def scalaJsReact             = mvn"com.github.japgolly.scalajs-react::core::4.1.0"
   def scalaNativeTools040      = mvn"org.scala-native::tools:0.4.17"
