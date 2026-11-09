@@ -15,15 +15,15 @@ import coursier.core.{
   DependencyManagement,
   Extension,
   MinimizedExclusions,
-  Publication,
-  Version
+  Overrides,
+  Publication
 }
 import coursier.error.{CoursierError, FetchError, ResolutionError}
 import coursier.ivy.IvyRepository
 import coursier.jvm.{JavaHome, JvmCache}
 import coursier.params.ResolutionParams
 import coursier.util.{Artifact, Task}
-import coursier.version.{VersionConstraint => VersionConstraint0}
+import coursier.version.{Version => Version0, VersionConstraint => VersionConstraint0}
 
 import scala.jdk.CollectionConverters._
 
@@ -197,13 +197,13 @@ object ApiHelper {
           }
           .toSet
       ),
-      values.isOptional
+      Some(values.isOptional)
     )
   def depMgmtValues(values: DependencyManagement.Values)
     : coursierapi.DependencyManagement.Values = {
     val apiValues = new coursierapi.DependencyManagement.Values(
       values.config.value,
-      values.version,
+      values.versionConstraint.asString,
       values.optional0.getOrElse(false)
     )
     apiValues.withExclusions(
@@ -231,18 +231,19 @@ object ApiHelper {
       .toSet
     val configuration = Configuration(dep.getConfiguration)
 
-    val dep0 = Dependency(module0, dep.getVersion)
-      .withExclusions(exclusions)
-      .withConfiguration(configuration)
+    val dep0 = Dependency(module0, VersionConstraint0(dep.getVersion))
       .copy(
+        minimizedExclusions = MinimizedExclusions(exclusions),
+        variantSelector = VariantSelector.ConfigurationBased(configuration),
         transitive = dep.isTransitive,
-        overrides =
+        overridesMap = Overrides(
           dep.getOverrides.asScala
             .map {
               case (key, values) =>
                 (depMgmtKey(key), depMgmtValues(values))
             }
             .toMap
+        )
       )
 
     Option(dep.getPublication)
@@ -258,18 +259,26 @@ object ApiHelper {
       .getOrElse(dep0)
   }
 
+  private def configuration(dep: Dependency): Configuration =
+    dep.variantSelector.asConfiguration.getOrElse {
+      sys.error(
+        s"Gradle Module variant selectors aren't supported here (${dep.variantSelector.repr})"
+      )
+    }
+
   def dependency(dep: Dependency): coursierapi.Dependency =
     coursierapi.Dependency
       .of(
         module(dep.module),
-        dep.version
+        dep.versionConstraint.asString
       )
-      .withConfiguration(dep.configuration.value)
+      .withConfiguration(configuration(dep).value)
       .withType(dep.attributes.`type`.value)
       .withClassifier(dep.attributes.classifier.value)
       .withExclusion(
         dep
-          .exclusions
+          .minimizedExclusions
+          .toSet()
           .map {
             case (o, n) =>
               new ju.AbstractMap.SimpleImmutableEntry(
@@ -281,7 +290,8 @@ object ApiHelper {
       )
       .withTransitive(dep.transitive)
       .withOverrides(
-        dep.overrides
+        dep.overridesMap
+          .flatten
           .map {
             case (key, values) =>
               (depMgmtKey(key), depMgmtValues(values))
@@ -351,7 +361,7 @@ object ApiHelper {
       }.asJava)
       .withUseSystemOsInfo(params.useSystemOsInfo)
       .withUseSystemJdkVersion(params.useSystemJdkVersion)
-      .withScalaVersion(params.scalaVersionOpt.orNull)
+      .withScalaVersion(params.scalaVersionOpt0.map(_.asString).orNull)
       .withKeepProvidedDependencies(params.keepProvidedDependencies.map(b => b: JBoolean).orNull)
       .withForceDepMgmtVersions(params.forceDepMgmtVersions.map(b => b: JBoolean).orNull)
       .withEnableDependencyOverrides(params.enableDependencyOverrides.map(b => b: JBoolean).orNull)
@@ -624,7 +634,7 @@ object ApiHelper {
       else {
         val dummyArtifact = Artifact("", Map(), Map(), changing = false, optional = false, None)
         fetch0.either().map(files =>
-          Fetch.Result().withExtraArtifacts(files.map((dummyArtifact, _)))
+          Fetch.Result().copy(fullExtraArtifacts = files.map(f => (dummyArtifact, Some(f))))
         )
       }
 
@@ -701,9 +711,9 @@ object ApiHelper {
 
   def versionListing(versions: coursier.core.Versions): coursierapi.VersionListing =
     coursierapi.VersionListing.of(
-      versions.latest,
-      versions.release,
-      versions.available.asJava,
+      versions.latest0.asString,
+      versions.release0.asString,
+      versions.available0.map(_.asString).asJava,
       versions
         .lastUpdated
         .map { dt =>
@@ -721,9 +731,9 @@ object ApiHelper {
 
   def versionListing(versions: coursierapi.VersionListing): coursier.core.Versions =
     coursier.core.Versions(
-      versions.getLatest,
-      versions.getRelease,
-      versions.getAvailable.asScala.toList,
+      Version0(versions.getLatest),
+      Version0(versions.getRelease),
+      versions.getAvailable.asScala.toList.map(Version0(_)),
       Option(versions.getLastUpdated).map { dt =>
         coursier.core.Versions.DateTime(
           dt.getYear,
@@ -842,6 +852,6 @@ object ApiHelper {
   }
 
   def compareVersions(version0: String, version1: String): Int =
-    Version(version0).compareTo(Version(version1))
+    Version0(version0).compare(Version0(version1))
 
 }

@@ -3,7 +3,6 @@ package coursier.util
 import scala.collection.immutable.HashMap
 import scala.collection.mutable
 import scala.collection.compat._
-import scala.collection.generic.Growable
 
 private[coursier] abstract class HashMapBuilder[A, B <: AnyRef] {
   def add(a: A, B: B): this.type
@@ -13,22 +12,8 @@ private[coursier] abstract class HashMapBuilder[A, B <: AnyRef] {
   def result(): HashMap[A, B]
 }
 
-private[coursier] object HashMapBuilder {
-  implicit class toGrowableExtensionMethods[A](val self: Growable[A]) extends AnyVal {
-    def addOne(elem: A): self.type = {
-      self += elem
-      self
-    }
-    def addAll(elems: IterableOnce[A]): self.type = {
-      self ++= elems
-      self
-    }
-  }
-}
-
 private[coursier] final class CompatibleHashMapBuilder[A, B <: AnyRef]
     extends HashMapBuilder[A, B] {
-  import HashMapBuilder.toGrowableExtensionMethods
   private val delegate            = new mutable.HashMap[A, B]
   override def getOrNull(a: A): B = delegate.getOrElse(a, null.asInstanceOf[B])
 
@@ -48,7 +33,7 @@ private[coursier] final class CompatibleHashMapBuilder[A, B <: AnyRef]
   }
 
   def addAll(elems: IterableOnce[(A, B)]): CompatibleHashMapBuilder.this.type = {
-    delegate.addAll(elems)
+    delegate ++= elems
     this
   }
 }

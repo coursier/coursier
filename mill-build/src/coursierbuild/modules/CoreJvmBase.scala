@@ -76,6 +76,15 @@ trait CoreJvmBase extends Core with CsCrossJvmModule with Shading with CsMima {
       ProblemFilter.exclude[ReversedMissingMethodProblem]("coursier.core.Overrides.transform"),
       ProblemFilter.exclude[ReversedMissingMethodProblem](
         "coursier.core.Overrides.mayContainGlobal"
+      ),
+
+      // HashMapBuilder and its extension methods were private[coursier]
+      ProblemFilter.exclude[MissingClassProblem]("coursier.util.HashMapBuilder$"),
+      ProblemFilter.exclude[MissingClassProblem](
+        "coursier.util.HashMapBuilder$toGrowableExtensionMethods"
+      ),
+      ProblemFilter.exclude[MissingClassProblem](
+        "coursier.util.HashMapBuilder$toGrowableExtensionMethods$"
       )
     )
 
