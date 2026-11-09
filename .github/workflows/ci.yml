@@ -392,7 +392,7 @@ jobs:
     - uses: coursier/cache-action@ee0650f98295f27a505e4bfd284c9bfaa913a465 # v9.0.1
       with:
         disableFallback: true
-    - uses: coursier/setup-action@648df969f41ef15fda2baba8b37f9fa3d16390a3 # v3.0.4
+    - uses: coursier/setup-action@d5a17f9aaeb260f9ba336a5b582fb49f79c64ac4 # v3.1.0
     - run: cs launch scalafmt -- --check
 
   scalafix:
