@@ -1,7 +1,7 @@
 {
   "comment": [
     "TEMPORARY: remove this file once zstd-jni ships this metadata itself (it does not as of",
-    "1.5.7-21). Same approach as ../../dev.dirs/reachability-metadata.json.",
+    "1.5.7-26). Same approach as ../../dev.dirs/reachability-metadata.json.",
     "",
     "Since 1.5.7-17, zstd-jni is a multi-release JAR: on JDK 22+, its stream classes",
     "(ZstdInputStreamNoFinalizer, ZstdOutputStreamNoFinalizer, the buffer streams) come from",
@@ -18,11 +18,11 @@
     "  4. ZSTD_compressBound",
     "  5. ZSTD_isError, ZSTD_getErrorCode",
     "  6. ZSTD_getErrorName",
-    "  7. ZSTD_createCDict (critical)",
-    "  8. ZSTD_createCDict_byReference",
+    "  7. zstd_java_createCDict (critical, copying the dictionary)",
+    "  8. zstd_java_createCDict (non-critical, by reference)",
     "  9. ZSTD_freeCDict, ZSTD_freeDDict, ZSTD_freeCStream, ZSTD_freeCCtx, ZSTD_freeDCtx, ZSTD_initDStream",
-    " 10. ZSTD_createDDict (critical)",
-    " 11. ZSTD_createDDict_byReference",
+    " 10. zstd_java_createDDict (critical, copying the dictionary)",
+    " 11. zstd_java_createDDict (non-critical, by reference)",
     " 12. ZSTD_CStreamOutSize, ZSTD_DStreamInSize, ZSTD_DStreamOutSize",
     " 13. ZSTD_createCStream, ZSTD_createCCtx, ZSTD_createDStream, ZSTD_createDCtx",
     " 14. ZSTD_CCtx_reset, ZSTD_DCtx_reset, ZSTD_initCStream",
@@ -43,6 +43,7 @@
     " 29. ZSTD_decompress",
     " 30. ZDICT_trainFromBuffer",
     " 31. ZDICT_trainFromBuffer_legacy, which takes ZDICT_legacy_params_t by value",
+    " 32. ZSTD_CCtx_loadDictionary_advanced, ZSTD_DCtx_loadDictionary_advanced (critical)",
     "Every handle is built in ZstdBinding's static initializer (which also calls each constant",
     "getter right away), so all of them get registered as soon as any zstd stream is touched,",
     "even the compression and dictionary ones cs never calls.",
@@ -99,6 +100,8 @@
         "parameterTypes": [
           "void*",
           "size_t",
+          "int",
+          "int",
           "int"
         ],
         "options": {
@@ -112,6 +115,8 @@
         "parameterTypes": [
           "void*",
           "size_t",
+          "int",
+          "int",
           "int"
         ]
       },
@@ -125,7 +130,9 @@
         "returnType": "void*",
         "parameterTypes": [
           "void*",
-          "size_t"
+          "size_t",
+          "int",
+          "int"
         ],
         "options": {
           "critical": {
@@ -137,7 +144,9 @@
         "returnType": "void*",
         "parameterTypes": [
           "void*",
-          "size_t"
+          "size_t",
+          "int",
+          "int"
         ]
       },
       {
@@ -337,6 +346,21 @@
           "int",
           "struct(int, struct(int, int, int))"
         ]
+      },
+      {
+        "returnType": "size_t",
+        "parameterTypes": [
+          "void*",
+          "void*",
+          "size_t",
+          "int",
+          "int"
+        ],
+        "options": {
+          "critical": {
+            "allowHeapAccess": true
+          }
+        }
       }
     ]
   }
