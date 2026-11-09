@@ -15,6 +15,7 @@ import coursier.core.{
   DependencyManagement,
   Extension,
   MinimizedExclusions,
+  Overrides,
   Publication
 }
 import coursier.error.{CoursierError, FetchError, ResolutionError}
@@ -235,13 +236,14 @@ object ApiHelper {
         minimizedExclusions = MinimizedExclusions(exclusions),
         variantSelector = VariantSelector.ConfigurationBased(configuration),
         transitive = dep.isTransitive,
-        overrides =
+        overridesMap = Overrides(
           dep.getOverrides.asScala
             .map {
               case (key, values) =>
                 (depMgmtKey(key), depMgmtValues(values))
             }
             .toMap
+        )
       )
 
     Option(dep.getPublication)
@@ -288,7 +290,8 @@ object ApiHelper {
       )
       .withTransitive(dep.transitive)
       .withOverrides(
-        dep.overrides
+        dep.overridesMap
+          .flatten
           .map {
             case (key, values) =>
               (depMgmtKey(key), depMgmtValues(values))

@@ -76,6 +76,19 @@ object DependencyTests extends TestSuite {
       assert(dep == dep0)
     }
 
+    test("overrides reach resolution") {
+      // resolution reads overridesMap, not the deprecated overrides field
+      val dep = Dependency.of(initialDep)
+        .addOverride("some-org", "some-name", "1.2")
+
+      val overrides = ApiHelper.dependency(dep).overridesMap.flatten.toSeq.map {
+        case (key, values) =>
+          (key.organization.value, key.name.value, values.versionConstraint.asString)
+      }
+
+      assert(overrides == Seq(("some-org", "some-name", "1.2")))
+    }
+
   }
 
 }
