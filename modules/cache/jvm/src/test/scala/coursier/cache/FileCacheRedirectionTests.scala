@@ -1434,13 +1434,13 @@ object FileCacheRedirectionTests extends TestSuite {
             .run
         }
 
-        val Right(_)         = resolve.unsafeRun(wrapExceptions = true)
+        val Right(_)         = resolve.unsafeRun(wrapExceptions = true): @unchecked
         val computedSha1Path = FileCache.auxiliaryFile(dummyFile.toFile, "SHA-1" + ".computed")
 
         Files.write(computedSha1Path.toPath, Array[Byte](1, 2, 3))
 
         val Left(_: coursier.cache.ArtifactError.NotFound) =
-          resolve.unsafeRun(wrapExceptions = true)
+          resolve.unsafeRun(wrapExceptions = true): @unchecked
       }
     }
 

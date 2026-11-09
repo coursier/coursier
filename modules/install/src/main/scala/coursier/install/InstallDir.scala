@@ -374,12 +374,12 @@ import scala.util.matching.Regex
                   ArchiveUtil.withFileInCompressedTarArchive(a.file, tarType, subPath) { is =>
                     writeTo(is, genDest)
                   }
-                case (ArchiveType.Gzip, None) =>
-                  ArchiveUtil.withGzipContent(a.file) { is =>
+                case (compressed: ArchiveType.Compressed, None) =>
+                  ArchiveUtil.withCompressedContent(a.file, compressed) { is =>
                     writeTo(is, genDest)
                   }
-                case (ArchiveType.Gzip, Some(_)) =>
-                  sys.error("Sub-path not supported for gzip files")
+                case (compressed: ArchiveType.Compressed, Some(_)) =>
+                  sys.error(s"Sub-path not supported for $compressed files")
                 case (ArchiveType.Zip, None) =>
                   ArchiveUtil.withFirstFileInZip(a.file) { is =>
                     writeTo(is, genDest)
@@ -388,6 +388,8 @@ import scala.util.matching.Regex
                   ArchiveUtil.withFileInZip(a.file, subPath) { is =>
                     writeTo(is, genDest)
                   }
+                case (ArchiveType.Ar, _) =>
+                  sys.error(s"ar archives not supported for prebuilt launchers (${a.artifact.url})")
               }
 
               FileUtil.tryMakeExecutable(genDest)

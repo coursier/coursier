@@ -6,7 +6,7 @@ import utest._
 
 object VersionIntervalTests extends TestSuite {
 
-  val tests = TestSuite {
+  val tests = Tests {
     test("invalid") {
       test("basic") {
         assert(VersionInterval.zero.isValid)

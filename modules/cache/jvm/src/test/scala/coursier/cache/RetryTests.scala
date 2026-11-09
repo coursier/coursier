@@ -292,7 +292,7 @@ object RetryTests extends TestSuite {
           override def rateLimited(url: String, duration: FiniteDuration): Unit =
             reported.add((url, duration))
         }
-        val cache = fileCache(dir).withLogger(logger)
+        val cache = fileCache(dir).copy(logger = logger)
         val other = Artifact("testretry://fake.host/test/other.txt")
 
         assert(get(cache, artifact).isLeft)

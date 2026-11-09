@@ -467,29 +467,24 @@ object NativeImage {
     def command(
       nativeImage:          String,
       extraNativeImageArgs: Seq[String],
-      destDir:              Option[String],
-      destName:             String,
+      output:               String,
       classPath:            String,
-    ) = {
-      val destDirOptions = destDir.toList.map(d => s"-H:Path=$d")
+    ) =
+      // `-o` rather than the -H:Path and -H:Name experimental options, that native-image warns
+      // about
       Seq(nativeImage) ++
         extraNativeImageArgs ++
         nativeImageOptions ++
-        destDirOptions ++
         Seq(
-          s"-H:Name=$destName",
+          "-o",
+          output,
           "-cp",
           classPath,
           mainClass,
         )
-    }
 
-    def defaultCommand: Seq[String] = {
-      val absDest    = dest.toNIO.normalize
-      val destDirOpt = Option(absDest.getParent).map(_.toString)
-      val destName   = absDest.getFileName.toString
-      command(nativeImage.toString, Nil, destDirOpt, destName, finalCp)
-    }
+    def defaultCommand: Seq[String] =
+      command(nativeImage.toString, Nil, dest.toNIO.normalize.toString, finalCp)
 
     def default: (Seq[String], Option[os.Path], Map[String, String]) = {
       val extraEnv = useJpms match {
@@ -565,7 +560,7 @@ object NativeImage {
               }
               val cp             = copiedCp.mkString(File.pathSeparator)
               val escapedCommand =
-                command("native-image", params.extraNativeImageArgs, Some("/data"), "output", cp).map {
+                command("native-image", params.extraNativeImageArgs, "/data/output", cp).map {
                   case s if s.contains(" ") || s.contains("$") || s.contains("\"") || s.contains("'") =>
                     "'" + s.replace("'", "\\'") + "'"
                   case s => s

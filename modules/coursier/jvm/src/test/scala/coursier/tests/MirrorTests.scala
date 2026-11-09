@@ -9,6 +9,7 @@ import coursier.util.StringInterpolators._
 import utest._
 
 import coursier.tests.AssertCompat.assert
+import scala.annotation.nowarn
 import scala.async.Async.{async, await}
 
 object MirrorTests extends TestSuite {
@@ -30,6 +31,8 @@ object MirrorTests extends TestSuite {
 
     test("resolve") {
 
+      // checks the deprecated mirror file API
+      @nowarn("cat=deprecation")
       def run(file: MirrorConfFile) = async {
         val res = await {
           Resolve()
@@ -55,6 +58,8 @@ object MirrorTests extends TestSuite {
         run(MirrorConfFile(mirrorFilePath))
       }
 
+      // checks the deprecated configuration file API
+      @nowarn("cat=deprecation")
       def runConfFile(file: Path) = async {
         val res = await {
           Resolve()

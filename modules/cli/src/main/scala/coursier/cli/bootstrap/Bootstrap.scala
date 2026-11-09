@@ -20,7 +20,8 @@ import coursier.core.{
   Organization,
   Repository,
   Resolution,
-  Type
+  Type,
+  VariantSelector
 }
 import coursier.install.{Channels, MainClass}
 import coursier.jvm.JvmCache
@@ -95,6 +96,7 @@ object Bootstrap extends CoursierCommand[BootstrapOptions] {
     loaderDependencies: Seq[(String, Seq[JavaOrScalaDependency])],
     res: Resolution,
     classifiers: Set[Classifier],
+    attributes: Seq[VariantSelector.AttributesBased],
     mainArtifacts: Option[Boolean],
     artifactTypes: Set[Type],
     scalaVersionOpt: Option[String],
@@ -119,9 +121,10 @@ object Bootstrap extends CoursierCommand[BootstrapOptions] {
 
     val perLoaderArtifacts = perLoaderResolutions
       .map { subRes =>
-        coursier.Artifacts.artifacts(
+        coursier.Artifacts.artifacts0(
           subRes,
           classifiers,
+          attributes,
           mainArtifacts,
           Some(artifactTypes),
           classpathOrder
@@ -418,6 +421,7 @@ object Bootstrap extends CoursierCommand[BootstrapOptions] {
             },
             res,
             params.sharedLaunch.artifact.classifiers,
+            params.sharedLaunch.artifact.attributes,
             Option(params.sharedLaunch.artifact.mainArtifacts).map(x => x),
             params.sharedLaunch.artifact.artifactTypes,
             scalaVersionOpt,

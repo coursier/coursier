@@ -4,18 +4,7 @@ import java.io.File
 import java.lang.{Boolean => JBoolean}
 
 import coursier.cache.{Cache, FileCache}
-import coursier.core.{
-  BomDependency,
-  Classifier,
-  Dependency,
-  Publication,
-  Repository,
-  Resolution,
-  ResolutionProcess,
-  Type,
-  VariantPublication,
-  VariantSelector
-}
+import coursier.core.{Publication, VariantPublication}
 import coursier.error.CoursierError
 import coursier.internal.FetchCache
 import coursier.params.{Mirror, ResolutionParams}

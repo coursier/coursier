@@ -163,9 +163,10 @@ import coursier.version.{Latest, Version, VersionConstraint, VersionParse}
           case Left(ex)    => throw new Exception(ex)
           case Right(res0) => res0
         }
-        val l = coursier.Artifacts.artifacts(
+        val l = coursier.Artifacts.artifacts0(
           subRes,
           classifiers,
+          Nil,
           Some(mainArtifacts),
           Some(artifactTypes),
           classpathOrder = true
@@ -517,12 +518,14 @@ object AppDescriptor {
     }
 
     availableScalaVersions0.map { availableScalaVersions =>
-
-      if (verbosity >= 2) {
-        System.err.println(s"Found ${availableScalaVersions.size} scala versions:")
+      // Only list them all from -v -v -v on: there are hundreds of them
+      if (verbosity >= 2)
+        System.err.println(
+          s"Found ${availableScalaVersions.size} scala versions" + (if (verbosity >= 3) ":" else "")
+        )
+      if (verbosity >= 3)
         for (v <- availableScalaVersions.toVector.map(Version(_)).sorted)
           System.err.println(s"  ${v.repr}")
-      }
 
       // FIXME Throw if scalaModules.nonEmpty && availableScalaVersions.isEmpty?
 

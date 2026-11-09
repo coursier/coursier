@@ -18,6 +18,7 @@ import japgolly.scalajs.react.vdom.HtmlAttrs.dangerouslySetInnerHtml
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 
+import scala.language.implicitConversions
 import scala.scalajs.js.Dynamic.{global => g}
 
 object App {

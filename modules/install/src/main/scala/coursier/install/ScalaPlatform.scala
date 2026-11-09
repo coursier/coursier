@@ -30,7 +30,7 @@ object ScalaPlatform {
     else
       v
 
-  final case object Native extends ScalaPlatform {
+  case object Native extends ScalaPlatform {
     def availableVersions(cache: Cache[Task], repositories: Seq[Repository]): Set[String] =
       listAvailableVersions(cache, repositories).getOrElse(Set.empty)
     private[install] override def description: String =
@@ -45,7 +45,7 @@ object ScalaPlatform {
       s"_native$ver"
   }
 
-  final case object JS extends ScalaPlatform {
+  case object JS extends ScalaPlatform {
     def availableVersions(cache: Cache[Task], repositories: Seq[Repository]): Set[String] =
       listAvailableVersions(cache, repositories).getOrElse(Set.empty)
     private[install] override def description: String =

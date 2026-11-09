@@ -456,6 +456,7 @@ object Launchers {
       val preamble = Preamble()
         .withOsKind(isWin)
         .callsItself(isWin)
+        .copy(javaOpts = forkArgs())
       val entries =
         cp.map(path => ClassPathEntry.Url(path.toNIO.toUri.toASCIIString))
       val loaderContent = coursier.launcher.ClassLoaderContent(entries)
@@ -495,6 +496,7 @@ object Launchers {
       val preamble = Preamble()
         .withOsKind(isWin)
         .callsItself(isWin)
+        .copy(javaOpts = forkArgs())
       val entries = cp.map { path =>
         urlOf(path) match {
           case None =>

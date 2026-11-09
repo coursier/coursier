@@ -150,9 +150,10 @@ object Overrides {
       DependencyManagement.Values
     ) => DependencyManagement.Values): Overrides =
       map match {
+        // GenericMap only has these type arguments
         case immMap: scala.collection.immutable.Map[
-              DependencyManagement.Key,
-              DependencyManagement.Values
+              DependencyManagement.Key @unchecked,
+              DependencyManagement.Values @unchecked
             ] =>
           var mayContainGlobal = false
           val transformed = immMap.transform { (k, v) =>

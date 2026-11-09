@@ -15,4 +15,10 @@ private[coursier] object ResolveInternals {
   @nowarn
   def deprecatedBomModuleVersions[F[_]](resolve: Resolve[F]) =
     resolve.bomModuleVersions
+  @nowarn
+  def deprecatedMirrorConfFiles[F[_]](resolve: Resolve[F]) =
+    resolve.mirrorConfFiles
+  @nowarn
+  def deprecatedConfFiles[F[_]](resolve: Resolve[F]) =
+    resolve.confFiles
 }

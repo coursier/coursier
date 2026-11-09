@@ -206,7 +206,7 @@ object DocHelpers {
       .filter(f => !keepList.contains(f.last))
 
     if (toGitRm.nonEmpty)
-      os.proc("git", "rm", "-r", "--", toGitRm.map(_.last)).call(
+      os.proc("git", "rm", "-r", "-q", "--", toGitRm.map(_.last)).call(
         cwd = dest,
         stdin = os.Inherit,
         stdout = os.Inherit,

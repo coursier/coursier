@@ -20,7 +20,7 @@ object IvyLocalTests extends TestSuite {
 
   lazy val localVersion = VersionConstraint("0.1.2-publish-local")
 
-  val tests = TestSuite {
+  val tests = Tests {
     test("coursier") {
       val module = mod"io.get-coursier:coursier-core_2.12"
 

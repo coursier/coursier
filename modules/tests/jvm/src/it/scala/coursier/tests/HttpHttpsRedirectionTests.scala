@@ -25,7 +25,7 @@ object HttpHttpsRedirectionTests extends TestSuite {
     def url: String = s"http://$host:$port"
 
     def healthCheck(): Boolean = {
-      val url0            = new java.net.URL(s"$url/health-check")
+      val url0            = new java.net.URI(s"$url/health-check").toURL
       var is: InputStream = null
       try {
         is = url0.openStream()

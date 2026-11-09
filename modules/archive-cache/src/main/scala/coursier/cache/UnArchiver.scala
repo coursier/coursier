@@ -2,7 +2,7 @@ package coursier.cache
 
 import org.apache.commons.compress.archivers.ar.{ArArchiveEntry, ArArchiveInputStream}
 import org.apache.commons.compress.compressors.xz.XZCompressorInputStream
-import org.apache.commons.io.input.{BoundedInputStream, CountingInputStream}
+import org.apache.commons.io.input.BoundedInputStream
 import org.codehaus.plexus.archiver.{AbstractUnArchiver, ArchiverException}
 import org.codehaus.plexus.archiver.tar.{
   TarBZip2UnArchiver,
@@ -172,12 +172,14 @@ object UnArchiver {
                           entry.getName.startsWith(path) &&
                           isSelected(entry.getName, fileInfo(entry))
                         ) {
-                          val bis = new BoundedInputStream(ais, remainingSpace + 1)
-                          val cis = new CountingInputStream(bis)
+                          val bis = BoundedInputStream.builder()
+                            .setInputStream(ais)
+                            .setMaxCount(remainingSpace + 1)
+                            .get()
                           extractFile(
                             getSourceFile,
                             outputDirectory,
-                            cis,
+                            bis,
                             entry.getName,
                             entry.getLastModifiedDate,
                             entry.isDirectory,
@@ -185,7 +187,7 @@ object UnArchiver {
                             null,
                             getFileMappers
                           )
-                          remainingSpace -= cis.getByteCount
+                          remainingSpace -= bis.getCount
                           if (remainingSpace < 0)
                             throw new ArchiverException("Maximum output size limit reached")
                         }
