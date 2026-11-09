@@ -111,7 +111,7 @@ object Deps {
   // plexus-archiver pulls it with the runtime scope, so only at run time: tests creating xz
   // archives need it at compile time, keep the version in sync with plexus-archiver's
   def xz      = mvn"org.tukaani:xz:1.12"
-  def zstdJni = mvn"com.github.luben:zstd-jni:1.5.7-25"
+  def zstdJni = mvn"com.github.luben:zstd-jni:1.5.7-26"
 
   /** The async/await implementation the test sources are written against.
     *
