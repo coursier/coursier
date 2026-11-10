@@ -1,6 +1,6 @@
 package coursier.install
 
-import java.io.OutputStream
+import java.io.{BufferedOutputStream, OutputStream}
 import java.nio.charset.StandardCharsets
 import java.nio.file.attribute.FileTime
 import java.nio.file.{Files, Path}
@@ -228,7 +228,7 @@ object InfoFile {
     var fos: OutputStream    = null
     var zos: ZipOutputStream = null
     try {
-      fos = Files.newOutputStream(dest)
+      fos = new BufferedOutputStream(Files.newOutputStream(dest), 1 << 16)
 
       for (b <- preambleDataOpt)
         fos.write(b)

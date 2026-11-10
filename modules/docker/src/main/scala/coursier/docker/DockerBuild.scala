@@ -339,7 +339,7 @@ object DockerBuild {
                     os.write.outputStream(dest)
                   ) {
                     (is, os) =>
-                      val gzos = new GZIPOutputStream(new PatchOutputStream(os))
+                      val gzos = new GZIPOutputStream(new PatchOutputStream(os), 64 * 1024)
                       val buf  = Array.ofDim[Byte](16 * 1024)
                       var read = 0
                       while ({
