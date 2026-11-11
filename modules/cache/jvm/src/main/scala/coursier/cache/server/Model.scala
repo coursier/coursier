@@ -61,13 +61,27 @@ object Model {
     *   whether the server should check the integrity of the artifact, an archive, and download it
     *   again if it's corrupted (sent on behalf of `ArchiveCache`) - servers predating this field
     *   ignore it, and don't check anything
+    * @param expectedChecksum
+    *   checksum the artifact is expected to have - the server downloads it again once if it doesn't
+    *   have it, then fails - servers predating this field ignore it, and don't check anything
     */
   final case class GetRequest(
     artifact: Artifact,
     cachePolicy: Option[String] = None,
     cachePolicies: Seq[String] = Nil,
     ttl: Option[String] = None,
-    archiveIntegrityCheck: Boolean = false
+    archiveIntegrityCheck: Boolean = false,
+    expectedChecksum: Option[Checksum] = None
+  )
+
+  /** @param algorithm
+    *   `MessageDigest` algorithm name, like `SHA-256`
+    * @param value
+    *   hex-encoded digest
+    */
+  final case class Checksum(
+    algorithm: String,
+    value: String
   )
 
   final case class GetResponse(

@@ -3,8 +3,9 @@ package coursier.jvm
 import dataclass.{data, since}
 
 import java.io.File
+import java.util.Locale
 
-import coursier.cache.{ArchiveCache, CacheLogger}
+import coursier.cache.{ArchiveCache, ArtifactError, CacheLogger, ExpectedChecksum}
 import coursier.core.Repository
 import coursier.util.{Artifact, Task}
 import scala.concurrent.duration.Duration
@@ -56,13 +57,54 @@ import scala.concurrent.duration.Duration
       case Right(Some(dir)) => JvmCache.finalDirectory(artifact.url, dir, os).map(Some(_))
     }
 
+  /** Gets the JVM of `entry`, downloading and extracting it if needed
+    *
+    * If `entry` has checksums, the strongest one coursier knows of is checked against the archive
+    * before extracting it. The cache does that check, alongside the archive integrity check (see
+    * `fileWithChecks` in `coursier.cache.FileCache`): if it fails, a `FileCache` removes the
+    * archive and downloads it again once, before this fails with [[JvmCache.WrongArchiveChecksum]],
+    * and a cache server does the same on its side.
+    */
   def get(
     entry: JvmIndexEntry,
     logger: Option[JvmCacheLogger]
   ): Task[File] = {
     val artifact = Artifact(entry.url).copy(changing = entry.version.endsWith("SNAPSHOT"))
-    get(artifact, logger)
+    JvmCache.checksumToCheck(entry.checksums) match {
+      case None => get(artifact, logger)
+      case Some((sumType, expected)) =>
+        checkArchive(artifact, sumType, expected).flatMap { _ =>
+          get(artifact, logger)
+        }
+    }
   }
+
+  private def checkArchive(
+    artifact: Artifact,
+    sumType: String,
+    expected: String
+  ): Task[Unit] =
+    archiveCache.cache
+      .fileWithChecks(
+        artifact,
+        integrityCheck = archiveCache.integrityCheck.getOrElse(true),
+        expectedChecksum = Some(ExpectedChecksum(sumType, expected))
+      )(Task.sync)
+      .run
+      .flatMap {
+        case Right(_) => Task.point(())
+        case Left(err: ArtifactError.UnexpectedChecksum) =>
+          Task.fail(
+            new JvmCache.WrongArchiveChecksum(
+              artifact.url,
+              new File(err.file),
+              err.sumType,
+              err.expected,
+              err.got
+            )
+          )
+        case Left(err) => Task.fail(err)
+      }
 
   def get(
     artifact: Artifact,
@@ -128,7 +170,13 @@ import scala.concurrent.duration.Duration
       .filter(_ => handleLoggerLifecycle)
       .getOrElse(CacheLogger.nop)
       .using {
-        JvmIndex.load(archiveCache.cache, indexUrl)
+        JvmIndex.load(
+          archiveCache.cache,
+          Nil,
+          JvmChannel.FromUrl(indexUrl),
+          Some(os),
+          Some(architecture)
+        )
       }
     withIndex(indexTask)
   }
@@ -150,7 +198,7 @@ import scala.concurrent.duration.Duration
   }
 
   def withIndexChannel(repositories: Seq[Repository], indexChannel: JvmChannel): JvmCache =
-    withIndexChannel(repositories, indexChannel, None, None)
+    withIndexChannel(repositories, indexChannel, Some(os), Some(architecture))
 
   def withDefaultIndex: JvmCache = {
     val indexTask = archiveCache.cache
@@ -158,7 +206,7 @@ import scala.concurrent.duration.Duration
       .filter(_ => handleLoggerLifecycle)
       .getOrElse(CacheLogger.nop)
       .using {
-        JvmIndex.load(archiveCache.cache)
+        JvmIndex.load(archiveCache.cache, os, architecture)
       }
     withIndex(indexTask)
   }
@@ -262,6 +310,32 @@ object JvmCache {
       rootDirTask
   }
 
+  /** Checksum types of the JVM indices, from the strongest to the weakest, with the name of their
+    * `MessageDigest` algorithm
+    */
+  private val checksumTypes = Seq(
+    "sha512" -> "SHA-512",
+    "sha256" -> "SHA-256",
+    "sha1"   -> "SHA-1",
+    "md5"    -> "MD5"
+  )
+
+  /** The strongest checksum among `checksums` that we know of, with its `MessageDigest` algorithm
+    * name
+    */
+  private def checksumToCheck(checksums: Map[String, String]): Option[(String, String)] =
+    if (checksums.isEmpty) None
+    else {
+      val normalized = checksums.map {
+        case (k, v) =>
+          k.toLowerCase(Locale.ROOT).filter(_ != '-') -> v
+      }
+      checksumTypes.collectFirst {
+        case (key, algorithm) if normalized.contains(key) =>
+          (algorithm, normalized(key))
+      }
+    }
+
   sealed abstract class JvmCacheException(message: String, parent: Throwable = null)
       extends Exception(message, parent)
 
@@ -295,5 +369,16 @@ object JvmCache {
 
   final class JvmNotFoundInIndex(val id: String, val reason: String)
       extends JvmCacheException(s"JVM $id not found in index: $reason")
+
+  final class WrongArchiveChecksum(
+    val archiveUrl: String,
+    val archive: File,
+    val checksumType: String,
+    val expected: String,
+    val actual: String
+  ) extends JvmCacheException(
+        s"Wrong $checksumType checksum for $archive (from $archiveUrl): " +
+          s"expected $expected, got $actual"
+      )
 
 }

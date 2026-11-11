@@ -92,6 +92,45 @@ object RemoteArchiveCacheTests extends TestSuite {
       }
     }
 
+    test("server checks checksums") {
+      withRemoteCache { (_, remoteCache, _) =>
+        implicit val ec: ExecutionContext = remoteCache.ec
+        val archive = remoteCache.file(artifact).run.unsafeRun()
+          .fold(err => throw new Exception(err), os.Path(_))
+        val content = os.read.bytes(archive)
+        val sha256 = java.security.MessageDigest.getInstance("SHA-256")
+          .digest(content).map(b => f"$b%02x").mkString
+        val digestFile = archive / os.up / s".${archive.last}__sha256.computed"
+
+        def fileWithChecksum(sha256: String) =
+          remoteCache.fileWithChecks(
+            artifact,
+            integrityCheck = false,
+            expectedChecksum = Some(ExpectedChecksum("SHA-256", sha256))
+          )(Task.sync).run.unsafeRun()
+
+        assert(fileWithChecksum(sha256) == Right(archive.toIO))
+        // the server persisted the digest
+        assert(os.read.bytes(digestFile).map(b => f"$b%02x").mkString == sha256)
+
+        // wrong checksum: the server downloads the archive again, then fails
+        val wrongSha256 = "ab" * 32
+        val res         = fileWithChecksum(wrongSha256)
+        assert(res.left.exists(_.getMessage.contains("wrong checksum")))
+        assert(res.left.exists(_.getMessage.contains(wrongSha256)))
+        assert(os.read.bytes(archive).toSeq == content.toSeq)
+
+        // archive with a wrong checksum in the server cache (as per the persisted digest): the
+        // server downloads it again
+        os.write.over(
+          digestFile,
+          wrongSha256.grouped(2).map(Integer.parseInt(_, 16).toByte).toArray[Byte]
+        )
+        assert(fileWithChecksum(sha256) == Right(archive.toIO))
+        assert(os.read.bytes(digestFile).map(b => f"$b%02x").mkString == sha256)
+      }
+    }
+
     test("no integrity check if disabled") {
       withRemoteCache { (cacheDir, remoteCache, archiveCache) =>
         archiveCache.copy(integrityCheck = Some(false)).get(artifact).unsafeRun()(remoteCache.ec)

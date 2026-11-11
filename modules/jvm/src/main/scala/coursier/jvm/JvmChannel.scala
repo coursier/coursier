@@ -216,6 +216,32 @@ object JvmChannel {
   def gitHub(): FromUrl =
     url(gitHubIndexUrl)
 
+  /** URL of the per-OS and CPU architecture index with checksums on GitHub */
+  def gitHubV2IndexUrl(os: String, arch: String): String =
+    s"https://github.com/coursier/jvm-index/raw/master/indices-v2/$os-$arch.json"
+  def gitHubV2(os: String, arch: String): FromUrl =
+    url(gitHubV2IndexUrl(os, arch))
+
+  /** OS and CPU architecture pairs for which coursier/jvm-index has per-OS and CPU indices */
+  private[jvm] val perOsArchIndices: Set[(String, String)] = Set(
+    "aix"        -> "ppc64",
+    "darwin"     -> "amd64",
+    "darwin"     -> "arm64",
+    "linux"      -> "amd64",
+    "linux"      -> "arm",
+    "linux"      -> "arm64",
+    "linux"      -> "ppc64",
+    "linux"      -> "ppc64le",
+    "linux"      -> "s390x",
+    "linux"      -> "x86",
+    "linux-musl" -> "amd64",
+    "linux-musl" -> "arm64",
+    "solaris"    -> "amd64",
+    "windows"    -> "amd64",
+    "windows"    -> "arm64",
+    "windows"    -> "x86"
+  )
+
   def centralLegacyModule: Module =
     mod"io.get-coursier:jvm-index"
   def centralModule(os: String, arch: String): Module =
@@ -231,8 +257,14 @@ object JvmChannel {
   def central(): FromModule =
     central(defaultOs(), defaultArchitecture())
 
+  /** Default index for the passed OS and CPU architecture
+    *
+    * The per-OS and CPU architecture index with checksums on GitHub when there's one for them, the
+    * single index on GitHub else.
+    */
   def default(os: String, arch: String): JvmChannel =
-    gitHub()
+    if (perOsArchIndices.contains((os, arch))) gitHubV2(os, arch)
+    else gitHub()
   def default(): JvmChannel =
     default(defaultOsOrRaw(), defaultArchitectureOrRaw())
 

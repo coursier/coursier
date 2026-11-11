@@ -85,19 +85,28 @@ To list the JVM that can be installed from it, run
 $ cs java --available
 ```
 
+By default, coursier uses the index of the current OS and CPU architecture with checksums
+from GitHub (like
+[`indices-v2/linux-amd64.json`](https://github.com/coursier/jvm-index/blob/master/indices-v2/linux-amd64.json)),
+and checks the checksums of the JVM archives it downloads against it.
+
 The JVM index source can be changed by using the `--jvm-index` option. Possible values are
 
-- `cs` (default)
+- `cs`
 
-  Uses [coursier index](https://github.com/coursier/jvm-index)
+  Uses the single [coursier index](https://github.com/coursier/jvm-index/blob/master/index.json) on GitHub,
+  that lists JVMs for all OSes and CPU architectures, but has no checksums
 
 - `cs-maven`
 
-  Fetches index from [io.get-coursier:jvm-index](https://repo1.maven.org/maven2/io/get-coursier/jvm-index/) Maven repository
+  Fetches the index of the current OS and CPU architecture from Maven Central, from the
+  [io.get-coursier.jvm.indices](https://repo1.maven.org/maven2/io/get-coursier/jvm/indices/)
+  organization (with checksums from version `0.0.5` on)
 
 - an arbitrary URL
 
-  It's also possible to specify arbitrary URL containing JVM index. For example,
+  It's also possible to specify arbitrary URL containing JVM index, in any of the formats
+  of [coursier/jvm-index](https://github.com/coursier/jvm-index#index-structure). For example,
 
   ```bash
   cs java --available --jvm-index https://url/of/your/index.json

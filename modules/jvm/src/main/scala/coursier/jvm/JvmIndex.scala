@@ -1,10 +1,11 @@
 package coursier.jvm
 
-import dataclass.data
+import dataclass.{data, since}
 
 import java.io.File
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
+import java.util.Locale
 import java.util.zip.ZipFile
 
 import com.github.plokhotnyuk.jsoniter_scala.macros._
@@ -63,6 +64,93 @@ object JvmIndex {
       case Failure(t)   => Left(t)
     }
 
+  private[jvm] final case class IndexV2Entry(
+    url: String,
+    checksums: Option[Map[String, String]]
+  )
+
+  private val indexV2Codec =
+    JsonCodecMaker.make[Map[String, Map[String, IndexV2Entry]]](CodecMakerConfig)
+
+  /** Archive type of JVM archives listed in indices with checksums, that don't specify it */
+  private def archiveTypeFromUrl(url: String): Option[String] = {
+    val fileName = url.takeWhile(c => c != '?' && c != '#').split('/').last.toLowerCase(Locale.ROOT)
+    if (fileName.endsWith(".tar.gz") || fileName.endsWith(".tgz")) Some("tgz")
+    else if (fileName.endsWith(".zip")) Some("zip")
+    else if (fileName.endsWith(".tar.xz") || fileName.endsWith(".txz")) Some("txz")
+    else if (fileName.endsWith(".tar.bz2") || fileName.endsWith(".tbz2")) Some("tbz2")
+    else if (fileName.endsWith(".tar.zst") || fileName.endsWith(".tzst")) Some("tzst")
+    else if (fileName.endsWith(".tar")) Some("tar")
+    else None
+  }
+
+  /** Parses a per-OS and CPU architecture index with checksums
+    *
+    * These are the `indices-v2/$os-$arch.json` files of coursier/jvm-index, also published as
+    * `coursier/jvm/indices/v2/$os-$arch.json` resources in the
+    * `io.get-coursier.jvm.indices:index-$os-$arch` JARs on Maven Central.
+    *
+    * Their values are JSON objects, with a `url` field (archive URL) and a `checksums` one
+    * (checksum type, like `sha256`, to hex-encoded checksum). Entries whose archive type can't be
+    * deduced from their URL are ignored, as these couldn't be extracted anyway.
+    */
+  def fromV2Bytes(
+    index: Array[Byte],
+    os: String,
+    arch: String
+  ): Either[Throwable, JvmIndex] =
+    Try(readFromArray(index)(indexV2Codec)) match {
+      case Success(map) =>
+        val content = map.map {
+          case (name, versionMap) =>
+            val versionMap0 = versionMap.flatMap {
+              case (version, entry) =>
+                archiveTypeFromUrl(entry.url).iterator.map(tpe => version -> s"$tpe+${entry.url}")
+            }
+            name -> versionMap0
+        }
+        val checksums = map
+          .valuesIterator
+          .flatMap(_.valuesIterator)
+          .flatMap(entry => entry.checksums.filter(_.nonEmpty).map(entry.url -> _).iterator)
+          .toMap
+        Right(JvmIndex(Map(os -> Map(arch -> content)), Some(""), checksums))
+      case Failure(t) => Left(t)
+    }
+
+  /** Parses an index, whichever its format
+    *
+    * Accepts the Jabba-like single index (`index.json` in coursier/jvm-index), the per-OS and CPU
+    * architecture indices (`indices/$os-$arch.json`), and those same indices with checksums
+    * (`indices-v2/$os-$arch.json`). `os` and `arch` are only used for the latter two, that don't
+    * mention the OS and CPU architecture they're for.
+    */
+  def fromBytes(
+    index: Array[Byte],
+    os: String,
+    arch: String
+  ): Either[Throwable, JvmIndex] =
+    fromBytes(index) match {
+      case r @ Right(_) => r
+      case Left(jabbaError) =>
+        fromV2Bytes(index, os, arch) match {
+          case r @ Right(_) => r
+          case Left(v2Error) =>
+            shortIndexFromBytes(index, os, arch) match {
+              case r @ Right(_) => r
+              case Left(v1Error) =>
+                val ex = new Exception(
+                  "Unrecognized JVM index format (tried the single index format, " +
+                    "and the per-OS and CPU architecture formats with and without checksums)",
+                  jabbaError
+                )
+                ex.addSuppressed(v2Error)
+                ex.addSuppressed(v1Error)
+                Left(ex)
+            }
+        }
+    }
+
   def fromString(index: String): Either[Throwable, JvmIndex] =
     Try(readFromString(index)(codec)) match {
       case Success(map) => Right(JvmIndex(map))
@@ -100,8 +188,9 @@ object JvmIndex {
       osArch <- osArchTask
       (os0, arch0) = osArch
       paths = Seq(
-        (s"coursier/jvm/indices/v1/$os0-$arch0.json", true),
-        ("index.json", false)
+        (s"coursier/jvm/indices/v2/$os0-$arch0.json", IndexFormat.PerOsArchWithChecksums),
+        (s"coursier/jvm/indices/v1/$os0-$arch0.json", IndexFormat.PerOsArch),
+        ("index.json", IndexFormat.Single)
       )
 
       res <- coursier.Fetch(cache)
@@ -130,15 +219,20 @@ object JvmIndex {
               paths
                 .iterator
                 .flatMap {
-                  case (path, isShort) =>
-                    Option(zf.getEntry(path)).iterator.map((path, isShort, _))
+                  case (path, format) =>
+                    Option(zf.getEntry(path)).iterator.map((path, format, _))
                 }
                 .map {
-                  case (path, isShort, e) =>
+                  case (path, format, e) =>
                     val binaryContent = FileUtil.readFully(zf.getInputStream(e))
-                    val res =
-                      if (isShort) shortIndexFromBytes(binaryContent, os0, arch0)
-                      else fromBytes(binaryContent)
+                    val res = format match {
+                      case IndexFormat.PerOsArchWithChecksums =>
+                        fromV2Bytes(binaryContent, os0, arch0)
+                      case IndexFormat.PerOsArch =>
+                        shortIndexFromBytes(binaryContent, os0, arch0)
+                      case IndexFormat.Single =>
+                        fromBytes(binaryContent)
+                    }
                     res.left.map(ex => new Exception(s"Error parsing $f!$path", ex))
                 }
                 .find(_ => true)
@@ -156,8 +250,15 @@ object JvmIndex {
           }
         }
     } yield dataOpt.toRight {
-      new Exception(s"${paths.mkString(" or ")} not found in ${res.files.mkString(", ")}")
+      new Exception(s"${paths.map(_._1).mkString(" or ")} not found in ${res.files.mkString(", ")}")
     }
+  }
+
+  private sealed abstract class IndexFormat extends Product with Serializable
+  private object IndexFormat {
+    case object Single                 extends IndexFormat
+    case object PerOsArch              extends IndexFormat
+    case object PerOsArchWithChecksums extends IndexFormat
   }
 
   def load(
@@ -172,20 +273,13 @@ object JvmIndex {
         Task.delay(Files.readAllBytes(f.path)).attempt.flatMap {
           case Left(ex) => Task.fail(new Exception(s"Error while reading ${f.path}", ex))
           case Right(content) =>
-            Task.fromEither(fromBytes(content))
+            Task.fromEither {
+              fromBytes(content, osOrDefault(os), archOrDefault(arch))
+                .left.map(ex => new Exception(s"Error parsing ${f.path}", ex))
+            }
         }
       case u: JvmChannel.FromUrl =>
-        cache.file(artifact(u.url)).run.flatMap {
-          case Left(err) =>
-            Task.fail(new Exception(s"Error while getting ${u.url}: $err"))
-          case Right(file) =>
-            val contentTask = Task.delay {
-              Files.readAllBytes(file.toPath)
-            }
-            contentTask.flatMap { content =>
-              Task.fromEither(fromBytes(content))
-            }
-        }
+        fromUrl(cache, u.url, os, arch)
       case m: JvmChannel.FromModule =>
         fromModule(cache, repositories, m, os, arch).flatMap {
           case Left(ex) => Task.fail(new Exception(s"No index found in ${m.repr}", ex))
@@ -204,6 +298,19 @@ object JvmIndex {
     cache: Cache[Task],
     indexUrl: String
   ): Task[JvmIndex] =
+    fromUrl(cache, indexUrl, None, None)
+
+  private def osOrDefault(os: Option[String]): String =
+    os.getOrElse(JvmChannel.defaultOsOrRaw())
+  private def archOrDefault(arch: Option[String]): String =
+    arch.getOrElse(JvmChannel.defaultArchitectureOrRaw())
+
+  private def fromUrl(
+    cache: Cache[Task],
+    indexUrl: String,
+    os: Option[String],
+    arch: Option[String]
+  ): Task[JvmIndex] =
     cache.file(artifact(indexUrl)).run.flatMap {
       case Left(err) =>
         Task.fail(new Exception(s"Error while getting $indexUrl: $err"))
@@ -212,7 +319,10 @@ object JvmIndex {
           Files.readAllBytes(file.toPath)
         }
         contentTask.flatMap { content =>
-          Task.fromEither(fromBytes(content))
+          Task.fromEither {
+            fromBytes(content, osOrDefault(os), archOrDefault(arch))
+              .left.map(ex => new Exception(s"Error parsing $indexUrl", ex))
+          }
         }
     }
 
@@ -220,6 +330,14 @@ object JvmIndex {
     cache: Cache[Task]
   ): Task[JvmIndex] =
     load(cache, coursier.Resolve().repositories, JvmChannel.default(), None, None)
+
+  /** Loads the default index for the passed OS and CPU architecture */
+  def load(
+    cache: Cache[Task],
+    os: String,
+    arch: String
+  ): Task[JvmIndex] =
+    load(cache, coursier.Resolve().repositories, JvmChannel.default(os, arch), Some(os), Some(arch))
 
   def load(): Task[JvmIndex] =
     load(Cache.default, coursier.Resolve().repositories, JvmChannel.default(), None, None)
@@ -260,7 +378,14 @@ object JvmIndex {
   deprecatedSettersSince = "2.1.25"
 ) case class JvmIndex(
   content: Map[String, Map[String, Map[String, Map[String, String]]]],
-  jdkNamePrefix: Option[String] = Some("jdk@")
+  jdkNamePrefix: Option[String] = Some("jdk@"),
+  /** Checksums of the archives listed in `content`, keyed by archive URL
+    *
+    * Values are maps from checksum type (like `sha256`) to hex-encoded checksum. Only indices with
+    * checksums (see [[JvmIndex.fromV2Bytes]]) fill this.
+    */
+  @since
+  checksums: Map[String, Map[String, String]] = Map.empty
 ) {
 
   import JvmIndex.parseDescriptor
@@ -351,7 +476,15 @@ object JvmIndex {
           case (retainedVersion, urlDescriptor) =>
             parseDescriptor(urlDescriptor).map {
               case (archiveType, url) =>
-                JvmIndexEntry(os, arch, name, retainedVersion, archiveType, url)
+                JvmIndexEntry(
+                  os,
+                  arch,
+                  name,
+                  retainedVersion,
+                  archiveType,
+                  url,
+                  checksums.getOrElse(url, Map.empty)
+                )
             }
         }
     } yield entries

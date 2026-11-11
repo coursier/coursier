@@ -192,6 +192,23 @@ object ArtifactError {
   )
   // format: on
 
+  /** The checksum of a file isn't the one it was expected to have
+    *
+    * Unlike [[WrongChecksum]], the expected checksum doesn't come from a checksum file, but was
+    * passed by the caller (like `JvmCache`, that gets checksums from JVM indices).
+    */
+  // format: off
+  final class UnexpectedChecksum(
+    val sumType: String,
+    val got: String,
+    val expected: String,
+    val file: String
+  ) extends ArtifactError(
+    "wrong checksum",
+    s"$file (expected $sumType $expected, got $got)"
+  )
+  // format: on
+
   // format: off
   final class WrongLength(
     val got: Long,
