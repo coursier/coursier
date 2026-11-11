@@ -15,7 +15,10 @@ abstract class PlatformCache[F[_]] {
   /** Like [[file]], also checking the integrity of archives
     *
     * Archives are checked using the checksums of their compression format (only supported for GZIP
-    * and ZIP archives for now), and downloaded again if they're corrupted.
+    * and ZIP archives for now), and downloaded again if they're corrupted. What's decompressed to
+    * check them is subject to the same limits as extracting them by default (see
+    * `UnArchiver.defaultMaxSize` and `UnArchiver.defaultMaxEntries` in coursier-archive-cache):
+    * archives exceeding them are reported as errors.
     *
     * This default implementation checks archives every time, and deletes corrupted ones before
     * downloading them again. [[FileCache]] keeps track of the archives it already checked, and
@@ -28,10 +31,12 @@ abstract class PlatformCache[F[_]] {
       f <- file(artifact)
       invalid <- EitherT(
         S.delay[Either[ArtifactError, Boolean]] {
-          val invalid0 = ArchiveIntegrity.check(artifact.url, f).contains(false)
-          if (invalid0)
-            Files.delete(f.toPath)
-          Right(invalid0)
+          ArchiveIntegrity.limitError {
+            val invalid0 = ArchiveIntegrity.check(artifact.url, f).contains(false)
+            if (invalid0)
+              Files.delete(f.toPath)
+            invalid0
+          }
         }
       )
       f0 <- if (invalid) file(artifact) else EitherT.point[F, ArtifactError, File](f)
