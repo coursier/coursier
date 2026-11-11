@@ -199,6 +199,23 @@ object VariantSelector {
         else None
       def repr: String = s">= ${minimumVersion.asString}"
     }
+
+    /** Matches values lower than or equal to `maximumVersion`
+      *
+      * This is the matcher used for `org.gradle.jvm.version`: a variant requiring a given JVM
+      * version can be used by any JVM whose version is higher than or equal to it, so requesting
+      * JVM version N accepts variants declaring a JVM version lower than or equal to N.
+      */
+    @data(
+      deprecatedSetters = true,
+      deprecatedSettersMessage = "Use copy instead",
+      deprecatedSettersSince = "2.1.25"
+    ) case class MaximumVersion(maximumVersion: Version0) extends VariantMatcher {
+      def matches(value: String): Option[Int] =
+        if (Version0(value).compareSemantic(maximumVersion) <= 0) Some(0)
+        else None
+      def repr: String = s"<= ${maximumVersion.asString}"
+    }
     @data(
       deprecatedSetters = true,
       deprecatedSettersMessage = "Use copy instead",
@@ -242,7 +259,7 @@ object VariantSelector {
                 else Equals(value)
             case "org.gradle.jvm.version" =>
               value =>
-                if (value.nonEmpty && value.forall(_.isDigit)) MinimumVersion(Version0(value))
+                if (value.nonEmpty && value.forall(_.isDigit)) MaximumVersion(Version0(value))
                 else Equals(value)
             case _ =>
               value =>

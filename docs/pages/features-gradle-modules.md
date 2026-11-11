@@ -101,7 +101,8 @@ also match - more generally, anything ending in `-api` is accepted, alongside ju
 * still for `org.gradle.usage`, if users pass `runtime` as a value, then things like `java-runtime` or `kotlin-runtime`
 also match - more generally, anything ending in `-runtime` is accepted, alongside just `runtime`
 * for `org.gradle.jvm.version`, users can pass a JVM major version, like `8` or `17`, and any version
-higher or equal to that is accepted
+lower or equal to that is accepted (variants requiring at most that JVM version can be used on it, like
+a variant built for Java 11 being usable on Java 17, but not a variant built for Java 21)
 
 Note that this list may evolve in the future, as Gradle Module support in coursier gets refined.
 
