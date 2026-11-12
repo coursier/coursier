@@ -1792,7 +1792,8 @@ also match - more generally, anything ending in <code>-api</code> is accepted, a
 <li>still for <code>org.gradle.usage</code>, if users pass <code>runtime</code> as a value, then things like <code>java-runtime</code> or <code>kotlin-runtime</code>
 also match - more generally, anything ending in <code>-runtime</code> is accepted, alongside just <code>runtime</code></li>
 <li>for <code>org.gradle.jvm.version</code>, users can pass a JVM major version, like <code>8</code> or <code>17</code>, and any version
-higher or equal to that is accepted</li>
+lower or equal to that is accepted (variants requiring at most that JVM version can be used on it, like
+a variant built for Java 11 being usable on Java 17, but not a variant built for Java 21)</li>
 </ul>
 <p>Note that this list may evolve in the future, as Gradle Module support in coursier gets refined.</p>
 <h2 id="variant-attributes-as-a-substitute-to-maven-configuration">Variant attributes as a substitute to Maven configuration<a class="headerlink" href="#variant-attributes-as-a-substitute-to-maven-configuration" title="Permanent link">&para;</a></h2>

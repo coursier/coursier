@@ -1539,14 +1539,22 @@ This index is updated on a regular basis, and list JDKs from various vendors, su
 <a href="https://www.azul.com/downloads/?package=jdk#zulu">Zulu</a>, <a href="https://bell-sw.com/libericajdk/">Liberica</a>,
 etc. See <a href="https://github.com/coursier/jvm-index?tab=readme-ov-file#available-jdks">here</a> for a more
 up-to-date list.</p>
-<p>The coursier JVM index is published both <a href="https://github.com/coursier/jvm-index/blob/master/index.json">on GitHub</a> and <a href="https://repo1.maven.org/maven2/io/get-coursier/jvm/indices">on Maven Central</a>.
-Both the API and the CLI of coursier default to the index on GitHub.</p>
+<p>The coursier JVM index is published both <a href="https://github.com/coursier/jvm-index">on GitHub</a> and <a href="https://repo1.maven.org/maven2/io/get-coursier/jvm/indices">on Maven Central</a>.
+Both the API and the CLI of coursier default to the index on GitHub, more precisely to
+<a href="https://github.com/coursier/jvm-index/tree/master/indices-v2">the index of the current OS and CPU architecture with checksums</a>
+(like <a href="https://github.com/coursier/jvm-index/blob/master/indices-v2/linux-amd64.json"><code>indices-v2/linux-amd64.json</code></a>).
+On Maven Central, coursier reads the same indices with checksums from the
+<code>io.get-coursier.jvm.indices:index-$os-$arch</code> JARs, if they have them (from version <code>0.0.5</code> on).</p>
 <p>In more detail, when asked for a JVM, coursier first downloads a JVM index. It then look for an
 entry in it adapted to the current OS and CPU architecture, and satisfying the user's request.
 It then uses the <a href="../features-archive-cache/">archive cache of coursier</a> to get an extracted version
 of that archive on disk. The archive cache itself downloads the archive if needed with
 <a href="../features-cache/">the standard coursier cache</a>, and extracts it under
 <a href="../features-archive-cache/#cache-location">its own cache directory</a>.</p>
+<p>When the index lists checksums for the archive (the indices with checksums mentioned above do,
+for most JDKs), coursier checks the strongest one it knows of (SHA-512, SHA-256, SHA-1, or MD5)
+against the downloaded archive before extracting it. If they don't match, the archive is removed
+from the cache and downloaded again once, and coursier fails if they still don't match.</p>
 <p>So the JVMs live under <a href="../features-archive-cache/#cache-location">the archive cache directory</a>.</p>
 
 
