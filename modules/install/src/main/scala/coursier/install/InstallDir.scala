@@ -810,6 +810,7 @@ object InstallDir {
 
   private def writeTo(is: InputStream, dest: Path): Unit = {
     var os: OutputStream = null
+    var success          = false
     try {
       os =
         Files.newOutputStream(dest, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)
@@ -818,9 +819,15 @@ object InstallDir {
       while ({ read = is.read(buf); read >= 0 })
         if (read > 0)
           os.write(buf, 0, read)
+      success = true
     }
-    finally if (os != null)
+    finally {
+      if (os != null)
         os.close()
+      // don't leave a partial launcher behind, like when extraction limits are exceeded
+      if (!success)
+        Files.deleteIfExists(dest)
+    }
   }
 
 }

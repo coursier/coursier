@@ -6,9 +6,9 @@ import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, FileSystemException, Path, Paths}
 import java.time.Instant
 import java.util.Locale
-import java.util.zip.ZipFile
+import java.util.zip.{GZIPOutputStream, ZipFile}
 
-import coursier.cache.Cache
+import coursier.cache.{Cache, UnArchiver}
 import coursier.cache.internal.FileUtil
 import coursier.install.error.NotAnApplication
 import coursier.launcher.Preamble
@@ -869,6 +869,53 @@ object InstallTests extends TestSuite {
       }
       test("windows") {
         run("windows", "x86_64")
+      }
+    }
+
+    test("don't leave a partial launcher behind when exceeding extraction limits") {
+      withTempDir { tmpDir =>
+        // 4 MiB of zeros, a few KB once compressed
+        val archive = tmpDir.resolve("archive/launcher.gz")
+        Files.createDirectories(archive.getParent)
+        Using.resource(new GZIPOutputStream(Files.newOutputStream(archive))) { os =>
+          os.write(new Array[Byte](4 * 1024 * 1024))
+        }
+
+        val id = "scalafmt-native"
+        val appInfo0 = appInfo(
+          RawAppDescriptor(List("org.scalameta::scalafmt-cli:3.0.6"))
+            .copy(
+              repositories = List("central"),
+              launcherType = "graalvm-native-image",
+              prebuiltBinaries = Map(
+                "x86_64-pc-linux" -> s"gz+${archive.toUri.toASCIIString}"
+              )
+            ),
+          id
+        )
+
+        val binDir = tmpDir.resolve("bin")
+        val installDir0 = installDir(binDir, "linux", "x86_64")
+          .copy(onlyPrebuilt = true)
+
+        val former = sys.props.get("coursier.archive.max-size")
+        sys.props("coursier.archive.max-size") = "1M"
+        val ex =
+          try
+            assertThrows[UnArchiver.ExtractionLimitException] {
+              installDir0.createOrUpdate(appInfo0)
+            }
+          finally former match {
+              case Some(v) => sys.props("coursier.archive.max-size") = v
+              case None    => sys.props -= "coursier.archive.max-size"
+            }
+        assert(ex.getMessage.contains("coursier.archive.max-size"))
+
+        val leftOver = Files.list(binDir).iterator().asScala
+          .map(_.getFileName.toString)
+          .filter(!_.endsWith(".lock"))
+          .toVector
+        assert(leftOver.isEmpty)
       }
     }
 

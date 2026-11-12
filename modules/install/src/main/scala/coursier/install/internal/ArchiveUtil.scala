@@ -1,6 +1,6 @@
 package coursier.install.internal
 
-import coursier.cache.ArchiveType
+import coursier.cache.{ArchiveType, UnArchiver}
 import org.apache.commons.compress.archivers.{
   ArchiveEntry,
   ArchiveInputStream,
@@ -16,6 +16,12 @@ import java.util.zip.{GZIPInputStream, ZipEntry, ZipFile}
 import scala.jdk.CollectionConverters._
 
 object ArchiveUtil {
+
+  // Content read from archives is written to disk by callers, so it's subject to the same size
+  // limit as archives extracted by ArchiveCache (UnArchiver.defaultMaxSize, unless maxSize is
+  // passed explicitly)
+  private def limitSize(archive: File, is: InputStream, maxSize: Long): InputStream =
+    UnArchiver.limitExtractedSize(archive, is, maxSize)
 
   private def withCompressedTarArchiveEntriesIterator[T](
     archive: File,
@@ -52,6 +58,8 @@ object ArchiveUtil {
           else new BufferedInputStream(uncompressedInputStream)
         )
 
+      // Entries before the wanted one are skipped, not written anywhere: archives with lots of
+      // them only cost CPU time
       var nextEntryOrNull: ArchiveEntry = null
 
       val it: Iterator[(ArchiveEntry, InputStream)] =
@@ -79,10 +87,17 @@ object ArchiveUtil {
     archive: File,
     compression: ArchiveType.Tar
   )(f: InputStream => T): T =
+    withFirstFileInCompressedTarArchive(archive, compression, UnArchiver.defaultMaxSize)(f)
+
+  def withFirstFileInCompressedTarArchive[T](
+    archive: File,
+    compression: ArchiveType.Tar,
+    maxSize: Long
+  )(f: InputStream => T): T =
     withCompressedTarArchiveEntriesIterator(archive, compression) { it =>
       val it0 = it.filter(!_._1.isDirectory).map(_._2)
       if (it0.hasNext)
-        f(it0.next())
+        f(limitSize(archive, it0.next(), maxSize))
       else
         throw new NoSuchElementException(s"No file found in $archive")
     }
@@ -92,23 +107,43 @@ object ArchiveUtil {
     compression: ArchiveType.Tar,
     pathInArchive: String
   )(f: InputStream => T): T =
+    withFileInCompressedTarArchive(archive, compression, pathInArchive, UnArchiver.defaultMaxSize)(
+      f
+    )
+
+  def withFileInCompressedTarArchive[T](
+    archive: File,
+    compression: ArchiveType.Tar,
+    pathInArchive: String,
+    maxSize: Long
+  )(f: InputStream => T): T =
     withCompressedTarArchiveEntriesIterator(archive, compression) { it =>
       val it0 = it.collect {
         case (ent, is) if !ent.isDirectory && ent.getName == pathInArchive =>
           is
       }
       if (it0.hasNext)
-        f(it0.next())
+        f(limitSize(archive, it0.next(), maxSize))
       else
         throw new NoSuchElementException(s"$pathInArchive not found in $archive")
     }
 
   def withGzipContent[T](gzFile: File)(f: InputStream => T): T =
-    withCompressedContent(gzFile, ArchiveType.Gzip)(f)
+    withGzipContent(gzFile, UnArchiver.defaultMaxSize)(f)
+
+  def withGzipContent[T](gzFile: File, maxSize: Long)(f: InputStream => T): T =
+    withCompressedContent(gzFile, ArchiveType.Gzip, maxSize)(f)
 
   def withCompressedContent[T](
     file: File,
     archiveType: ArchiveType.Compressed
+  )(f: InputStream => T): T =
+    withCompressedContent(file, archiveType, UnArchiver.defaultMaxSize)(f)
+
+  def withCompressedContent[T](
+    file: File,
+    archiveType: ArchiveType.Compressed,
+    maxSize: Long
   )(f: InputStream => T): T = {
     var fis: InputStream = null
     var is: InputStream  = null
@@ -118,7 +153,7 @@ object ArchiveUtil {
         case ArchiveType.Gzip => new GZIPInputStream(fis, 64 * 1024)
         case ArchiveType.Xz => new XZCompressorInputStream(new BufferedInputStream(fis, 64 * 1024))
       }
-      f(is)
+      f(limitSize(file, is, maxSize))
     }
     finally {
       if (is != null) is.close()
@@ -126,7 +161,10 @@ object ArchiveUtil {
     }
   }
 
-  def withFirstFileInZip[T](zip: File)(f: InputStream => T): T = {
+  def withFirstFileInZip[T](zip: File)(f: InputStream => T): T =
+    withFirstFileInZip(zip, UnArchiver.defaultMaxSize)(f)
+
+  def withFirstFileInZip[T](zip: File, maxSize: Long)(f: InputStream => T): T = {
     var zf: ZipFile     = null
     var is: InputStream = null
     try {
@@ -135,7 +173,7 @@ object ArchiveUtil {
         throw new NoSuchElementException(s"No file found in $zip")
       }
       is = zf.getInputStream(ent)
-      f(is)
+      f(limitSize(zip, is, maxSize))
     }
     finally {
       if (zf != null)
@@ -145,7 +183,12 @@ object ArchiveUtil {
     }
   }
 
-  def withFileInZip[T](zip: File, pathInArchive: String)(f: InputStream => T): T = {
+  def withFileInZip[T](zip: File, pathInArchive: String)(f: InputStream => T): T =
+    withFileInZip(zip, pathInArchive, UnArchiver.defaultMaxSize)(f)
+
+  def withFileInZip[T](zip: File, pathInArchive: String, maxSize: Long)(
+    f: InputStream => T
+  ): T = {
     var zf: ZipFile     = null
     var is: InputStream = null
     try {
@@ -154,7 +197,7 @@ object ArchiveUtil {
         throw new NoSuchElementException(s"$pathInArchive not found in $zip")
       }
       is = zf.getInputStream(ent)
-      f(is)
+      f(limitSize(zip, is, maxSize))
     }
     finally {
       if (zf != null)
