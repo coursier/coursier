@@ -14,7 +14,7 @@ import utest._
 import java.io.{ByteArrayOutputStream, OutputStream}
 import java.util.zip.GZIPOutputStream
 
-import scala.util.{Failure, Try, Using}
+import scala.util.{Failure, Properties, Try, Using}
 
 object ArchiveCacheLimitsTests extends TestSuite {
 
@@ -86,9 +86,10 @@ object ArchiveCacheLimitsTests extends TestSuite {
     ext: String,
     content: Array[Byte],
     maxSize: Long,
-    maxEntries: Long
+    maxEntries: Long,
+    unArchiver0: (Long, Long) => UnArchiver
   ): Try[Either[ArtifactError, os.Path]] = {
-    val unArchiver = UnArchiver.default(maxSize, maxEntries)
+    val unArchiver = unArchiver0(maxSize, maxEntries)
     val archiveCache = ArchiveCache.create[Task]((dir / "arc").toIO)
       .copy(cache = FileCache[Task]((dir / "cache").toIO), unArchiver = unArchiver)
     val archive = dir / "archives" / s"archive.$ext"
@@ -104,11 +105,12 @@ object ArchiveCacheLimitsTests extends TestSuite {
     archives: Seq[(String, Array[Byte])],
     maxSize: Long,
     maxEntries: Long,
-    expectedMessage: String
+    expectedMessage: String,
+    unArchiver: (Long, Long) => UnArchiver = UnArchiver.default(_, _)
   ): Unit =
     for ((ext, content) <- archives)
       withTmpDir { dir =>
-        get(dir, ext, content, maxSize, maxEntries) match {
+        get(dir, ext, content, maxSize, maxEntries, unArchiver) match {
           case Failure(ex: UnArchiver.ExtractionLimitException) =>
             assert(ex.getMessage.contains(expectedMessage))
           case other =>
@@ -118,6 +120,29 @@ object ArchiveCacheLimitsTests extends TestSuite {
         val leftOver = os.walk(dir / "arc").filter(os.isFile(_)).filter(_.last != ".lock")
         assert(leftOver.isEmpty)
       }
+
+  private def withProp[T](name: String, value: String)(f: => T): T = {
+    val former = sys.props.get(name)
+    sys.props(name) = value
+    try f
+    finally former match {
+        case Some(v) => sys.props(name) = v
+        case None    => sys.props.remove(name)
+      }
+  }
+
+  // tar archives, extracted by the tar command with UnArchiver.priviledged
+  // no xz archives here either, as org.tukaani:xz isn't on the Scala 3 compile class path
+  private def tarArchives(entries: Seq[(String, Array[Byte])]): Seq[(String, Array[Byte])] =
+    Seq(
+      "tar"     -> tar(entries),
+      "tar.gz"  -> gzip(tar(entries)),
+      "tar.bz2" -> bzip2(tar(entries)),
+      "tar.zst" -> zstd(tar(entries))
+    )
+
+  private def priviledged(maxSize: Long, maxEntries: Long): UnArchiver =
+    UnArchiver.priviledgedTestMode(maxSize, maxEntries)
 
   val tests = Tests {
 
@@ -161,7 +186,14 @@ object ArchiveCacheLimitsTests extends TestSuite {
       val entries = Seq("a.txt" -> Array[Byte](1, 2), "big" -> zeros)
       for ((ext, content) <- multiFileArchives(entries))
         withTmpDir { dir =>
-          val res = get(dir, ext, content, maxSize = bigSize + 2, maxEntries = 2).get
+          val res = get(
+            dir,
+            ext,
+            content,
+            maxSize = bigSize + 2,
+            maxEntries = 2,
+            UnArchiver.default(_, _)
+          ).get
           res match {
             case Left(err) => throw new Exception(s"Extracting $ext archive", err)
             case Right(extracted) =>
@@ -170,7 +202,8 @@ object ArchiveCacheLimitsTests extends TestSuite {
         }
       for ((ext, content) <- singleFileArchives(zeros))
         withTmpDir { dir =>
-          val res = get(dir, ext, content, maxSize = bigSize, maxEntries = 1).get
+          val res =
+            get(dir, ext, content, maxSize = bigSize, maxEntries = 1, UnArchiver.default(_, _)).get
           res match {
             case Left(err)        => throw new Exception(s"Extracting $ext archive", err)
             case Right(extracted) => assert(os.size(extracted) == bigSize.toLong)
@@ -179,15 +212,6 @@ object ArchiveCacheLimitsTests extends TestSuite {
     }
 
     test("default limits") {
-      def withProp[T](name: String, value: String)(f: => T): T = {
-        val former = sys.props.get(name)
-        sys.props(name) = value
-        try f
-        finally former match {
-            case Some(v) => sys.props(name) = v
-            case None    => sys.props.remove(name)
-          }
-      }
       assert(UnArchiver.defaultMaxSize == UnArchiver.defaultMaxSizeFallback)
       assert(UnArchiver.defaultMaxEntries == UnArchiver.defaultMaxEntriesFallback)
       withProp("coursier.archive.max-size", "12345") {
@@ -227,6 +251,91 @@ object ArchiveCacheLimitsTests extends TestSuite {
               throw new Exception(s"Expected extraction to fail, got $other")
           }
         }
+      }
+    }
+
+    test("priviledged") {
+      test("size") {
+        if (!Properties.isWin)
+          checkRejected(
+            tarArchives(Seq("a.txt" -> Array[Byte](1, 2), "big" -> zeros)),
+            maxSize = 1024 * 1024,
+            maxEntries = 0,
+            expectedMessage = "maximum extracted size",
+            unArchiver = priviledged
+          )
+      }
+      test("spread over several entries") {
+        if (!Properties.isWin)
+          checkRejected(
+            tarArchives((1 to 8).map(n => s"file-$n" -> new Array[Byte](bigSize / 8))),
+            maxSize = 1024 * 1024,
+            maxEntries = 0,
+            expectedMessage = "maximum extracted size",
+            unArchiver = priviledged
+          )
+      }
+      test("entries") {
+        if (!Properties.isWin)
+          checkRejected(
+            tarArchives((1 to 20).map(n => s"file-$n" -> Array[Byte](n.toByte))),
+            maxSize = 0,
+            maxEntries = 10,
+            expectedMessage = "maximum number of entries",
+            unArchiver = priviledged
+          )
+      }
+      test("within limits") {
+        val entries = Seq("a.txt" -> Array[Byte](1, 2), "big" -> zeros)
+        if (!Properties.isWin)
+          for ((ext, content) <- tarArchives(entries))
+            withTmpDir { dir =>
+              // the size limit applies to the tar stream, headers and padding included
+              val res =
+                get(dir, ext, content, maxSize = bigSize + 64 * 1024, maxEntries = 2, priviledged)
+                  .get
+              res match {
+                case Left(err) => throw new Exception(s"Extracting $ext archive", err)
+                case Right(extracted) =>
+                  assert(os.read.bytes(extracted / "a.txt").toSeq == Seq[Byte](1, 2))
+                  assert(os.size(extracted / "big") == bigSize.toLong)
+              }
+            }
+      }
+      test("invalid archive") {
+        // not a tar archive: commons-compress fails, and so does tar, as it gets a truncated stream
+        val content = gzip(Array.tabulate[Byte](64 * 1024)(n => (n * 31 + 7).toByte))
+        if (!Properties.isWin)
+          withTmpDir { dir =>
+            val res = get(dir, "tar.gz", content, maxSize = 0, maxEntries = 0, priviledged)
+            assert(res.isFailure)
+            val leftOver = os.walk(dir / "arc").filter(os.isFile(_)).filter(_.last != ".lock")
+            assert(leftOver.isEmpty)
+          }
+      }
+      test("default limits") {
+        if (!Properties.isWin)
+          withProp("coursier.archive.max-size", "1024") {
+            withTmpDir { dir =>
+              val archiveCache = ArchiveCache.create[Task]((dir / "arc").toIO)
+                .copy(
+                  cache = FileCache[Task]((dir / "cache").toIO),
+                  unArchiver = UnArchiver.priviledgedTestMode()
+                )
+              val archive = dir / "archives" / "archive.tar.gz"
+              os.write(archive, gzip(tar(Seq("big" -> zeros))), createFolders = true)
+              val res = Try {
+                archiveCache.get(Artifact(archive.toNIO.toUri.toASCIIString))
+                  .unsafeRun()(archiveCache.cache.ec)
+              }
+              res match {
+                case Failure(ex: UnArchiver.ExtractionLimitException) =>
+                  assert(ex.getMessage.contains("COURSIER_ARCHIVE_MAX_SIZE"))
+                case other =>
+                  throw new Exception(s"Expected extraction to fail, got $other")
+              }
+            }
+          }
       }
     }
   }
