@@ -427,8 +427,20 @@ import scala.util.control.NonFatal
               Downloader.retryAfter(conn, clock)
             )
           )
+        else if (partialDownload && Downloader.isGzipEncoded(conn)) {
+          // The range we asked for is a range of the gzip-encoded body, but tmp holds decoded
+          // bytes: its length isn't an offset in the encoded body, and what we got can't be
+          // appended to it. Start over (tmp is now empty, so no Range is sent this time).
+          CacheUrl.closeConn(conn)
+          conn = null
+          Files.deleteIfExists(tmp.toPath)
+          doDownload0(file, url, keepHeaderChecksums, allCredentials0, tmp)
+        }
         else {
-          val lenOpt = Option(conn.getContentLengthLong).filter(_ >= 0L)
+          // the length of a gzip-encoded body isn't the one of what we write
+          val lenOpt = Option(conn.getContentLengthLong)
+            .filter(_ >= 0L)
+            .filter(_ => !Downloader.isGzipEncoded(conn))
           for (len0 <- lenOpt) {
             val previouslyDownloaded = if (partialDownload) alreadyDownloaded else 0L
             logger.downloadLength(
@@ -454,7 +466,7 @@ import scala.util.control.NonFatal
 
           val in = {
             val baseStream =
-              if (conn.getContentEncoding == "gzip") new GZIPInputStream(conn.getInputStream)
+              if (Downloader.isGzipEncoded(conn)) new GZIPInputStream(conn.getInputStream)
               else conn.getInputStream
             new BufferedInputStream(baseStream, bufferSize)
           }
@@ -1032,6 +1044,14 @@ object Downloader {
     fromSeconds.orElse(fromHttpDate)
   }
 
+  /** Whether the body of a response is gzip-encoded, which we decode while downloading it
+    *
+    * We never send `Accept-Encoding`, but some servers send gzip anyway, like S3 for objects stored
+    * with that encoding.
+    */
+  private def isGzipEncoded(conn: URLConnection): Boolean =
+    conn.getContentEncoding == "gzip"
+
   /** The `Last-Modified` time of a response, in milliseconds since the epoch
     *
     * `URLConnection#getLastModified` parses the header with the deprecated `Date.parse`, which
@@ -1269,6 +1289,8 @@ object Downloader {
           try {
             val len = Some(c.getContentLengthLong)
               .filter(_ >= 0L)
+              // the encoded length, while the cache holds the decoded content
+              .filter(_ => !isGzipEncoded(c))
 
             success = true
             logger.gettingLengthResult(url, len)
