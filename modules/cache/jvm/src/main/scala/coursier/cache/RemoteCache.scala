@@ -1,7 +1,7 @@
 package coursier.cache
 
 import com.github.plokhotnyuk.jsoniter_scala.core._
-import coursier.cache.internal.RemoteCacheHelpers
+import coursier.cache.internal.{ArchiveIntegrity, RemoteCacheHelpers}
 import coursier.cache.server.Model
 import coursier.cache.server.Model.{Artifact => ModelArtifact, _}
 import coursier.paths.CachePath
@@ -191,7 +191,8 @@ import scala.util.Try
   private def fileWithPolicy(
     artifact: Artifact,
     cachePolicy: Option[String],
-    archiveIntegrityCheck: Boolean = false
+    archiveIntegrityCheck: Boolean = false,
+    expectedChecksum: Option[ExpectedChecksum] = None
   ): EitherT[F, ArtifactError, File] =
     EitherT {
       Sync[F].schedule(pool) {
@@ -230,7 +231,10 @@ import scala.util.Try
             cachePolicies =
               if (cachePolicy.isEmpty) cachePolicies.map(Model.cachePolicyName) else Nil,
             ttl = Some(Model.serializeTtl(ttl)),
-            archiveIntegrityCheck = archiveIntegrityCheck
+            archiveIntegrityCheck = archiveIntegrityCheck,
+            expectedChecksum = expectedChecksum.map { c =>
+              Model.Checksum(c.algorithm, c.normalizedValue)
+            }
           )
           val body = writeToArray(request)
 
@@ -305,11 +309,51 @@ import scala.util.Try
   override def fileWithIntegrityCheck(
     artifact: Artifact
   )(implicit S: Sync[F]): EitherT[F, ArtifactError, File] =
+    fileWithChecks0(artifact, integrityCheck = true, expectedChecksum = None)
+
+  /** Like [[file]], optionally checking the integrity of archives, and checking that the file has
+    * the expected checksum
+    *
+    * The cache server is in charge of the cache, so it's the one checking checksums, and
+    * downloading files again if their checksum is wrong. As servers predating checksum checks
+    * ignore them, the checksum of the file the server returns is checked here too, reading the
+    * digest the server persisted alongside it if there's one. Nothing is written to the cache here,
+    * nor deleted from it.
+    */
+  override def fileWithChecks(
+    artifact: Artifact,
+    integrityCheck: Boolean,
+    expectedChecksum: Option[ExpectedChecksum]
+  )(implicit S: Sync[F]): EitherT[F, ArtifactError, File] =
+    fileWithChecks0(artifact, integrityCheck, expectedChecksum)
+
+  private def fileWithChecks0(
+    artifact: Artifact,
+    integrityCheck: Boolean,
+    expectedChecksum: Option[ExpectedChecksum]
+  ): EitherT[F, ArtifactError, File] =
     fileFallback0.filter(_ => artifact.url.startsWith("file:/")) match {
       case Some(fallback) =>
-        fallback.fileWithIntegrityCheck(artifact)(sync)
+        fallback.fileWithChecks(artifact, integrityCheck, expectedChecksum)(sync)
       case None =>
-        fileWithPolicy(artifact, None, archiveIntegrityCheck = true)
+        val download = fileWithPolicy(
+          artifact,
+          None,
+          archiveIntegrityCheck = integrityCheck,
+          expectedChecksum = expectedChecksum
+        )
+        expectedChecksum match {
+          case None => download
+          case Some(expected) =>
+            download.flatMap { f =>
+              EitherT(
+                sync.delay {
+                  ArchiveIntegrity.checkChecksum(f, expected, ArchiveIntegrity.readOnlyDigest)
+                    .map(_ => f)
+                }
+              )
+            }
+        }
     }
 
   private def fetchWithPolicy(cachePolicy: Option[String]): Cache.Fetch[F] =

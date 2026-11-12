@@ -1,7 +1,7 @@
 package coursier.cache.server
 
 import com.github.plokhotnyuk.jsoniter_scala.core._
-import coursier.cache.{ArtifactError, CachePolicy, FileCache}
+import coursier.cache.{ArtifactError, CachePolicy, ExpectedChecksum, FileCache}
 import coursier.util.Task
 import io.undertow.server.{HttpHandler, HttpServerExchange}
 import io.undertow.util.{Headers, StatusCodes}
@@ -113,7 +113,10 @@ object CacheServer {
                           cache.retry,
                           policies,
                           ttl,
-                          archiveIntegrityCheck = request.archiveIntegrityCheck
+                          archiveIntegrityCheck = request.archiveIntegrityCheck,
+                          expectedChecksum = request.expectedChecksum.map { c =>
+                            ExpectedChecksum(c.algorithm, c.value)
+                          }
                         ).run
                     }
                     fileTask.future()(cache.ec)

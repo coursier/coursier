@@ -29,6 +29,18 @@ object JvmChannelTests extends TestSuite {
       }
     }
 
+    test("default channel") {
+      assert(
+        JvmChannel.default("linux", "arm64") ==
+          JvmChannel.FromUrl(
+            "https://github.com/coursier/jvm-index/raw/master/indices-v2/linux-arm64.json"
+          )
+      )
+      // no per-OS and CPU index for these, so we fall back to the single index
+      assert(JvmChannel.default("freebsd", "amd64") == JvmChannel.gitHub())
+      assert(JvmChannel.default("linux", "sparc") == JvmChannel.gitHub())
+    }
+
     test("default JDK name on x86") {
       assert(JvmCache.defaultJdkNameFor("windows", "x86") == "liberica")
       assert(JvmCache.defaultJdkNameFor("linux", "x86") == "liberica")

@@ -1,11 +1,12 @@
 package coursier.jvm
 
 import java.io.File
+import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Path, Paths}
 import java.util.concurrent.atomic.{AtomicBoolean, AtomicInteger}
 
 import coursier.cache.internal.FileUtil
-import coursier.cache.{ArchiveCache, MockCache}
+import coursier.cache.{ArchiveCache, Cache, FileCache, MockCache}
 import coursier.util.{Sync, Task}
 import utest._
 
@@ -283,6 +284,192 @@ object JvmCacheTests extends TestSuite {
         val relDir = dir.relativeTo(tmpDir)
 
         assert(relDir == expectedDir)
+      }
+    }
+
+    test("checksums") {
+      val archiveName =
+        if (Properties.isWin) "the-jdk-1.1-windows.tar.gz" else "the-jdk-1.1.tar.gz"
+      val archiveSha256 = {
+        val archive = os.Path(mockDataLocation) / "https" / "foo.com" / "download" / archiveName
+        val md      = java.security.MessageDigest.getInstance("SHA-256")
+        md.digest(os.read.bytes(archive)).map(b => f"$b%02x").mkString
+      }
+
+      def jvmCacheWithChecksums(
+        tmpDir: Path,
+        checksums: String,
+        url: String = s"https://foo.com/download/$archiveName",
+        cache0: Cache[Task] = cache
+      ): JvmCache = {
+        val strV2Index =
+          s"""{
+             |  "the-jdk": {
+             |    "1.1": {
+             |      "url": "$url",
+             |      "checksums": $checksums
+             |    }
+             |  }
+             |}
+             |""".stripMargin
+        val v2Index = JvmIndex
+          .fromBytes(strV2Index.getBytes(StandardCharsets.UTF_8), theOS, "the-arch")
+          .fold(throw _, identity)
+        val archiveCache = ArchiveCache.create[Task](tmpDir.toFile).copy(cache = cache0)
+        JvmCache()
+          .copy(
+            archiveCache = archiveCache,
+            os = theOS,
+            architecture = "the-arch",
+            defaultJdkNameOpt = None,
+            defaultVersionOpt = None
+          )
+          .withIndex(Task.point(v2Index))
+      }
+
+      def checkJdk(home: File): Unit = {
+        val javaExec = new File(new File(home, "bin"), filename)
+        val output   = Seq(javaExec.getAbsolutePath, "-version").!!
+        assert(output.replace("\r\n", "\n") == "the jdk 1.1\n")
+      }
+
+      test("valid") {
+        withTempDir { tmpDir =>
+          val jvmCache = jvmCacheWithChecksums(tmpDir, s"""{"sha256": "$archiveSha256"}""")
+          val entries  = jvmCache.entries("the-jdk:1.1").unsafeRun(wrapExceptions = true)(cache.ec)
+          assert(entries.map(_.map(_.checksums)) == Right(Seq(Map("sha256" -> archiveSha256))))
+          checkJdk(jvmCache.get("the-jdk:1.1").unsafeRun(wrapExceptions = true)(cache.ec))
+        }
+      }
+
+      test("invalid") {
+        withTempDir { tmpDir =>
+          val wrongSha256 = archiveSha256.reverse
+          val jvmCache    = jvmCacheWithChecksums(tmpDir, s"""{"sha256": "$wrongSha256"}""")
+          val res = Try(jvmCache.get("the-jdk:1.1").unsafeRun(wrapExceptions = true)(cache.ec))
+          val wrongChecksumOpt = res match {
+            case Failure(ex) =>
+              Iterator.iterate[Throwable](ex)(_.getCause)
+                .takeWhile(_ != null)
+                .collectFirst { case e: JvmCache.WrongArchiveChecksum => e }
+            case Success(_) => None
+          }
+          assert(wrongChecksumOpt.map(_.expected) == Some(wrongSha256))
+          assert(wrongChecksumOpt.map(_.actual) == Some(archiveSha256))
+
+          // the archive mustn't have been extracted
+          val installed =
+            jvmCache.getIfInstalled("the-jdk:1.1").unsafeRun(wrapExceptions = true)(cache.ec)
+          assert(installed.isEmpty)
+        }
+      }
+
+      test("strongest checksum is checked") {
+        withTempDir { tmpDir =>
+          val jvmCache = jvmCacheWithChecksums(
+            tmpDir,
+            s"""{"md5": "wrong", "sha256": "$archiveSha256"}"""
+          )
+          checkJdk(jvmCache.get("the-jdk:1.1").unsafeRun(wrapExceptions = true)(cache.ec))
+        }
+      }
+
+      test("digest persisted in FileCache") {
+        withTempDir0 { tmpDir =>
+          val archive = tmpDir / "src" / archiveName
+          os.copy(
+            os.Path(mockDataLocation) / "https" / "foo.com" / "download" / archiveName,
+            archive,
+            createFolders = true
+          )
+          val url = archive.toNIO.toUri.toASCIIString
+          val fileCache = FileCache.create[Task]()
+            .copy(location = (tmpDir / "cache").toIO, localArtifactsShouldBeCached = true)
+          val cachedArchive = fileCache.localFile(url)
+          val digestFile    = FileCache.auxiliaryFile(cachedArchive, "SHA-256.computed")
+
+          def jvmCache(sha256: String) = jvmCacheWithChecksums(
+            (tmpDir / "arc").toNIO,
+            s"""{"sha256": "$sha256"}""",
+            url = url,
+            cache0 = fileCache
+          )
+          def digestFileContent(): String =
+            os.read.bytes(os.Path(digestFile)).map(b => f"$b%02x").mkString
+
+          checkJdk(jvmCache(archiveSha256).get("the-jdk:1.1").unsafeRun(wrapExceptions = true)(
+            fileCache.ec
+          ))
+          assert(digestFile.exists())
+          assert(digestFileContent() == archiveSha256)
+
+          // the persisted digest is used rather than computed again: with a fake one matching
+          // the index, the check passes
+          val fakeSha256 = "ab" * 32
+          os.write.over(
+            os.Path(digestFile),
+            fakeSha256.grouped(2).map(Integer.parseInt(_, 16).toByte).toArray[Byte]
+          )
+          os.remove.all(tmpDir / "arc")
+          checkJdk(jvmCache(fakeSha256).get("the-jdk:1.1").unsafeRun(wrapExceptions = true)(
+            fileCache.ec
+          ))
+        }
+      }
+
+      test("archive with wrong checksum downloaded again by FileCache") {
+        withTempDir0 { tmpDir =>
+          val archive = tmpDir / "src" / archiveName
+          os.copy(
+            os.Path(mockDataLocation) / "https" / "foo.com" / "download" / archiveName,
+            archive,
+            createFolders = true
+          )
+          val url = archive.toNIO.toUri.toASCIIString
+          val fileCache = FileCache.create[Task]()
+            .copy(location = (tmpDir / "cache").toIO, localArtifactsShouldBeCached = true)
+          val cachedArchive = os.Path(fileCache.localFile(url))
+          val digestFile = os.Path(FileCache.auxiliaryFile(cachedArchive.toIO, "SHA-256.computed"))
+
+          val jvmCache = jvmCacheWithChecksums(
+            (tmpDir / "arc").toNIO,
+            s"""{"sha256": "$archiveSha256"}""",
+            url = url,
+            cache0 = fileCache
+          )
+          checkJdk(jvmCache.get("the-jdk:1.1").unsafeRun(wrapExceptions = true)(fileCache.ec))
+
+          // make the cached archive look like it has a wrong checksum (an archive that's not
+          // corrupted, but isn't the one of the index): it should be downloaded again
+          val wrongDigest = ("ab" * 32).grouped(2).map(Integer.parseInt(_, 16).toByte).toArray[Byte]
+          os.write.over(digestFile, wrongDigest)
+          os.remove.all(tmpDir / "arc")
+          checkJdk(jvmCache.get("the-jdk:1.1").unsafeRun(wrapExceptions = true)(fileCache.ec))
+          assert(os.read.bytes(digestFile).toSeq != wrongDigest.toSeq)
+
+          // still wrong after downloading it again
+          os.write.over(archive, "corrupted")
+          os.remove(cachedArchive)
+          FileCache.clearAuxiliaryFiles(cachedArchive.toIO)
+          os.remove.all(tmpDir / "arc")
+          val res = Try(jvmCache.get("the-jdk:1.1").unsafeRun(wrapExceptions = true)(fileCache.ec))
+          val wrongChecksumOpt = res match {
+            case Failure(ex) =>
+              Iterator.iterate[Throwable](ex)(_.getCause)
+                .takeWhile(_ != null)
+                .collectFirst { case e: JvmCache.WrongArchiveChecksum => e }
+            case Success(_) => None
+          }
+          assert(wrongChecksumOpt.map(_.expected) == Some(archiveSha256))
+          assert(wrongChecksumOpt.map(_.archive) == Some(cachedArchive.toIO))
+        }
+      }
+
+      test("unknown checksum types are ignored") {
+        withTempDir { tmpDir =>
+          val jvmCache = jvmCacheWithChecksums(tmpDir, """{"sha3-256": "foo"}""")
+          checkJdk(jvmCache.get("the-jdk:1.1").unsafeRun(wrapExceptions = true)(cache.ec))
+        }
       }
     }
 

@@ -1,5 +1,7 @@
 package coursier.jvm
 
+import java.nio.charset.StandardCharsets
+
 import coursier.cache.ArchiveType
 import utest._
 
@@ -136,6 +138,107 @@ object JvmIndexTests extends TestSuite {
         val res      = index.lookup("openfoo", "1+", os = Some(os), arch = Some(arch))
         val expected = Right(Seq(open191, open192, open201, open202))
         assert(res == expected)
+      }
+    }
+
+    test("formats") {
+      val os   = "the-os"
+      val arch = "the-arch"
+
+      val tgzUrl = "https://foo.com/jdk-21.0.1.tar.gz"
+      val zipUrl = "https://foo.com/jdk-21.0.2.zip"
+
+      def bytes(s: String): Array[Byte] =
+        s.getBytes(StandardCharsets.UTF_8)
+
+      def entries(index: JvmIndex): Either[String, Seq[JvmIndexEntry]] =
+        index.lookup("foo", "21", os = Some(os), arch = Some(arch))
+
+      test("v2") {
+        val index = JvmIndex.fromBytes(
+          bytes(
+            s"""{
+               |  "foo": {
+               |    "21.0.1": {
+               |      "url": "$tgzUrl",
+               |      "checksums": {"sha256": "abcd", "md5": "ef01"}
+               |    },
+               |    "21.0.2": {
+               |      "url": "$zipUrl",
+               |      "checksums": {}
+               |    },
+               |    "21.0.3": {
+               |      "url": "https://foo.com/jdk-21.0.3.pkg",
+               |      "checksums": {"sha256": "2345"}
+               |    },
+               |    "21.0.4": {
+               |      "url": "https://foo.com/jdk-21.0.4.tar.xz",
+               |      "future-field": true
+               |    }
+               |  }
+               |}
+               |""".stripMargin
+          ),
+          os,
+          arch
+        ).fold(throw _, identity)
+        val expected = Right(Seq(
+          JvmIndexEntry(
+            os,
+            arch,
+            "foo",
+            "21.0.1",
+            ArchiveType.Tgz,
+            tgzUrl,
+            Map("sha256" -> "abcd", "md5" -> "ef01")
+          ),
+          JvmIndexEntry(os, arch, "foo", "21.0.2", ArchiveType.Zip, zipUrl),
+          // 21.0.3 is ignored: archive type can't be deduced from its URL
+          JvmIndexEntry(
+            os,
+            arch,
+            "foo",
+            "21.0.4",
+            ArchiveType.Txz,
+            "https://foo.com/jdk-21.0.4.tar.xz"
+          )
+        ))
+        assert(entries(index) == expected)
+        assert(index.available(Some(os), Some(arch)).map(_.keySet) == Right(Set("foo")))
+      }
+
+      test("v1") {
+        val index = JvmIndex.fromBytes(
+          bytes(
+            s"""{"foo": {"21.0.1": "tgz+$tgzUrl", "21.0.2": "zip+$zipUrl"}}"""
+          ),
+          os,
+          arch
+        ).fold(throw _, identity)
+        val expected = Right(Seq(
+          JvmIndexEntry(os, arch, "foo", "21.0.1", ArchiveType.Tgz, tgzUrl),
+          JvmIndexEntry(os, arch, "foo", "21.0.2", ArchiveType.Zip, zipUrl)
+        ))
+        assert(entries(index) == expected)
+      }
+
+      test("single") {
+        val index = JvmIndex.fromBytes(
+          bytes(
+            s"""{"$os": {"$arch": {"jdk@foo": {"1.21.0.1": "tgz+$tgzUrl"}}}}"""
+          ),
+          "other-os",
+          "other-arch"
+        ).fold(throw _, identity)
+        val expected = Right(Seq(
+          JvmIndexEntry(os, arch, "foo", "1.21.0.1", ArchiveType.Tgz, tgzUrl)
+        ))
+        assert(entries(index) == expected)
+      }
+
+      test("invalid") {
+        val res = JvmIndex.fromBytes(bytes("""{"foo": ["bar"]}"""), os, arch)
+        assert(res.isLeft)
       }
     }
 

@@ -480,13 +480,41 @@ import scala.util.control.NonFatal
     fileWithIntegrityCheck0(artifact)
 
   private def fileWithIntegrityCheck0(artifact: Artifact): EitherT[F, ArtifactError, File] =
+    fileWithChecks0(artifact, integrityCheck = true, expectedChecksum = None)
+
+  /** Like [[file]], optionally checking the integrity of archives, and checking that the file has
+    * the expected checksum
+    *
+    * The checksum of the file is persisted alongside it, like [[validateChecksum]] does, so that
+    * it's not computed again. If it's not the expected one, the file is deleted and downloaded
+    * again once. If this cache defers to a cache server, the server is the one doing that.
+    */
+  override def fileWithChecks(
+    artifact: Artifact,
+    integrityCheck: Boolean,
+    expectedChecksum: Option[ExpectedChecksum]
+  )(implicit S: Sync[F]): EitherT[F, ArtifactError, File] =
+    fileWithChecks0(artifact, integrityCheck, expectedChecksum)
+
+  private def fileWithChecks0(
+    artifact: Artifact,
+    integrityCheck: Boolean,
+    expectedChecksum: Option[ExpectedChecksum]
+  ): EitherT[F, ArtifactError, File] =
     remoteCacheSubstitute match {
       case Some(remoteCache) =>
         ensureLoggerIsInitialized[ArtifactError].flatMap { _ =>
-          remoteCache.fileWithIntegrityCheck(artifact)
+          remoteCache.fileWithChecks(artifact, integrityCheck, expectedChecksum)(remoteCache.sync)
         }
       case None =>
-        fileWith(artifact, retry, cachePolicies, ttl, archiveIntegrityCheck = true)
+        fileWith(
+          artifact,
+          retry,
+          cachePolicies,
+          ttl,
+          archiveIntegrityCheck = integrityCheck,
+          expectedChecksum = expectedChecksum
+        )
     }
 
   /** Gets `artifact` from this cache, with cache policies and a TTL other than this cache's
@@ -496,21 +524,33 @@ import scala.util.control.NonFatal
     * @param archiveIntegrityCheck
     *   whether to check the integrity of `artifact`, an archive, like [[fileWithIntegrityCheck]]
     *   does
+    * @param expectedChecksum
+    *   checksum `artifact` is expected to have, see [[fileWithChecks]]
     */
   private[coursier] def fileWith(
     artifact: Artifact,
     retry: Int,
     cachePolicies: Seq[CachePolicy],
     ttl: Option[Duration],
-    archiveIntegrityCheck: Boolean = false
+    archiveIntegrityCheck: Boolean = false,
+    expectedChecksum: Option[ExpectedChecksum] = None
   ): EitherT[F, ArtifactError, File] = {
     def download: EitherT[F, ArtifactError, File] =
       ensureLoggerIsInitialized[ArtifactError].flatMap { _ =>
         cachePolicies.tail.map(filePerPolicy(artifact, _, retry, ttl))
           .foldLeft(filePerPolicy(artifact, cachePolicies.head, retry, ttl))(_ orElse _)
       }
-    if (archiveIntegrityCheck)
-      EitherT(ArchiveIntegrity.checkedDownload(location, artifact.url, download.run))
+    if (archiveIntegrityCheck || expectedChecksum.nonEmpty)
+      EitherT(
+        ArchiveIntegrity.checkedDownload(
+          location,
+          artifact.url,
+          archiveIntegrityCheck,
+          expectedChecksum,
+          (f, sumType) => FileCache.persistedDigest(location, sumType, f, retry0),
+          download.run
+        )
+      )
     else
       download
   }
