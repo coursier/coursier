@@ -136,6 +136,10 @@ object StringInterpolators {
         c.Expr(
           q"_root_.coursier.core.VariantSelector.VariantMatcher.MinimumVersion(_root_.coursier.version.Version(${mv.minimumVersion.asString}))"
         )
+      case mv: VariantSelector.VariantMatcher.MaximumVersion =>
+        c.Expr(
+          q"_root_.coursier.core.VariantSelector.VariantMatcher.MaximumVersion(_root_.coursier.version.Version(${mv.maximumVersion.asString}))"
+        )
       case ew: VariantSelector.VariantMatcher.EndsWith =>
         c.Expr(q"_root_.coursier.core.VariantSelector.VariantMatcher.EndsWith(${ew.suffix})")
       case anyOf: VariantSelector.VariantMatcher.AnyOf =>

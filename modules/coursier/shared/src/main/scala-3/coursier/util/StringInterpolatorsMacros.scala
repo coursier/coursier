@@ -85,6 +85,12 @@ object StringInterpolatorsMacros {
             Version0(${ Expr(minVersion.minimumVersion.asString) })
           )
         }
+      case maxVersion: VariantSelector.VariantMatcher.MaximumVersion =>
+        '{
+          VariantSelector.VariantMatcher.MaximumVersion(
+            Version0(${ Expr(maxVersion.maximumVersion.asString) })
+          )
+        }
       case endsWith: VariantSelector.VariantMatcher.EndsWith =>
         '{ VariantSelector.VariantMatcher.EndsWith(${ Expr(endsWith.suffix) }) }
       case anyOf: VariantSelector.VariantMatcher.AnyOf =>
