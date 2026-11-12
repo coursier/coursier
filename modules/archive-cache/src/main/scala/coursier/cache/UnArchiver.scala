@@ -568,6 +568,16 @@ object UnArchiver {
   def default(): UnArchiver with OpenStream =
     new DefaultUnArchiver(defaultMaxSize, defaultMaxEntries)
 
+  /** Wraps a stream of content extracted from `archive`, so that reading more than `maxSize` bytes
+    * from it fails with [[ExtractionLimitException]]
+    *
+    * Meant for code reading content from archives itself, rather than via an [[UnArchiver]]. Pass
+    * [[defaultMaxSize]] to apply the same limit as [[default]]. Zero or negative values disable the
+    * limit.
+    */
+  def limitExtractedSize(archive: File, is: InputStream, maxSize: Long): InputStream =
+    new ExtractionLimits(archive, maxSize, 0L).limit(is)
+
   /** An [[UnArchiver]] failing with [[ExtractionLimitException]] if an archive has more than
     * `maxEntries` entries, or more than `maxSize` bytes of content once extracted
     *
