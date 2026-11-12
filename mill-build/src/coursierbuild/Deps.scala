@@ -14,9 +14,16 @@ object Deps {
     mvn"io.github.alexarchambault:concurrent-reference-hash-map:1.1.0"
   def dataClassVersion = "0.3.0"
   def dataClass        = mvn"io.github.alexarchambault::data-class:$dataClassVersion"
-  def dataClass3       = mvn"io.github.alexarchambault:data-class_3:$dataClassVersion"
-  def dataClassPlugin =
-    mvn"io.github.alexarchambault:::data-class-plugin:$dataClassVersion"
+  // The Scala 3 side (annotations + compiler plugin) is on a data-class snapshot from
+  // central:maven-snapshots (see DataClassModuleBase), the only one with a plugin for Scala 3.10.1.
+  // The timestamped versions of a snapshot have per-artifact build numbers, and the plugin for
+  // Scala 3.10.1 (new in that snapshot) has a different one than the other artifacts.
+  private def dataClass3Snapshot = "0.3.1-20261111.225724"
+  def dataClass3                 = mvn"io.github.alexarchambault:data-class_3:$dataClass3Snapshot-2"
+  def dataClassPlugin(scalaVersion: String) = {
+    val buildNumber = if (scalaVersion == "3.10.1") 1 else 2
+    mvn"io.github.alexarchambault:::data-class-plugin:$dataClass3Snapshot-$buildNumber"
+  }
   def dependency   = mvn"io.get-coursier::dependency::0.3.4"
   def directories  = mvn"io.get-coursier.util:directories-jni:0.2.0"
   def diffUtils    = mvn"io.github.java-diff-utils:java-diff-utils:4.18"

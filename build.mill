@@ -77,7 +77,12 @@ trait DataClassModuleBase extends CsScalaModule {
     if (usesDataClassPlugin) Deps.dataClass3 else Deps.dataClass
   )
   def scalacPluginMvnDeps = super.scalacPluginMvnDeps() ++ {
-    if (usesDataClassPlugin) Seq(Deps.dataClassPlugin)
+    if (usesDataClassPlugin) Seq(Deps.dataClassPlugin(scalaVersion()))
+    else Nil
+  }
+  // for the data-class snapshot of the Scala 3 modules, see Deps.dataClass3
+  def repositories = super.repositories() ++ {
+    if (usesDataClassPlugin) Seq("central:maven-snapshots")
     else Nil
   }
   def scalacOptions = super.scalacOptions() ++ {
