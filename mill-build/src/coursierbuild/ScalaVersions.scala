@@ -5,7 +5,7 @@ object ScalaVersions {
   def scala213 = "2.13.18"
   def scala212 = "2.12.21"
 
-  def scala3Latest = "3.10.0"
+  def scala3Latest = "3.10.1"
 
   // Only for the cli module itself: as an application rather than a library, it doesn't
   // force its Scala 3 version onto anyone, and can use the latest one. Its module
