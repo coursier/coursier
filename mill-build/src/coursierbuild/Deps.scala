@@ -78,7 +78,7 @@ object Deps {
   // too.
   private def scalaCliConfig3(sv: String) =
     if (sv.startsWith("2.13")) mvn"org.virtuslab.scala-cli:config_3:1.17.1" // scala-steward:off
-    else mvn"org.virtuslab.scala-cli:config_3:1.18.0"
+    else mvn"org.virtuslab.scala-cli:config_3:1.19.0"
   // a platform dependency, so that Scala.js modules get the Scala.js one
   def scala3Library(sv: String) = mvn"org.scala-lang::scala3-library::$sv"
   def scalaCompiler(sv: String) =
