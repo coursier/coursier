@@ -4,7 +4,7 @@ import java.io.File
 import java.util.concurrent.ExecutorService
 
 import coursier.cache._
-import coursier.credentials.Credentials
+import coursier.credentials.{Credentials, NetrcCredentials}
 import coursier.internal.InMemoryCache
 import coursier.util.{Sync, Task}
 
@@ -21,6 +21,7 @@ final case class CacheParams(
   followHttpToHttpsRedirections: Boolean,
   credentials: Seq[coursier.credentials.Credentials] = Nil,
   useEnvCredentials: Boolean = true,
+  netrc: Option[NetrcCredentials] = None,
   userAgent: Option[String] = None,
   userAgentComments: Seq[String] = Nil,
   rejectNonAuthoritativeResponses: Boolean = false
@@ -48,6 +49,8 @@ final case class CacheParams(
     copy(credentials = credentials)
   def withUseEnvCredentials(useEnvCredentials: Boolean): CacheParams =
     copy(useEnvCredentials = useEnvCredentials)
+  def withNetrc(netrc: Option[NetrcCredentials]): CacheParams =
+    copy(netrc = netrc)
   def withUserAgent(userAgent: Option[String]): CacheParams =
     copy(userAgent = userAgent)
 
@@ -95,6 +98,8 @@ final case class CacheParams(
         if (!useEnvCredentials)
           c = c.copy(credentials = Nil)
         c = c.addCredentials(credentials*)
+        // last, so that any other credentials win over the netrc file, like in curl
+        c = c.addCredentials(netrc.toSeq*)
         c
       case rc: RemoteCache[Task] =>
         rc.copy(

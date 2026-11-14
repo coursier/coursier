@@ -427,8 +427,10 @@ object CacheUrl {
             // over HTTP, these can't match whatever their host, which is easy to miss now that
             // credentials are HTTPS-only by default
             val httpsOnlyHint =
-              if (isHttp && c.httpsOnly && !c.host.contains("://")) " (HTTPS only)" else ""
-            c.host + c.realm.fold("")(r => s"($r)") + httpsOnlyHint
+              if (isHttp && c.httpsOnly && (c.anyHost || !c.host.contains("://"))) " (HTTPS only)"
+              else ""
+            val host = if (c.anyHost) "any host" else c.host
+            host + c.realm.fold("")(r => s"($r)") + httpsOnlyHint
           }
           .distinct
         val configured =

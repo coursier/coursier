@@ -25,6 +25,8 @@ public abstract class Credentials implements Serializable {
   public static List<Credentials> credentials() throws IOException {
     List<Credentials> list = new ArrayList<>(credentialsFromProperties());
     list.addAll(credentialsFromConfig());
+    // last, so that any other credentials win over the netrc file, like with the CLI
+    list.add(new NetrcCredentials());
     return list;
   }
 

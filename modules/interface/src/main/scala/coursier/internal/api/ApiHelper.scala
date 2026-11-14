@@ -473,6 +473,16 @@ object ApiHelper {
       .map(directCredentials)
       .map(dc => dc: coursier.credentials.Credentials)
 
+    val netrcCredentials =
+      if (cache.isNetrc)
+        Some(
+          coursier.credentials.NetrcCredentials(
+            Option(cache.getNetrcFile),
+            cache.isNetrcOptional
+          ): coursier.credentials.Credentials
+        )
+      else None
+
     val fileCredentials = cache.getCredentialFiles.asScala
       .map(path =>
         coursier.credentials.FileCredentials(
@@ -488,6 +498,8 @@ object ApiHelper {
         logger = loggerOpt.getOrElse(CacheLogger.nop)
       )
       .addCredentials((cacheCredentials ++ fileCredentials).toSeq: _*)
+      // last, so that the other credentials win over the netrc file
+      .addCredentials(netrcCredentials.toSeq: _*)
   }
 
   def cache(cache: FileCache[Task]): coursierapi.Cache = {
@@ -500,6 +512,7 @@ object ApiHelper {
     val cacheCredentials = cache.credentials.flatMap {
       case dc: coursier.credentials.DirectCredentials => Seq(credentials(dc))
       case _: coursier.credentials.FileCredentials    => Nil
+      case _: coursier.credentials.NetrcCredentials   => Nil
       case other                                      => other.get().map(credentials)
     }
 
@@ -512,6 +525,12 @@ object ApiHelper {
       .withLocation(cache.location)
       .withLogger(loggerOpt.orNull)
       .withCredentials(cacheCredentials.asJava)
+    for (
+      netrc <- cache.credentials.collectFirst {
+        case nc: coursier.credentials.NetrcCredentials => nc
+      }
+    )
+      c.withNetrc(true).withNetrcFile(netrc.path.orNull).withNetrcOptional(netrc.optional)
     fileCredentialPaths.foldLeft(c)((c, path) => c.addFileCredentials(path))
   }
 
