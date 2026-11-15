@@ -57,7 +57,7 @@ object Deps {
     mvn"io.github.alexarchambault.native-terminal:native-terminal:${Versions.nativeTerminal}"
   def noCrcZis       = mvn"io.github.alexarchambault.scala-cli.tmp:zip-input-stream:0.1.1"
   def osLib          = mvn"com.lihaoyi::os-lib:0.11.10"
-  def plexusArchiver = mvn"org.codehaus.plexus:plexus-archiver:4.15.0"
+  def plexusArchiver = mvn"org.codehaus.plexus:plexus-archiver:4.16.0"
   // plexus-archiver needs its loggers
   def plexusContainerDefault = mvn"org.codehaus.plexus:plexus-container-default:2.1.1"
     .exclude("junit" -> "junit")
