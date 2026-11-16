@@ -28,5 +28,5 @@ object ScalaVersions {
   val all            = Seq(scala213, scala212, scala3)
   val allButScala212 = Seq(scala213, scala3)
 
-  def scalaJs = "1.22.0"
+  def scalaJs = "1.23.0"
 }
