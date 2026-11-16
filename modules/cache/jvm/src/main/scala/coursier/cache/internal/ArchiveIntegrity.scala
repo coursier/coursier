@@ -1,6 +1,6 @@
 package coursier.cache.internal
 
-import java.io.{EOFException, File, InputStream}
+import java.io.{EOFException, File, FilterInputStream, InputStream}
 import java.math.BigInteger
 import java.nio.file.{Files, NoSuchFileException}
 import java.security.{MessageDigest, NoSuchAlgorithmException}
@@ -9,7 +9,7 @@ import java.util.zip.{GZIPInputStream, ZipException, ZipFile}
 import scala.jdk.CollectionConverters._
 
 import coursier.cache.{ArtifactError, CacheLocks, ExpectedChecksum, FileCache}
-import coursier.util.{EitherT, Sync}
+import coursier.util.{EitherT, EnvEntry, Sync}
 
 /** Integrity checks of archives, using the checksums of their compression format
   *
@@ -22,9 +22,75 @@ private[coursier] object ArchiveIntegrity {
   private def isZip(url: String): Boolean =
     url.endsWith(".zip") || url.endsWith(".jar")
 
+  /** Thrown when decompressing an archive to check its integrity exceeds [[ArchiveLimits]]
+    *
+    * Such archives aren't deemed corrupted, which would make us download them again: callers report
+    * this as an error.
+    */
+  final class LimitExceededException(message: String) extends Exception(message)
+
+  /** Counts what's decompressed from `archive` against the limits of [[ArchiveLimits]]
+    *
+    * These are the limits extraction applies by default, so that archive bombs are rejected before
+    * they're fully decompressed.
+    */
+  private final class Limits(archive: File) {
+    private val maxSize    = ArchiveLimits.maxSize
+    private val maxEntries = ArchiveLimits.maxEntries
+    private var size       = 0L
+    private var entries    = 0L
+
+    private def fail(what: String, limit: Long, entry: EnvEntry): Nothing =
+      throw new LimitExceededException(
+        ArchiveLimits.exceededMessage(
+          s"Decompressing $archive to check its integrity",
+          what,
+          limit,
+          entry
+        )
+      )
+
+    /** To be called before each entry is decompressed */
+    def newEntry(): Unit = {
+      entries += 1
+      if (maxEntries > 0 && entries > maxEntries)
+        fail("number of entries", maxEntries, ArchiveLimits.maxEntriesEntry)
+    }
+
+    /** Wraps a stream of decompressed content, so that it fails if the size limit is exceeded
+      *
+      * With `sizeFactor` greater than 1, it only fails once `sizeFactor` times the size limit is
+      * exceeded.
+      */
+    def limit(is: InputStream, sizeFactor: Int = 1): InputStream =
+      new FilterInputStream(is) {
+        private val maxSize0 =
+          if (maxSize > Long.MaxValue / sizeFactor) Long.MaxValue else maxSize * sizeFactor
+        private def count(read: Long): Unit =
+          if (read > 0) {
+            size += read
+            if (maxSize > 0 && size > maxSize0)
+              fail("extracted size", maxSize, ArchiveLimits.maxSizeEntry)
+          }
+        override def read(): Int = {
+          val b = super.read()
+          if (b >= 0) count(1L)
+          b
+        }
+        override def read(b: Array[Byte], off: Int, len: Int): Int = {
+          val read = super.read(b, off, len)
+          count(read)
+          read
+        }
+      }
+  }
+
   /** Checks the integrity of an archive
     *
     * Only supported for GZIP and ZIP archives for now.
+    *
+    * What's decompressed is counted against the limits of [[ArchiveLimits]], and
+    * [[LimitExceededException]] is thrown if they're exceeded.
     *
     * @return
     *   whether the archive is valid, or `None` if its format isn't supported
@@ -40,11 +106,14 @@ private[coursier] object ArchiveIntegrity {
     }
     if (isGzip(url)) {
       // read uncompressed content fully to validate GZIP checksum
+      // Extraction limits only count the content of tar entries, not the headers and padding of
+      // the tar stream, so allow some room for those when this is a tar.gz archive
+      val sizeFactor       = if (url.endsWith(".gz") && !url.endsWith(".tar.gz")) 1 else 2
       var fis: InputStream = null
       try {
         fis = Files.newInputStream(file.toPath)
         try {
-          readAndDiscard(new GZIPInputStream(fis, 64 * 1024))
+          readAndDiscard(new Limits(file).limit(new GZIPInputStream(fis, 64 * 1024), sizeFactor))
           Some(true)
         }
         catch {
@@ -63,8 +132,11 @@ private[coursier] object ArchiveIntegrity {
       var zf: ZipFile = null
       try {
         zf = new ZipFile(file)
-        for (ent <- zf.entries().asScala)
-          readAndDiscard(zf.getInputStream(ent))
+        val limits = new Limits(file)
+        for (ent <- zf.entries().asScala) {
+          limits.newEntry()
+          readAndDiscard(limits.limit(zf.getInputStream(ent)))
+        }
         Some(true)
       }
       catch {
@@ -78,6 +150,14 @@ private[coursier] object ArchiveIntegrity {
     else
       None
   }
+
+  /** Like [[check]], reporting [[LimitExceededException]] as an [[ArtifactError]] */
+  def limitError[T](f: => T): Either[ArtifactError, T] =
+    try Right(f)
+    catch {
+      case e: LimitExceededException =>
+        Left(new ArtifactError.DownloadError(e.getMessage, Some(e)))
+    }
 
   private def isInCache(file: File, cacheLocation: File): Boolean =
     file.toPath.toAbsolutePath.normalize.startsWith(cacheLocation.toPath.toAbsolutePath.normalize)
@@ -166,7 +246,9 @@ private[coursier] object ArchiveIntegrity {
     * checked again, and the digest of the archive is persisted alongside it by `digest`.
     *
     * @return
-    *   whether the archive was deleted, and should be downloaded again
+    *   whether the archive was deleted, and should be downloaded again (throws
+    *   [[LimitExceededException]] if it's too large to check its integrity, leaving it and its
+    *   integrity file as they are)
     */
   private def checkCached(
     cacheLocation: File,
@@ -249,7 +331,9 @@ private[coursier] object ArchiveIntegrity {
       deleted <- EitherT(
         S.delay[Either[ArtifactError, Boolean]] {
           if (isInCache(f, cacheLocation))
-            checkCached(cacheLocation, url, f, integrityCheck, expectedChecksum, digest)
+            limitError {
+              checkCached(cacheLocation, url, f, integrityCheck, expectedChecksum, digest)
+            }.flatMap(identity)
           else
             expectedChecksum
               .map(checkChecksum(f, _, computeDigest))

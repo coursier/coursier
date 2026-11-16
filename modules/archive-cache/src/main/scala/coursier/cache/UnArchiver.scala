@@ -34,6 +34,7 @@ import scala.collection.mutable
 import scala.jdk.CollectionConverters._
 import scala.util.{Failure, Success, Try, Using}
 
+import coursier.cache.internal.ArchiveLimits
 import coursier.util.EnvEntry
 
 trait UnArchiver {
@@ -137,7 +138,8 @@ object UnArchiver {
             Left(extractCompressed(c, archive, destDir))
           case ArchiveType.Zip =>
             Right {
-              new ZipUnArchiver with CheckSymbolicLinks with LimitExtraction {
+              new ZipUnArchiver with CheckSymbolicLinks with LimitExtraction
+                with LimitZipSymbolicLinks {
                 def checker = linkChecker
                 def limits  = limits0
               }
@@ -405,9 +407,7 @@ object UnArchiver {
 
     private def fail(what: String, limit: Long, entry: EnvEntry): Nothing =
       throw new ExtractionLimitException(
-        s"Extracting $archive exceeds the maximum $what ($limit). " +
-          s"Set ${entry.envName} in the environment, or the ${entry.propName} Java property, " +
-          "to change that limit (0 to disable it)."
+        ArchiveLimits.exceededMessage(s"Extracting $archive", what, limit, entry)
       )
 
     /** To be called before each entry is extracted */
@@ -510,6 +510,61 @@ object UnArchiver {
     }
   }
 
+  /** Maximum length of the target of symbolic links in zip archives, in bytes
+    *
+    * Linux' PATH_MAX, the maximum length of symbolic link targets there (it's even lower on macOS)
+    */
+  private def maxZipSymbolicLinkTargetLength = 4096
+
+  /** Mixed into plexus zip unarchivers, to bound the size of symbolic link targets
+    *
+    * The target of a symbolic link is the content of its zip entry, that plexus-archiver reads
+    * fully in memory (via commons-compress `ZipFile#getUnixSymlink`) before calling `extractFile`,
+    * so neither [[LimitExtraction]] nor the plexus `maxOutputSize` limit apply to it. A small
+    * compressed link entry could make it read GBs in memory. `isSelected` is called right before
+    * that, so we check the size of link entries there, reading at most a few KB of them.
+    */
+  private trait LimitZipSymbolicLinks extends AbstractUnArchiver {
+    override protected def isSelected(fileName: String, fileInfo: PlexusIoResource): Boolean = {
+      if (fileInfo.isSymbolicLink) {
+        def fail(): Nothing =
+          throw new ArchiverException(
+            s"Symbolic link $fileName in $getSourceFile has a target longer than " +
+              s"$maxZipSymbolicLinkTargetLength bytes"
+          )
+        // the size in the archive can't be trusted, the actual content is checked below
+        if (fileInfo.getSize > maxZipSymbolicLinkTargetLength)
+          fail()
+        val tooLong =
+          try
+            Using.resource(fileInfo.getContents) { is =>
+              // reads at most maxZipSymbolicLinkTargetLength + 1 bytes
+              val buf   = new Array[Byte](maxZipSymbolicLinkTargetLength + 1)
+              var total = 0
+              var read  = 0
+              while (
+                total < buf.length && {
+                  read = is.read(buf, total, buf.length - total)
+                  read >= 0
+                }
+              )
+                total += read
+              total > maxZipSymbolicLinkTargetLength
+            }
+          catch {
+            case e: IOException =>
+              throw new ArchiverException(
+                s"Error reading symbolic link $fileName in $getSourceFile",
+                e
+              )
+          }
+        if (tooLong)
+          fail()
+      }
+      super.isSelected(fileName, fileInfo)
+    }
+  }
+
   /** Checks that symbolic links extracted under `root` don't point outside of it
     *
     * Each link is checked before it's created, against what has been extracted so far. But a link
@@ -596,62 +651,39 @@ object UnArchiver {
       }
   }
 
-  private def maxSizeEntry =
-    EnvEntry("COURSIER_ARCHIVE_MAX_SIZE", "coursier.archive.max-size")
-  private def maxEntriesEntry =
-    EnvEntry("COURSIER_ARCHIVE_MAX_ENTRIES", "coursier.archive.max-entries")
+  private def maxSizeEntry    = ArchiveLimits.maxSizeEntry
+  private def maxEntriesEntry = ArchiveLimits.maxEntriesEntry
 
   /** Default maximum size of the content extracted from an archive, in bytes (8 GiB)
     *
     * JDK or GraalVM archives are several hundreds of MB once extracted, so that leaves a lot of
     * room, while preventing archive bombs from filling the disk.
     */
-  def defaultMaxSizeFallback: Long = 8L * 1024L * 1024L * 1024L
+  def defaultMaxSizeFallback: Long = ArchiveLimits.maxSizeFallback
 
   /** Default maximum number of entries extracted from an archive */
-  def defaultMaxEntriesFallback: Long = 1000000L
-
-  // accepts a number of bytes, optionally followed by a K, M, G, or T suffix (powers of 1024)
-  private def parseSize(input: String): Option[Long] = {
-    val s = input.trim
-    val (num, factor) = s.lastOption.map(_.toUpper) match {
-      case Some('K') => (s.init, 1024L)
-      case Some('M') => (s.init, 1024L * 1024L)
-      case Some('G') => (s.init, 1024L * 1024L * 1024L)
-      case Some('T') => (s.init, 1024L * 1024L * 1024L * 1024L)
-      case _         => (s, 1L)
-    }
-    Try(Math.multiplyExact(num.trim.toLong, factor)).toOption
-  }
-
-  private def readLimit(entry: EnvEntry, fallback: Long): Long = {
-    val values = entry.read()
-    values.env.map(v => (v, s"environment variable ${entry.envName}"))
-      .orElse(values.prop.map(v => (v, s"Java property ${entry.propName}")))
-      .fold(fallback) {
-        case (value, from) =>
-          parseSize(value).getOrElse {
-            throw new IllegalArgumentException(s"Invalid value '$value' for $from")
-          }
-      }
-  }
+  def defaultMaxEntriesFallback: Long = ArchiveLimits.maxEntriesFallback
 
   /** Maximum size of the content extracted from an archive by [[default]], in bytes
     *
     * Can be set via the `COURSIER_ARCHIVE_MAX_SIZE` environment variable or the
     * `coursier.archive.max-size` Java property, as a number of bytes, optionally followed by K, M,
     * G, or T (like `32G`). 0 disables the limit.
+    *
+    * [[ArchiveCache]] also applies it when decompressing archives to check their integrity.
     */
   def defaultMaxSize: Long =
-    readLimit(maxSizeEntry, defaultMaxSizeFallback)
+    ArchiveLimits.maxSize
 
   /** Maximum number of entries extracted from an archive by [[default]]
     *
     * Can be set via the `COURSIER_ARCHIVE_MAX_ENTRIES` environment variable or the
     * `coursier.archive.max-entries` Java property. 0 disables the limit.
+    *
+    * [[ArchiveCache]] also applies it when decompressing ZIP archives to check their integrity.
     */
   def defaultMaxEntries: Long =
-    readLimit(maxEntriesEntry, defaultMaxEntriesFallback)
+    ArchiveLimits.maxEntries
 
   def default(): UnArchiver with OpenStream =
     new DefaultUnArchiver(defaultMaxSize, defaultMaxEntries)
@@ -685,7 +717,7 @@ object UnArchiver {
   def priviledgedMaxSizeFallback: Long = 32L * 1024L * 1024L * 1024L
 
   private def priviledgedMaxSize: Long =
-    readLimit(maxSizeEntry, priviledgedMaxSizeFallback)
+    ArchiveLimits.readLimit(maxSizeEntry, priviledgedMaxSizeFallback)
 
   /** An [[UnArchiver]] extracting tar archives with `sudo tar`, so that ownership and permissions
     * are kept

@@ -14,7 +14,7 @@ import utest._
 import java.io.{ByteArrayOutputStream, OutputStream}
 import java.util.zip.GZIPOutputStream
 
-import scala.util.{Failure, Properties, Try, Using}
+import scala.util.{Failure, Properties, Success, Try, Using}
 
 object ArchiveCacheLimitsTests extends TestSuite {
 
@@ -81,17 +81,40 @@ object ArchiveCacheLimitsTests extends TestSuite {
       "xz" -> xz(content)
     )
 
+  private def withProp[T](name: String, value: String)(f: => T): T = {
+    val former = sys.props.get(name)
+    sys.props(name) = value
+    try f
+    finally former match {
+        case Some(v) => sys.props(name) = v
+        case None    => sys.props.remove(name)
+      }
+  }
+
+  // With cacheArchive, the archive is copied to the cache like a downloaded one, so that
+  // ArchiveCache checks its integrity before extracting it
   private def get(
     dir: os.Path,
     ext: String,
     content: Array[Byte],
     maxSize: Long,
     maxEntries: Long,
-    unArchiver0: (Long, Long) => UnArchiver
+    unArchiver: (Long, Long) => UnArchiver = UnArchiver.default(_, _),
+    cacheArchive: Boolean = false
+  ): Try[Either[ArtifactError, os.Path]] =
+    get0(dir, ext, content, unArchiver(maxSize, maxEntries), cacheArchive)
+
+  private def get0(
+    dir: os.Path,
+    ext: String,
+    content: Array[Byte],
+    unArchiver: UnArchiver,
+    cacheArchive: Boolean
   ): Try[Either[ArtifactError, os.Path]] = {
-    val unArchiver = unArchiver0(maxSize, maxEntries)
+    val cache = FileCache[Task]((dir / "cache").toIO)
+      .copy(localArtifactsShouldBeCached = cacheArchive)
     val archiveCache = ArchiveCache.create[Task]((dir / "arc").toIO)
-      .copy(cache = FileCache[Task]((dir / "cache").toIO), unArchiver = unArchiver)
+      .copy(cache = cache, unArchiver = unArchiver)
     val archive = dir / "archives" / s"archive.$ext"
     os.write.over(archive, content, createFolders = true)
     Try {
@@ -120,16 +143,6 @@ object ArchiveCacheLimitsTests extends TestSuite {
         val leftOver = os.walk(dir / "arc").filter(os.isFile(_)).filter(_.last != ".lock")
         assert(leftOver.isEmpty)
       }
-
-  private def withProp[T](name: String, value: String)(f: => T): T = {
-    val former = sys.props.get(name)
-    sys.props(name) = value
-    try f
-    finally former match {
-        case Some(v) => sys.props(name) = v
-        case None    => sys.props.remove(name)
-      }
-  }
 
   // tar archives, extracted by the tar command with UnArchiver.priviledged
   // no xz archives here either, as org.tukaani:xz isn't on the Scala 3 compile class path
@@ -182,7 +195,7 @@ object ArchiveCacheLimitsTests extends TestSuite {
       )
     }
 
-    test("within limits") {
+    def withinLimits(cacheArchive: Boolean): Unit = {
       val entries = Seq("a.txt" -> Array[Byte](1, 2), "big" -> zeros)
       for ((ext, content) <- multiFileArchives(entries))
         withTmpDir { dir =>
@@ -192,7 +205,7 @@ object ArchiveCacheLimitsTests extends TestSuite {
             content,
             maxSize = bigSize + 2,
             maxEntries = 2,
-            UnArchiver.default(_, _)
+            cacheArchive = cacheArchive
           ).get
           res match {
             case Left(err) => throw new Exception(s"Extracting $ext archive", err)
@@ -203,12 +216,93 @@ object ArchiveCacheLimitsTests extends TestSuite {
       for ((ext, content) <- singleFileArchives(zeros))
         withTmpDir { dir =>
           val res =
-            get(dir, ext, content, maxSize = bigSize, maxEntries = 1, UnArchiver.default(_, _)).get
+            get(dir, ext, content, maxSize = bigSize, maxEntries = 1, cacheArchive = cacheArchive)
+              .get
           res match {
             case Left(err)        => throw new Exception(s"Extracting $ext archive", err)
             case Right(extracted) => assert(os.size(extracted) == bigSize.toLong)
           }
         }
+    }
+
+    test("within limits") {
+      test("local archives") {
+        withinLimits(cacheArchive = false)
+      }
+      // limits applied by the integrity check too
+      test("cached archives") {
+        withinLimits(cacheArchive = true)
+      }
+    }
+
+    test("integrity check") {
+      // archives that ArchiveCache checks the integrity of
+      def integrityChecked(archives: Seq[(String, Array[Byte])]): Seq[(String, Array[Byte])] =
+        archives.filter { case (ext, _) => ext == "zip" || ext == "gz" || ext == "tar.gz" }
+
+      // the integrity check applies the default limits, whatever the limits of the UnArchiver
+      // of ArchiveCache, so that a cache server checking archives applies them too
+      val failing: UnArchiver = new UnArchiver {
+        def extract(
+          archiveType: ArchiveType,
+          archive: java.io.File,
+          destDir: java.io.File,
+          overwrite: Boolean
+        ): Unit =
+          throw new Exception("Archive shouldn't be extracted")
+      }
+
+      def checkRejectedEarly(
+        archives: Seq[(String, Array[Byte])],
+        expectedMessage: String
+      ): Unit = {
+        assert(archives.nonEmpty)
+        for ((ext, content) <- archives)
+          withTmpDir { dir =>
+            get0(dir, ext, content, failing, cacheArchive = true) match {
+              case Success(Left(err)) =>
+                // the limit is hit while decompressing the archive to check its integrity,
+                // before extraction starts
+                assert(err.getMessage.contains("to check its integrity"))
+                assert(err.getMessage.contains(expectedMessage))
+              case other =>
+                throw new Exception(s"Expected integrity check of $ext archive to fail, got $other")
+            }
+            // the downloaded archive isn't deemed corrupted, deleted, and downloaded again
+            val cached   = os.walk(dir / "cache").filter(os.isFile(_))
+            val archives = cached.filter(_.last == s"archive.$ext")
+            assert(archives.length == 1)
+            assert(os.read.bytes(archives.head).sameElements(content))
+            assert(!cached.exists(_.last.endsWith("__integrity")))
+            // nothing got extracted
+            val extracted =
+              if (os.exists(dir / "arc")) os.walk(dir / "arc").filter(os.isFile(_))
+              else Nil
+            assert(extracted.forall(_.last == ".lock"))
+          }
+      }
+
+      test("size") {
+        withProp("coursier.archive.max-size", "1M") {
+          checkRejectedEarly(
+            integrityChecked(
+              multiFileArchives(Seq("a.txt" -> Array[Byte](1, 2), "big" -> zeros)) ++
+                singleFileArchives(zeros)
+            ),
+            "maximum extracted size (1048576). Set COURSIER_ARCHIVE_MAX_SIZE"
+          )
+        }
+      }
+      // entries of tar.gz archives aren't counted there, only their extraction counts them
+      test("entries") {
+        withProp("coursier.archive.max-entries", "10") {
+          checkRejectedEarly(
+            multiFileArchives((1 to 20).map(n => s"file-$n" -> Array[Byte](n.toByte)))
+              .filter(_._1 == "zip"),
+            "maximum number of entries (10). Set COURSIER_ARCHIVE_MAX_ENTRIES"
+          )
+        }
+      }
     }
 
     test("default limits") {
