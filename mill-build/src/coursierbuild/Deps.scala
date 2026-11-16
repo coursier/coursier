@@ -72,15 +72,19 @@ object Deps {
     else
       scalaCliConfig3(sv)
         .exclude(("com.github.plokhotnyuk.jsoniter-scala", "jsoniter-scala-core_3"))
-  // The Scala 2.13 modules still support Java 8, and config_3 1.19.0 and later target Java 17,
+  // scala-steward:off
+  // (the whole block, comments included: Scala Steward rewrites versions in comments too, and
+  // #4031 bumped the "config_3 1.18.0" below while leaving the actual dependencies alone)
+  // The Scala 2.13 modules still support Java 8, and config_3 1.18.0 and later target Java 17,
   // so they stay at the last release with Java 8 class files (the interface module shades it).
   // The Scala 3 modules use the same artifact, so a pin in .scala-steward.conf would block them
   // too. They stay at 1.18.0 too: 1.19.0 and later are built with Scala 3.9 and depend on
   // scala-library 3.9.0, which is unusable from the Scala 3.3 LTS modules (the 3.3 compiler
   // can't read that stdlib, and it would leak into the dependencies of the published modules).
   private def scalaCliConfig3(sv: String) =
-    if (sv.startsWith("2.13")) mvn"org.virtuslab.scala-cli:config_3:1.17.1" // scala-steward:off
-    else mvn"org.virtuslab.scala-cli:config_3:1.18.0"                       // scala-steward:off
+    if (sv.startsWith("2.13")) mvn"org.virtuslab.scala-cli:config_3:1.17.1"
+    else mvn"org.virtuslab.scala-cli:config_3:1.18.0"
+  // scala-steward:on
   // a platform dependency, so that Scala.js modules get the Scala.js one
   def scala3Library(sv: String) = mvn"org.scala-lang::scala3-library::$sv"
   def scalaCompiler(sv: String) =
