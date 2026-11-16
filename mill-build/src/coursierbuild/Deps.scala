@@ -72,7 +72,7 @@ object Deps {
     else
       scalaCliConfig3(sv)
         .exclude(("com.github.plokhotnyuk.jsoniter-scala", "jsoniter-scala-core_3"))
-  // The Scala 2.13 modules still support Java 8, and config_3 1.18.0 and later target Java 17,
+  // The Scala 2.13 modules still support Java 8, and config_3 1.19.0 and later target Java 17,
   // so they stay at the last release with Java 8 class files (the interface module shades it).
   // The Scala 3 modules use the same artifact, so a pin in .scala-steward.conf would block them
   // too. They stay at 1.18.0 too: 1.19.0 and later are built with Scala 3.9 and depend on
