@@ -1,5 +1,6 @@
 package coursier.cache
 
+import coursier.exec.Umask
 import org.apache.commons.compress.archivers.ar.{ArArchiveEntry, ArArchiveInputStream}
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream
@@ -33,6 +34,7 @@ import java.util.zip.GZIPInputStream
 import scala.collection.mutable
 import scala.jdk.CollectionConverters._
 import scala.util.{Failure, Success, Try, Using}
+import scala.util.control.NonFatal
 
 import coursier.cache.internal.ArchiveLimits
 import coursier.util.EnvEntry
@@ -139,14 +141,15 @@ object UnArchiver {
           case ArchiveType.Zip =>
             Right {
               new ZipUnArchiver with CheckSymbolicLinks with LimitExtraction
-                with LimitZipSymbolicLinks {
+                with LimitZipSymbolicLinks with MaskPermissions {
                 def checker = linkChecker
                 def limits  = limits0
               }
             }
           case ArchiveType.Ar =>
             val unArc: org.codehaus.plexus.archiver.UnArchiver =
-              new org.codehaus.plexus.archiver.AbstractUnArchiver with LimitExtraction {
+              new org.codehaus.plexus.archiver.AbstractUnArchiver with LimitExtraction
+                with MaskPermissions {
                 def limits = limits0
                 def fileInfo(entry: ArArchiveEntry): PlexusIoResource =
                   new PlexusIoResource {
@@ -208,35 +211,39 @@ object UnArchiver {
             Right(unArc)
           case ArchiveType.Tar =>
             Right {
-              new TarUnArchiver with CheckSymbolicLinks with LimitExtraction {
+              new TarUnArchiver with CheckSymbolicLinks with LimitExtraction with MaskPermissions {
                 def checker = linkChecker
                 def limits  = limits0
               }
             }
           case ArchiveType.Tgz =>
             Right {
-              new TarGZipUnArchiver with CheckSymbolicLinks with LimitExtraction {
+              new TarGZipUnArchiver with CheckSymbolicLinks with LimitExtraction
+                with MaskPermissions {
                 def checker = linkChecker
                 def limits  = limits0
               }
             }
           case ArchiveType.Tbz2 =>
             Right {
-              new TarBZip2UnArchiver with CheckSymbolicLinks with LimitExtraction {
+              new TarBZip2UnArchiver with CheckSymbolicLinks with LimitExtraction
+                with MaskPermissions {
                 def checker = linkChecker
                 def limits  = limits0
               }
             }
           case ArchiveType.Txz =>
             Right {
-              new TarXZUnArchiver with CheckSymbolicLinks with LimitExtraction {
+              new TarXZUnArchiver with CheckSymbolicLinks with LimitExtraction
+                with MaskPermissions {
                 def checker = linkChecker
                 def limits  = limits0
               }
             }
           case ArchiveType.Tzst =>
             Right {
-              new TarZstdUnArchiver with CheckSymbolicLinks with LimitExtraction {
+              new TarZstdUnArchiver with CheckSymbolicLinks with LimitExtraction
+                with MaskPermissions {
                 def checker = linkChecker
                 def limits  = limits0
               }
@@ -473,6 +480,39 @@ object UnArchiver {
     }
   }
 
+  /** Mixed into plexus unarchivers, to mask the permissions of the files they extract
+    *
+    * plexus-archiver applies the permissions of archive entries as is, ignoring the umask, so that
+    * archives can create group or world-writable files (like a JVM's `bin/java`), that other local
+    * users could modify. This applies the umask of the current process to them, like `tar` does for
+    * non-root users. setuid / setgid / sticky bits are dropped too (plexus-archiver can't set them
+    * anyway).
+    */
+  private trait MaskPermissions extends AbstractUnArchiver {
+    override protected def extractFile(
+      srcF: File,
+      dir: File,
+      compressedInputStream: InputStream,
+      entryName: String,
+      entryDate: Date,
+      isDirectory: Boolean,
+      mode: Integer,
+      symlinkDestination: String,
+      fileMappers: Array[FileMapper]
+    ): Unit =
+      super.extractFile(
+        srcF,
+        dir,
+        compressedInputStream,
+        entryName,
+        entryDate,
+        isDirectory,
+        Option(mode).map(m => (m & UnArchiver.permissionMask): Integer).orNull,
+        symlinkDestination,
+        fileMappers
+      )
+  }
+
   /** Mixed into plexus unarchivers, to check the symbolic links they extract
     *
     * plexus-archiver checks that archive entries aren't written outside of the extraction
@@ -684,6 +724,32 @@ object UnArchiver {
     */
   def defaultMaxEntries: Long =
     ArchiveLimits.maxEntries
+
+  /** The umask of the current process
+    *
+    * Read once, when first needed, as reading it can require changing it temporarily (see
+    * [[Umask.get]]). Best effort: falls back to the common `022` if it can't be read (JNA can't
+    * load its native library, unsupported OS…), as a missing umask shouldn't prevent extracting
+    * archives.
+    *
+    * In an object of its own rather than a lazy val, which would change the static initializer of
+    * the UnArchiver object on Scala 3 (and MiMa reports that).
+    */
+  private object ProcessUmask {
+    private def default: Int = Integer.parseInt("022", 8)
+    val value: Int =
+      if (Umask.available())
+        try Umask.get()
+        catch {
+          case NonFatal(_) | _: LinkageError =>
+            default
+        }
+      else
+        default
+  }
+
+  /** Permission bits kept from archive entries: the `rwx` bits that the umask allows */
+  private def permissionMask: Int = Integer.parseInt("777", 8) & ~ProcessUmask.value
 
   def default(): UnArchiver with OpenStream =
     new DefaultUnArchiver(defaultMaxSize, defaultMaxEntries)

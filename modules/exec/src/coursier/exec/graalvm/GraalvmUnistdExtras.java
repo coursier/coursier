@@ -18,4 +18,8 @@ public class GraalvmUnistdExtras {
     @CFunction
     public static native int chdir(CCharPointer path);
 
+    // from sys/stat.h rather than unistd.h, mode_t being an int or narrower
+    @CFunction
+    public static native int umask(int mask);
+
 }

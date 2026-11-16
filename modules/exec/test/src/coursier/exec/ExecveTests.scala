@@ -64,6 +64,20 @@ object ExecveTests extends TestSuite {
     }
   }
 
+  private def runUmaskAndCheck(command: String*): Unit = {
+    val outputFile = os.temp(prefix = "coursier-umask-test", suffix = ".txt")
+    try {
+      // a non-default umask, so that a hard-coded fallback doesn't pass
+      os.proc("sh", "-c", "umask 0027 && exec \"$@\"", "sh", command, "umask", outputFile)
+        .call(stdin = os.Inherit, stdout = os.Inherit)
+      val lines = os.read.lines(outputFile)
+      // from Umask.get, then from the umask system call
+      assert(lines == Seq("27", "27"))
+    }
+    finally
+      os.remove(outputFile)
+  }
+
   private def assemblyCommand = {
     val assembly = sys.props.getOrElse(
       "coursier.execve.test.assembly",
@@ -169,6 +183,23 @@ object ExecveTests extends TestSuite {
             new ErrnoException("foo", 2, null).getMessage ==
               "foo: No such file or directory (errno 2)"
           )
+        }
+
+        test("umask-assembly") {
+          runUmaskAndCheck(assemblyCommand: _*)
+        }
+
+        test("umask-native-image") {
+          runUmaskAndCheck(nativeImage)
+        }
+
+        test("umask-in-process") {
+          val expected = Integer.parseInt(os.proc("sh", "-c", "umask").call().out.trim(), 8)
+          assert(Umask.get() == expected)
+          val viaSyscall = Umask.umask(Integer.parseInt("077", 8))
+          Umask.umask(viaSyscall)
+          assert(viaSyscall == expected)
+          assert(Umask.get() == expected)
         }
       }
 }
