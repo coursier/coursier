@@ -25,9 +25,8 @@ import scala.concurrent.duration.Duration
   *   - the `.error` short-circuit lives in `Downloader.shouldDownload`, which the `FetchMissing`
   *     and `ForceDownload` branches of `downloadUrl` never call - so those two policies ignore
   *     cached errors entirely;
-  *   - `.error` files are *written* with wall-clock time (`Files.write`) but *read back* against
-  *     the cache's `Clock`, unlike `.checked` files which `doTouchCheckFile` stamps from the clock.
-  *     The tests below stamp `.error` explicitly so that both sides agree.
+  *   - `.error` files are stamped from the cache's `Clock` when written, and their TTL is checked
+  *     against it, like `.checked` files. Most tests below still stamp `.error` explicitly.
   */
 object FileCacheErrorTests extends TestSuite {
 
@@ -237,7 +236,7 @@ object FileCacheErrorTests extends TestSuite {
 
     test("a metadata reference file") {
 
-      test("makes a cached error permanent, TTL or not") {
+      test("makes a cached error permanent within the TTL") {
         withSetup { ctx =>
           ctx.seedPom()
 
@@ -248,13 +247,60 @@ object FileCacheErrorTests extends TestSuite {
           val (requests, _) = ctx.at(t0, CachePolicy.Update, artifact)
           assert(requests == List("GET"))
           assert(ctx.errorFile.exists())
-          ctx.stampErrorAt(t0)
+          // stamped from the cache clock when written
+          assert(ctx.errorFile.lastModified() == t0.toEpochMilli)
 
-          // long past the TTL, and still no request: this branch of `checkErrFile` doesn't consult
-          // the timestamp at all
-          val (requests0, res0) = ctx.at(hoursIn(24L * 365L), CachePolicy.Update, artifact)
+          val (requests0, res0) = ctx.at(hoursIn(1), CachePolicy.Update, artifact)
           assert(requests0 == Nil)
           assert(assertNotFound(res0).permanent.contains(true))
+        }
+      }
+
+      test("doesn't hide an artifact that appears after the TTL") {
+        withSetup { ctx =>
+          ctx.seedPom()
+
+          val artifact = ctx.jar.copy(extra = Map("metadata" -> ctx.pom))
+
+          // a 404, possibly transient or spoofed, gets remembered
+          val (requests, res) = ctx.at(t0, CachePolicy.Update, artifact)
+          assert(requests == List("GET"))
+          assertNotFound(res)
+          assert(ctx.errorFile.exists())
+
+          ctx.state.found = true
+
+          // within the TTL, the remembered error still answers, without any request
+          val (requests0, res0) = ctx.at(hoursIn(1), CachePolicy.Update, artifact)
+          assert(requests0 == Nil)
+          assertNotFound(res0)
+
+          // past the TTL, the server is asked again, and the artifact is fetched
+          val (requests1, res1) = ctx.at(hoursIn(25), CachePolicy.Update, artifact)
+          assert(requests1 == List("GET"))
+          val f = res1.fold(e => throw new Exception(e.describe), identity)
+          assert(os.read(os.Path(f)) == jarContent)
+          assert(!ctx.errorFile.exists())
+        }
+      }
+
+      test("is re-checked with a zero TTL") {
+        withSetup { ctx =>
+          ctx.seedPom()
+
+          val artifact = ctx.jar.copy(extra = Map("metadata" -> ctx.pom))
+
+          assert(ctx.at(t0, CachePolicy.Update, artifact)._1 == List("GET"))
+          assert(ctx.errorFile.exists())
+
+          ctx.state.found = true
+
+          val zeroTtl =
+            new Ctx(ctx.state, ctx.log, ctx.base.withTtl(Duration.Zero), ctx.jarUrl, ctx.pomUrl)
+          val (requests, res) = zeroTtl.at(t0.plusSeconds(1L), CachePolicy.Update, artifact)
+          assert(requests == List("GET"))
+          val f = res.fold(e => throw new Exception(e.describe), identity)
+          assert(os.read(os.Path(f)) == jarContent)
         }
       }
 

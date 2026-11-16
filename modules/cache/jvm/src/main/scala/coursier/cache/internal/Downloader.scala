@@ -708,16 +708,19 @@ import scala.util.control.NonFatal
     def checkErrFile: Either[ArtifactError, Unit] = {
       val errFile0 = errFile(file)
 
-      if (referenceFileOpt.exists(_.exists()) && errFile0.exists())
-        Left(new ArtifactError.NotFound(url, Some(true)))
-      else if (cacheErrors && errFile0.exists()) {
+      // Not-found errors are only remembered for the TTL, even when a reference file is in cache:
+      // past it, the server is asked again, so that a transient or spoofed 404 doesn't hide a file
+      // for good
+      def errFileValid: Boolean = {
         val ts  = errFile0.lastModified()
         val now = clock.millis()
-        if (ts > 0L && (ttl.exists(!_.isFinite) || now < ts + ttl.fold(0L)(_.toMillis)))
-          Left(new ArtifactError.NotFound(url))
-        else
-          Right(())
+        ts > 0L && (ttl.exists(!_.isFinite) || now < ts + ttl.fold(0L)(_.toMillis))
       }
+
+      if (referenceFileOpt.exists(_.exists()) && errFile0.exists() && errFileValid)
+        Left(new ArtifactError.NotFound(url, Some(true)))
+      else if (cacheErrors && errFile0.exists() && errFileValid)
+        Left(new ArtifactError.NotFound(url))
       else
         Right(())
     }
@@ -797,6 +800,8 @@ import scala.util.control.NonFatal
         val p = errFile0.toPath
         Util.createDirectories(p.getParent)
         FileUtil.writeNoFollow(p, Array.emptyByteArray)
+        // stamped from the clock, as the TTL of the error is checked against it
+        errFile0.setLastModified(clock.millis())
       }
 
     def deleteErrFileBlocking() =
