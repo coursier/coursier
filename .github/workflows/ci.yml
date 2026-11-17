@@ -353,7 +353,7 @@ jobs:
     - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
       if: steps.docusaurus.outputs.affected != 'false'
       with:
-        node-version: '18'
+        node-version: '24'
     - run: ./mill -i doc.generate --npm-install --yarn-run-build
       if: steps.docusaurus.outputs.affected != 'false'
       env:
@@ -1239,7 +1239,7 @@ jobs:
           submodules: true
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: '18'
+          node-version: '24'
       - uses: coursier/cache-action@ee0650f98295f27a505e4bfd284c9bfaa913a465 # v9.0.1
         with:
           disableFallback: true
@@ -1267,7 +1267,7 @@ jobs:
           submodules: true
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: '18'
+          node-version: '24'
       - uses: coursier/cache-action@ee0650f98295f27a505e4bfd284c9bfaa913a465 # v9.0.1
         with:
           disableFallback: true

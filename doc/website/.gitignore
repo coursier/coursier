@@ -1,8 +1,7 @@
-translated_docs
+.docusaurus
 build/
-yarn.lock
 node_modules
-i18n/*
+yarn.lock
 
 # these are handled in a separate repo
 versioned_docs/

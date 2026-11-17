@@ -1,0 +1,23 @@
+.heroBanner {
+  padding: 4rem 0;
+  text-align: center;
+}
+
+.screencast {
+  width: 100%;
+  max-width: 45em;
+  margin: 1rem 0;
+}
+
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.features {
+  padding: 2rem 0;
+}

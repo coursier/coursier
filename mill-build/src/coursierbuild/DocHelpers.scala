@@ -53,6 +53,134 @@ object DocHelpers {
       os.remove.all(dest)
       os.copy(versionsJson, dest)
     }
+
+    migrateVersionedDocs(docusaurusDir)
+  }
+
+  /** Converts the versioned docs under `docusaurusDir` from the Docusaurus 1 format to the
+    * Docusaurus 3 one, in place
+    *
+    * Docusaurus 1 only snapshots the docs and the sidebar that changed since the former version,
+    * and the missing ones fall back to the latest former version having them. Its docs have
+    * `id: version-X-foo` / `original_id: foo` front matters, and its sidebars refer to docs with
+    * that `version-X-` prefix too.
+    *
+    * Docusaurus 3 needs a full snapshot for each version, and doc ids without a version prefix.
+    *
+    * Versions already in the Docusaurus 3 format (added by `docusaurus docs:version`, or migrated
+    * by an earlier run, then pushed to coursier/versioned-docs) are left as is.
+    */
+  def migrateVersionedDocs(docusaurusDir: os.Path): Unit = {
+
+    val versionsJson = docusaurusDir / "versions.json"
+    val versions =
+      if (os.isFile(versionsJson)) ujson.read(os.read(versionsJson)).arr.map(_.str).toVector
+      else Vector.empty[String]
+
+    def isV1Doc(content: String): Boolean =
+      frontMatterLines(content).exists(_.exists(_.startsWith("original_id:")))
+
+    def migrateDoc(content: String): String =
+      frontMatterLines(content) match {
+        case Some(lines) =>
+          val body = content.linesWithSeparators.drop(lines.length + 2).mkString
+          val newLines = lines.filter { line =>
+            !line.startsWith("id:") && !line.startsWith("original_id:")
+          }
+          (Seq("---") ++ newLines ++ Seq("---")).map(_ + "\n").mkString + body
+        case None => content
+      }
+
+    var docs          = Map.empty[os.SubPath, String]
+    var sidebarOpt    = Option.empty[ujson.Value]
+    var migratedCount = 0
+
+    // Docusaurus 1 falls back to older versions, which are last in versions.json
+    for (version <- versions.reverseIterator) {
+      val docsDir     = docusaurusDir / "versioned_docs" / s"version-$version"
+      val sidebarFile = docusaurusDir / "versioned_sidebars" / s"version-$version-sidebars.json"
+
+      val versionDocs =
+        if (os.isDir(docsDir))
+          os.walk(docsDir)
+            .filter(os.isFile)
+            .filter(_.last.endsWith(".md"))
+            .map(f => f.subRelativeTo(docsDir) -> os.read(f))
+            .toMap
+        else
+          Map.empty[os.SubPath, String]
+
+      val isV1 = versionDocs.isEmpty || versionDocs.valuesIterator.exists(isV1Doc)
+
+      docs =
+        if (isV1) docs ++ versionDocs.map { case (p, content) => p -> migrateDoc(content) }
+        else versionDocs
+
+      val docIds = docs.keySet.map(_.toString.stripSuffix(".md"))
+
+      if (os.isFile(sidebarFile))
+        sidebarOpt = Some(stripVersionPrefix(ujson.read(os.read(sidebarFile)), version))
+      for (sidebar <- sidebarOpt)
+        os.write.over(
+          sidebarFile,
+          ujson.write(removeMissingDocs(sidebar, docIds), indent = 2) + "\n"
+        )
+
+      if (isV1) {
+        migratedCount += 1
+        for ((p, content) <- docs)
+          os.write.over(docsDir / p, content, createFolders = true)
+      }
+    }
+
+    if (migratedCount > 0)
+      System.err.println(
+        s"Migrated $migratedCount versioned docs out of ${versions.length} to Docusaurus 3"
+      )
+  }
+
+  /** Removes the `version-X-` prefixes from a Docusaurus 1 sidebar (no-op on Docusaurus 3 ones) */
+  private def stripVersionPrefix(sidebar: ujson.Value, version: String): ujson.Value = {
+    val prefix = s"version-$version-"
+    sidebar match {
+      case ujson.Str(id)    => ujson.Str(id.stripPrefix(prefix))
+      case ujson.Arr(items) => ujson.Arr(items.map(stripVersionPrefix(_, version)))
+      case ujson.Obj(entries) =>
+        ujson.Obj.from(
+          entries.iterator.map {
+            case (k, v) => k.stripPrefix(prefix) -> stripVersionPrefix(v, version)
+          }
+        )
+      case other => other
+    }
+  }
+
+  /** Removes the sidebar entries pointing at missing docs, that Docusaurus 1 ignores and that make
+    * Docusaurus 3 fail
+    */
+  private def removeMissingDocs(sidebar: ujson.Value, docIds: Set[String]): ujson.Value =
+    sidebar match {
+      case ujson.Arr(items) =>
+        ujson.Arr(
+          items
+            .filter {
+              case ujson.Str(id) => docIds.contains(id)
+              case _             => true
+            }
+            .map(removeMissingDocs(_, docIds))
+        )
+      case ujson.Obj(entries) =>
+        ujson.Obj.from(entries.iterator.map { case (k, v) => k -> removeMissingDocs(v, docIds) })
+      case other => other
+    }
+
+  /** The lines of the front matter of a Markdown file, if it has one */
+  private def frontMatterLines(content: String): Option[Seq[String]] = {
+    val lines = content.linesIterator
+    if (lines.hasNext && lines.next() == "---")
+      Some(lines.takeWhile(_ != "---").toVector)
+    else
+      None
   }
 
   private def runAndLog(secrets: Seq[String])(command: os.Shellable*) = {
@@ -63,7 +191,7 @@ object DocHelpers {
     os.proc(command *)
   }
 
-  /** Snapshots the docs of `newVersion` with `docusaurus-version`, under `docusaurusDir` */
+  /** Snapshots the docs of `newVersion` with `docusaurus docs:version`, under `docusaurusDir` */
   def addVersionedDocs(docusaurusDir: os.Path, newVersion: String): Unit = {
     runAndLog(Nil)("yarn", "run", "version", newVersion).call(
       cwd = docusaurusDir,
@@ -222,6 +350,10 @@ object DocHelpers {
 
     for (elem <- toCopy)
       os.copy.into(elem, dest)
+
+    // Prevents GitHub Pages from processing the website with Jekyll, that ignores files starting
+    // with '_'
+    os.write.over(dest / ".nojekyll", "")
 
     os.proc("git", "add", "--", ".").call(
       cwd = dest,

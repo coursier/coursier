@@ -13,7 +13,6 @@
       "cli-resolve",
       "cli-fetch",
       "cli-complete",
-      "cli-setup",
       "cli-appdescriptors"
     ],
     "Motivation": [
