@@ -443,11 +443,14 @@ object ResolutionProcess {
 
   def apply(resolution: Resolution): ResolutionProcess = {
     val resolution0 = resolution.nextIfNoMissing
+    val missing     = resolution0.missingFromCache
 
-    if (resolution0.isDone)
+    // If nothing is missing but resolution isn't done, its states loop with no fix point
+    // (see Resolution.oscillatingVersions), and further iterations can't change anything
+    if (resolution0.isDone || missing.isEmpty)
       Done(resolution0)
     else
-      Missing(resolution0.missingFromCache.toSeq, resolution0, apply)
+      Missing(missing.toSeq, resolution0, apply)
   }
 
   private[coursier] def fetchAll[F[_]](

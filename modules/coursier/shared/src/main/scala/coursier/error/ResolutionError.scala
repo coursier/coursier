@@ -25,6 +25,29 @@ object ResolutionError {
   )
   // format: on
 
+  /** Resolution loops through the same states without ever reaching a fix point
+    *
+    * See [[coursier.core.Resolution.oscillatingVersions]].
+    */
+  final class VersionsDoNotConverge(
+    resolution: Resolution,
+    val versions: Map[Module, Seq[VersionConstraint]]
+  ) extends Simple(
+        resolution,
+        "Resolution does not converge, the versions of these modules keep changing:" +
+          System.lineSeparator() +
+          versions
+            .toVector
+            .sortBy(_._1.repr)
+            .map {
+              case (mod, versions0) =>
+                s"  ${mod.repr}: ${versions0.map(_.asString).mkString(", ")}" +
+                  System.lineSeparator()
+            }
+            .mkString +
+          "Forcing the version of one of them should fix that"
+      )
+
   // format: off
   final class CantDownloadModule(
     resolution: Resolution,

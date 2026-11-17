@@ -510,8 +510,13 @@ object Resolve extends PlatformResolve {
     val checkDone: ValidationNel[ResolutionError, Unit] =
       if (res.isDone)
         ValidationNel.success(())
-      else
-        ValidationNel.failure(new ResolutionError.MaximumIterationReached(res))
+      else {
+        val oscillatingVersions = res.oscillatingVersions
+        if (oscillatingVersions.isEmpty)
+          ValidationNel.failure(new ResolutionError.MaximumIterationReached(res))
+        else
+          ValidationNel.failure(new ResolutionError.VersionsDoNotConverge(res, oscillatingVersions))
+      }
 
     val checkErrors: ValidationNel[ResolutionError, Unit] = res
       .errors0

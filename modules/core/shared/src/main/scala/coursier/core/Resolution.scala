@@ -1868,24 +1868,80 @@ object Resolution {
     )
   }
 
+  // The only fields nextNoMissingUnsafe changes
+  private def iterationState: (Set[Dependency], Set[Dependency]) =
+    (dependencies, conflicts)
+
   /** If no module info is missing, the next state of the resolution, which can be immediately
     * calculated. Else, the current resolution.
+    *
+    * If the successive states loop without reaching a fix point (when evicting a version drops the
+    * dependencies that required the newer versions, so that older versions come back, see
+    * [[oscillatingVersions]]), this stops at the last state of the loop, which is not done but has
+    * no missing module info.
     */
-  @tailrec
   final def nextIfNoMissing: Resolution = {
-    val missing = missingFromCache
 
-    if (missing.isEmpty) {
-      val next0 = nextNoMissingUnsafe
+    // The successive states only depend on dependencies and conflicts, so a state seen
+    // before means a loop that never ends
+    @tailrec
+    def helper(res: Resolution, seen: Set[(Set[Dependency], Set[Dependency])]): Resolution =
+      if (res.missingFromCache.isEmpty) {
+        val next0 = res.nextNoMissingUnsafe
 
-      if (next0 == this)
-        this
+        if (next0 == res)
+          res
+        else {
+          val seen0 = seen + res.iterationState
+          if (seen0.contains(next0.iterationState))
+            res
+          else
+            helper(next0, seen0)
+        }
+      }
       else
-        next0.nextIfNoMissing
-    }
-    else
-      this
+        res
+
+    helper(this, Set.empty)
   }
+
+  /** If this resolution is caught in a loop of states that never reaches a fix point, the versions
+    * that each module whose version changes along the loop goes through. Empty otherwise.
+    *
+    * This happens when evicting a version drops dependencies that brought newer versions of other
+    * modules, so that the older versions of those come back, and bring the newer versions again,
+    * etc. Forcing the version of one of these modules usually gets the resolution out of the loop.
+    */
+  def oscillatingVersions: Map[Module, Seq[VersionConstraint0]] =
+    if (isDone || missingFromCache.nonEmpty)
+      Map.empty
+    else {
+
+      @tailrec
+      def helper(
+        res: Resolution,
+        seen: Set[(Set[Dependency], Set[Dependency])],
+        versions: Vector[Map[Module, VersionConstraint0]]
+      ): Option[Vector[Map[Module, VersionConstraint0]]] =
+        if (res.missingFromCache.nonEmpty || res.isDone) None
+        else if (seen.contains(res.iterationState)) Some(versions)
+        else
+          helper(
+            res.nextNoMissingUnsafe,
+            seen + res.iterationState,
+            versions :+ res.reconciledVersions
+          )
+
+      helper(this, Set.empty, Vector.empty) match {
+        case None => Map.empty
+        case Some(versions) =>
+          val modules = versions.flatMap(_.keys).distinct
+          modules
+            .map(mod => mod -> versions.flatMap(_.get(mod)).distinct.sorted)
+            .filter(_._2.lengthCompare(1) > 0)
+            .toMap
+      }
+    }
 
   /** Required modules for the dependency management of `project`.
     */
