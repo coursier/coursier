@@ -170,7 +170,7 @@ object Config extends Command[ConfigOptions] {
       args.all match {
         case Seq() =>
           throw new ConfigError(
-            s"no key passed (usage: $progName config key [value…], " +
+            s"no key passed (usage: $progName config key [value...], " +
               s"run '$progName config --help' to list keys)"
           )
         case Seq(name, values @ _*) =>

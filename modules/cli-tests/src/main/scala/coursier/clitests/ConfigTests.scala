@@ -94,7 +94,7 @@ abstract class ConfigTests extends TestSuite {
         )
         assert(err.startsWith("Error: Malformed values"))
         assert(err.contains("Inline credentials not accepted"))
-        assert(err.contains(s"Config file: $configFile"))
+        assert(err.contains(s"Config file: ${configFile.toNIO}"))
       }
     }
 
@@ -121,7 +121,7 @@ abstract class ConfigTests extends TestSuite {
       val res = os.proc(launcher, "config", "--help").call(stderr = os.Pipe)
       val out = res.out.text()
       // the program name in the usage line is in bold
-      assert(out.contains(" [options] [key [value…]]"))
+      assert(out.contains(" [options] [key [value...]]"))
       assert(out.contains("SCALA_CLI_CONFIG"))
       assert(out.contains("--config-file"))
       for (key <- Seq("repositories.mirrors", "repositories.credentials", "httpProxy.address"))

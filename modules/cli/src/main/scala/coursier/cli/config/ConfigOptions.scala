@@ -84,7 +84,7 @@ object ConfigOptions {
 
   lazy val help: Help[ConfigOptions] =
     Help.derive[ConfigOptions].copy(
-      argsNameOption = Some("key [value…]"),
+      argsNameOption = Some("key [value...]"), // ASCII, Windows consoles may not print "…"
       helpMessage = Some(HelpMessage(helpMessage))
     )
 
