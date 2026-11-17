@@ -407,6 +407,35 @@ object ArchiveCacheLimitsTests extends TestSuite {
             assert(leftOver.isEmpty)
           }
       }
+      // tar exiting before having read all of its input, like bsdtar does at the end-of-archive
+      // marker, while the JVM still writes the rest of the tar stream to it
+      // The archive is way bigger than a pipe buffer, so that writing to tar fails for sure.
+      def tarExitingEarly(exitCode: Int): Try[Either[ArtifactError, os.Path]] =
+        withTmpDir { dir =>
+          val unArchiver = UnArchiver.priviledgedTestMode(
+            maxSize = 0L,
+            maxEntries = 0L,
+            tarCommand = Seq("sh", "-c", s"exit $exitCode")
+          )
+          get0(dir, "tar", tar(Seq("big" -> zeros)), unArchiver, cacheArchive = false)
+        }
+      test("tar exiting early successfully") {
+        if (!Properties.isWin)
+          tarExitingEarly(0) match {
+            case Success(Right(_)) =>
+            case other =>
+              throw new Exception(s"Expected extraction to succeed, got $other")
+          }
+      }
+      test("tar exiting early with an error") {
+        if (!Properties.isWin)
+          tarExitingEarly(3) match {
+            case Failure(ex) =>
+              assert(ex.getMessage.contains("see tar command messages above"))
+            case other =>
+              throw new Exception(s"Expected extraction to fail, got $other")
+          }
+      }
       test("default limits") {
         if (!Properties.isWin)
           withProp("coursier.archive.max-size", "1024") {
