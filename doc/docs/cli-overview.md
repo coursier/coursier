@@ -148,14 +148,14 @@ openjdk version "11.0.6" 2020-01-14
 OpenJDK Runtime Environment AdoptOpenJDK (build 11.0.6+10)
 OpenJDK 64-Bit Server VM AdoptOpenJDK (build 11.0.6+10, mixed mode)
 ```
-will automatically download the latest AdoptOpenJDK 11 (in the coursier cache), unpack it (in the [managed JVM directory](https://get-coursier.io/docs/cli-java.html#managed-jvm-directory)), and run it with `-version`.
+will automatically download the latest AdoptOpenJDK 11 (in the coursier cache), unpack it (in the [archive cache](cli-java.md#managed-jvm-directory)), and run it with `-version`.
 
 It uses the [index](https://github.com/coursier/jvm-index) by default to know where to download JVM archives from, and assumes AdoptOpenJDK if only a version is passed.
 
 The `java-home` command prints the Java home of a JVM, like
 ```bash
 $ cs java-home --jvm 9
-~/Library/Caches/Coursier/jvm/adopt@1.9.0-0/Contents/Home
+~/Library/Caches/Coursier/arc/https/github.com/AdoptOpenJDK/…/Contents/Home
 ```
 
 One can [update](https://get-coursier.io/docs/cli-installation.html#how-it-sets-environment-variables-globally) profile files (Linux / macOS) or user environment variables (Windows) for a specific JVM with `--setup`, like
@@ -168,7 +168,7 @@ You don't have to update these environment variables if you prefer not to.
 For example, one can just get a Java home with
 ```bash
 $ cs java-home --jvm graalvm:20
-~/Library/Caches/Coursier/jvm/graalvm@20.0.0/Contents/Home
+~/Library/Caches/Coursier/arc/https/github.com/graalvm/graalvm-ce-builds/releases/download/vm-20.0.0/graalvm-ce-java8-darwin-amd64-20.0.0.tar.gz/graalvm-ce-java8-20.0.0/Contents/Home
 ```
 or set environment variables only for the current session with
 ```bash
@@ -179,7 +179,7 @@ OpenJDK Runtime Environment AdoptOpenJDK (build 11.0.6+10)
 OpenJDK 64-Bit Server VM AdoptOpenJDK (build 11.0.6+10, mixed mode)
 ```
 
-These two commands only write things in the coursier cache, and the [managed JVM directory](https://get-coursier.io/docs/cli-java.html#managed-jvm-directory), which is a cache too (both of these directories live under `~/.cache/coursier` on Linux, `~/Library/Caches/Coursier` on macOS).
+These two commands only write things in the coursier cache, and the [archive cache](cli-java.md#managed-jvm-directory), which is a cache too (both of these directories live under `~/.cache/coursier` on Linux, `~/Library/Caches/Coursier` on macOS).
 
 The [dedicated page](cli-java.md) gives more details about the `java` and `java-home` commands.
 

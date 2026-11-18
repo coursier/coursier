@@ -26,7 +26,7 @@ $ cs java-home
 
 If no JVM is installed on your system, the default one is automatically
 downloaded and
-extracted in the [JVM cache](#managed-jvm-directory), and used. The
+extracted in the [archive cache](#managed-jvm-directory), and used. The
 default JVM is version 21 from the [JVM index](#jvm-index) — [Temurin](https://adoptium.net)
 on most platforms, [Zulu](https://www.azul.com/downloads/) on macOS ARM, and
 [Liberica](https://bell-sw.com/libericajdk/) on Windows ARM.
@@ -56,15 +56,12 @@ adopt:1.8.0-212
 …
 ```
 
-`cs java --installed` lists the ones currently installed on your system:
+`cs java --installed` lists the ones currently installed on your system, alongside their location:
 ```bash
 $ cs java --installed
-adopt:1.8.0-242
-adopt:1.11.0-6
-adopt:1.13.0-2
-graalvm:19.3.1
-graalvm-java11:19.3.1
-openjdk:1.14.0
+adoptium:1.11.0.33 installed at ~/.cache/coursier/arc/https/github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.33%252B10/OpenJDK11U-jdk_x64_linux_hotspot_11.0.33_10.tar.gz/jdk-11.0.33+10
+zulu:21.0.10 installed at ~/.cache/coursier/arc/https/cdn.azul.com/zulu/bin/zulu21.48.15-ca-jdk21.0.10-linux_x64.tar.gz/zulu21.48.15-ca-jdk21.0.10-linux_x64
+…
 ```
 
 ## JVM index
@@ -123,7 +120,7 @@ an available one, it is assumed it corresponds to an interval. For example
 and the latest one will be selected:
 ```bash
 $ cs java-home --jvm graalvm:19.3 # picks graalvm:19.3.1
-~/.cache/coursier/jvm/graalvm@19.3.1
+~/.cache/coursier/arc/https/github.com/graalvm/graalvm-ce-builds/releases/download/vm-19.3.1/graalvm-ce-java8-linux-amd64-19.3.1.tar.gz/graalvm-ce-java8-19.3.1
 ```
 
 ```bash
@@ -155,8 +152,8 @@ Passing `--env` to the `java` command makes it print a bash script
 that sets the right environment variables for a JVM to be used:
 ```bash
 $ cs java --jvm 11 --env
-export JAVA_HOME="/home/alex/.cache/coursier/jvm/adopt@1.11.0-6"
-export PATH="/home/alex/.cache/coursier/jvm/adopt@1.11.0-6/bin:$PATH"
+export JAVA_HOME="/home/alex/.cache/coursier/arc/https/github.com/AdoptOpenJDK/openjdk11-binaries/releases/download/jdk-11.0.6%252B10/OpenJDK11U-jdk_x64_linux_hotspot_11.0.6_10.tar.gz/jdk-11.0.6+10"
+export PATH="/home/alex/.cache/coursier/arc/https/github.com/AdoptOpenJDK/openjdk11-binaries/releases/download/jdk-11.0.6%252B10/OpenJDK11U-jdk_x64_linux_hotspot_11.0.6_10.tar.gz/jdk-11.0.6+10/bin:$PATH"
 ```
 
 This script can be evaluated for the specified JVM to be used:
@@ -200,28 +197,29 @@ Note that this command will update shell configuration files. In order to see th
 
 ## Managed JVM directory
 
-The default directory for JVMs managed by coursier is OS-specific:
-- Linux: `~/.cache/coursier/jvm`
-- macOS: `~/Library/Caches/Coursier/jvm`
-- Windows: `%LOCALAPPDATA%\Coursier\Cache\jvm`, typically looking like `C:\Users\Alex\AppData\Local\Coursier\Cache\jvm`
+The JVMs managed by coursier live in the [archive cache](features-archive-cache.md): the archive
+of a JVM is downloaded via the [standard coursier cache](cache.md), and extracted in the archive cache,
+in a directory that's derived from the URL of the archive. For example, on Linux, the Java home of a
+JVM managed by coursier looks like
+```text
+~/.cache/coursier/arc/https/github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.13%252B9/OpenJDK21U-jdk_x64_linux_hotspot_21.0.13_9.tar.gz/jdk-21.0.13+9
+```
+
+The default directory of the archive cache is OS-specific:
+- Linux: `~/.cache/coursier/arc`
+- macOS: `~/Library/Caches/Coursier/arc`
+- Windows: `%LOCALAPPDATA%\Coursier\Cache\arc`, typically looking like `C:\Users\Alex\AppData\Local\Coursier\Cache\arc`
 
 It can be changed via
-- the `COURSIER_JVM_CACHE` environment variable, or
-- the `coursier.jvm.cache` Java property.
+- the `COURSIER_ARCHIVE_CACHE` environment variable, or
+- the `coursier.archive.cache` Java property.
 
-Note that the `java`, `java-home`, and `setup` commands also accept a custom
-managed JVM directory via `--jvm-dir`, like
-```bash
-$ cs java --jvm-dir my-custom-directory --jvm 11 -version
-Extracting
-  /Users/alex/Library/Caches/Coursier/v1/https/github.com/AdoptOpenJDK/openjdk11-binaries/releases/download/jdk-11.0.6%252B10/OpenJDK11U-jdk_x64_mac_hotspot_11.0.6_10.tar.gz
-in
-  my-custom-directory/adopt@1.11.0-6
-Done
-openjdk version "11.0.6" 2020-01-14
-OpenJDK Runtime Environment AdoptOpenJDK (build 11.0.6+10)
-OpenJDK 64-Bit Server VM AdoptOpenJDK (build 11.0.6+10, mixed mode)
-```
+Note that this changes the location of all the archives extracted by coursier, not only the one of JVMs.
+
+coursier versions before 2.1 used to extract JVMs in a directory of their own (`~/.cache/coursier/jvm` on
+Linux), that could be changed with the `COURSIER_JVM_CACHE` environment variable, the `coursier.jvm.cache`
+Java property, or the `--jvm-dir` option. These aren't used anymore, and coursier ignores the JVMs that
+are still in that directory.
 
 ## Parsing of arguments by the `java` command
 

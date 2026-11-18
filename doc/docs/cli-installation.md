@@ -357,16 +357,17 @@ $ cs setup --jvm 11
 
 #### JVM directory
 
-JVMs are extracted in
-[the JVM cache directory](cli-java.md#managed-jvm-directory) by default.
+JVMs are extracted in [the archive cache](cli-java.md#managed-jvm-directory).
 
-Pass a custom directory to extract JVM under with `--jvm-dir`:
+Set `COURSIER_ARCHIVE_CACHE` to have them, and the other archives coursier extracts, extracted under
+a custom directory:
 
 ```bash
-$ eval "$(cs setup --jvm 11 --jvm-dir test-jvm)"
+$ export COURSIER_ARCHIVE_CACHE="$(pwd)/test-arc"
+$ eval "$(cs setup --jvm 11)"
 …
 $ echo "$JAVA_HOME"
-…/test-jvm/adopt@1.11.0-6
+…/test-arc/https/github.com/…
 ```
 
 #### Applications
