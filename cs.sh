@@ -10,7 +10,7 @@
 
 set -eu
 
-CS_VERSION="2.1.26"
+CS_VERSION="2.1.27"
 
 GH_ORG="coursier"
 GH_NAME="coursier"
