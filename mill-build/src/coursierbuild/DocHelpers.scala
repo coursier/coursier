@@ -18,7 +18,7 @@ object DocHelpers {
     env -- secretEnvVars
 
   /** Pages of the former mkdocs-based website, that used to be published under `/upcoming`, and the
-    * page under `/docs` their content was merged into
+    * Docusaurus page their content was merged into
     */
   private def upcomingPages: Seq[(String, String)] = Seq(
     "index"                   -> "overview",
@@ -59,11 +59,13 @@ object DocHelpers {
   /** Writes pages redirecting the URLs of the former mkdocs-based website (`/upcoming/…`) to the
     * pages its content was merged into, under `siteDir`, the root of the built website
     *
-    * Fragments (`#some-section`) are kept, as most headings were kept as is.
+    * These redirect to the docs of the main branch (`/docs/next/…`), like the former website was
+    * built from it: the pages right under `/docs` are those of the latest release, which might not
+    * have that content yet. Fragments (`#some-section`) are kept, as most headings were kept as is.
     */
   def writeUpcomingRedirects(siteDir: os.Path): Unit =
     for ((page, doc) <- upcomingPages) {
-      val target = s"/docs/$doc"
+      val target = s"/docs/next/$doc"
       val content =
         s"""<!DOCTYPE html>
            |<html lang="en">
