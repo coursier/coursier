@@ -19,6 +19,6 @@ object Versions {
   def sbtCoursier  = "2.1.13"
   def graalVmJvmId = "liberica-nik:25.0.5.0.3"
   def scalaCli     = "1.19.0"
-  def csDocker     = "2.1.26"
+  def csDocker     = "2.1.27"
   def csQemu       = "9.2.1-1"
 }
