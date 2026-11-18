@@ -12,18 +12,11 @@ object Deps {
   def collectionCompat = mvn"org.scala-lang.modules::scala-collection-compat::2.14.0"
   def concurrentReferenceHashMap =
     mvn"io.github.alexarchambault:concurrent-reference-hash-map:1.1.0"
-  def dataClassVersion = "0.3.0"
+  def dataClassVersion = "0.3.1"
   def dataClass        = mvn"io.github.alexarchambault::data-class:$dataClassVersion"
-  // The Scala 3 side (annotations + compiler plugin) is on a data-class snapshot from
-  // central:maven-snapshots (see DataClassModuleBase), the only one with a plugin for Scala 3.10.1.
-  // The timestamped versions of a snapshot have per-artifact build numbers, and the plugin for
-  // Scala 3.10.1 (new in that snapshot) has a different one than the other artifacts.
-  private def dataClass3Snapshot = "0.3.1-20261111.225724"
-  def dataClass3                 = mvn"io.github.alexarchambault:data-class_3:$dataClass3Snapshot-2"
-  def dataClassPlugin(scalaVersion: String) = {
-    val buildNumber = if (scalaVersion == "3.10.1") 1 else 2
-    mvn"io.github.alexarchambault:::data-class-plugin:$dataClass3Snapshot-$buildNumber"
-  }
+  def dataClass3       = mvn"io.github.alexarchambault:data-class_3:$dataClassVersion"
+  def dataClassPlugin =
+    mvn"io.github.alexarchambault:::data-class-plugin:$dataClassVersion"
   def dependency   = mvn"io.get-coursier::dependency::0.3.4"
   def directories  = mvn"io.get-coursier.util:directories-jni:0.2.0"
   def diffUtils    = mvn"io.github.java-diff-utils:java-diff-utils:4.18"
@@ -113,7 +106,7 @@ object Deps {
   // Pinned in .scala-steward.conf too, so that it doesn't get bumped to 2.x.
   def slf4jApi = mvn"org.slf4j:slf4j-api:1.7.36"
   def slf4JNop = mvn"org.slf4j:slf4j-nop:2.0.20"
-  def svm      = mvn"org.graalvm.nativeimage:svm:25.0.5.0.3"
+  def svm      = mvn"org.graalvm.nativeimage:svm:25.0.5.1"
   // stick to the 2.x line: tika 3.x is compiled for Java 11, and we still support Java 8.
   // Pinned in .scala-steward.conf too, so that it doesn't get bumped back to 3.x.
   def tika     = mvn"org.apache.tika:tika-core:2.9.4"
