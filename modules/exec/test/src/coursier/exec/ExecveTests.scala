@@ -89,13 +89,13 @@ object ExecveTests extends TestSuite {
       val inheritedFd = lines
         .collectFirst { case s"inherited-fd=$fd" => fd.toInt }
         .getOrElse(sys.error(s"No inherited-fd line in $lines"))
-      val fds = lines.filter(_.forall(_.isDigit)).map(_.toInt).toSet
-      // the descriptors of ls, that listed /dev/fd: those it inherited, plus the one
-      // of the directory it lists
+      val fds = lines.collect { case s"/dev/fd/$fd" => fd.toInt }.toSet
+      // the descriptors of the shell, that listed /dev/fd: those it inherited, plus the one
+      // of the directory it listed
       val unexpectedFds = fds -- Set(0, 1, 2, inheritedFd)
+      assert(os.read.lines(tmpDir / "inherited") == Seq("inherited"))
       assert(fds.contains(inheritedFd))
       assert(unexpectedFds.size <= 1)
-      assert(os.read.lines(tmpDir / "inherited") == Seq("inherited"))
       assert(lines.filter(_.startsWith("hook-")).sorted == Seq("hook-1", "hook-2"))
     }
     finally {
