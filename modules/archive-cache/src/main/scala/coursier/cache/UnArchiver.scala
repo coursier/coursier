@@ -23,6 +23,7 @@ import java.io.{
   BufferedInputStream,
   File,
   FilterInputStream,
+  FilterOutputStream,
   IOException,
   InputStream,
   OutputStream
@@ -279,9 +280,21 @@ object UnArchiver {
     * extraction limits apply to them too. For them, the size limit applies to the uncompressed tar
     * stream given to `tar` (headers and padding included), that bounds what `tar` can write
     * whatever the way it parses entries, and the entry limit to the entries commons-compress reads.
+    *
+    * `tar` may exit successfully before having read all of its input: bsdtar (the `tar` of macOS)
+    * stops reading at the end-of-archive marker, leaving unread the padding up to the end of the
+    * last tar record, that commons-compress reads and copies. Failing to write to `tar` is fine
+    * then, its exit code tells whether the extraction succeeded.
     */
-  private final class SudoAbleUnArchiver(useSudo: Boolean, maxSize: Long, maxEntries: Long)
-      extends UnArchiver with OpenStream {
+  private final class SudoAbleUnArchiver(
+    useSudo: Boolean,
+    maxSize: Long,
+    maxEntries: Long,
+    tarCommand: Seq[String]
+  ) extends UnArchiver with OpenStream {
+
+    def this(useSudo: Boolean, maxSize: Long, maxEntries: Long) =
+      this(useSudo, maxSize, maxEntries, Seq("tar"))
 
     // for binary compatibility
     def this(useSudo: Boolean) = this(useSudo, priviledgedMaxSize, defaultMaxEntries)
@@ -328,7 +341,7 @@ object UnArchiver {
           proceed()
         case tar: ArchiveType.Tar =>
           val maybeSudo = if (useSudo) Seq("sudo") else Nil
-          val command   = maybeSudo ++ Seq("tar", "-xf", "-")
+          val command   = maybeSudo ++ tarCommand ++ Seq("-xf", "-")
           Files.createDirectories(destDir.toPath)
           val limits = new ExtractionLimits(archive, maxSize, maxEntries)
           val proc = new ProcessBuilder()
@@ -348,7 +361,8 @@ object UnArchiver {
               s"Error extracting $archive under $destDir (see tar command messages above)",
               cause
             )
-          Try(pipeTar(tar, archive, limits, proc.getOutputStream)) match {
+          val stdin = new WriteFailureTrackingOutputStream(proc.getOutputStream)
+          Try(pipeTar(tar, archive, limits, stdin)) match {
             case Success(()) =>
               closeStdin()
               val retCode = proc.waitFor()
@@ -362,12 +376,15 @@ object UnArchiver {
               proc.waitFor()
               throw e
             case Failure(e) =>
-              // tar exited early (broken pipe), or the archive couldn't be read
+              // tar exited early (broken pipe, or "Stream closed" if the JDK noticed it exited),
+              // or the archive couldn't be read
               closeStdin()
               val retCode = proc.waitFor()
               if (retCode != 0)
                 throw error(e)
-              else
+              // if writing to it failed, tar stopped reading its input and exited successfully:
+              // it extracted the whole archive as far as it's concerned (see above)
+              if (!stdin.writeFailed)
                 throw new ArchiverException(s"Error reading $archive", e)
           }
         case other =>
@@ -376,6 +393,23 @@ object UnArchiver {
 
     def inputStream(archiveType: ArchiveType.Compressed, is: InputStream): InputStream =
       defaultUnArchiver().inputStream(archiveType, is)
+  }
+
+  /** Records whether writing to `os` failed */
+  private final class WriteFailureTrackingOutputStream(os: OutputStream)
+      extends FilterOutputStream(os) {
+    @volatile private var failed = false
+    def writeFailed: Boolean     = failed
+    private def track[T](f: => T): T =
+      try f
+      catch {
+        case e: IOException =>
+          failed = true
+          throw e
+      }
+    override def write(b: Int): Unit                             = track(os.write(b))
+    override def write(b: Array[Byte], off: Int, len: Int): Unit = track(os.write(b, off, len))
+    override def flush(): Unit                                   = track(os.flush())
   }
 
   /** Copies to `os` everything read from `is`, including skipped bytes */
@@ -807,4 +841,14 @@ object UnArchiver {
   /** Like [[priviledged(maxSize:Long,maxEntries:Long)*]], but runs `tar` without sudo */
   def priviledgedTestMode(maxSize: Long, maxEntries: Long): UnArchiver =
     new SudoAbleUnArchiver(false, maxSize, maxEntries)
+
+  /** Like [[priviledgedTestMode(maxSize:Long,maxEntries:Long)*]], running `tarCommand` instead of
+    * `tar` (with `-xf -` appended to it)
+    */
+  private[cache] def priviledgedTestMode(
+    maxSize: Long,
+    maxEntries: Long,
+    tarCommand: Seq[String]
+  ): UnArchiver =
+    new SudoAbleUnArchiver(false, maxSize, maxEntries, tarCommand)
 }
