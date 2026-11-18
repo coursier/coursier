@@ -26,6 +26,13 @@ After the setup, you can [start using Scala](https://docs.scala-lang.org/scala3/
 
 ## Native launcher
 
+The coursier CLI is distributed as native binaries, and as [a JAR](#jar-based-launcher) that needs
+an already installed JVM to run.
+
+Use a native launcher if one is available for your system (Linux and macOS on x86-64 and ARM64,
+Windows on x86-64). Else (Windows on ARM64, *BSD, …), install a JVM on your own, and use the
+[JAR-based launcher](#jar-based-launcher).
+
 ### Linux
 
 On Linux, download the coursier installer with
@@ -199,6 +206,21 @@ Install it via `pkg` from the [Ports Collection](https://www.freshports.org/deve
 ```bash
 $ pkg install coursier
 ```
+
+## Launcher script
+
+The [`cs.sh` script](https://github.com/coursier/coursier/blob/main/cs.sh) downloads the native launcher
+of a fixed coursier version (Linux and macOS on x86-64 and ARM64, Windows on x86-64 from Git Bash and the
+like), keeps it in the [coursier cache](cache.md), and runs it with the arguments it is passed.
+It only relies on `bash`, `curl`, and `gunzip`, which makes it convenient on CI or in scripts:
+
+```bash
+$ curl -fLo cs.sh https://github.com/coursier/coursier/raw/main/cs.sh
+$ chmod +x cs.sh
+$ ./cs.sh launch scalafmt -- --version
+```
+
+A copy of this script is kept in the [coursier/ci-scripts](https://github.com/coursier/ci-scripts) repository.
 
 ## zsh completions
 
@@ -429,8 +451,10 @@ On Windows, the `setup` command updates the `User` environment variables.
 
 ## Other native Linux launchers
 
-Flavors of the native Linux launchers other than the default one are available. Note that these are only
-built for the x86-64 architecture for now (no ARM64).
+Flavors of the native Linux launchers other than the default one are available. The static, mostly static,
+and container launchers are available for both the x86-64 and ARM64 architectures (the commands below
+download the x86-64 ones, substitute `aarch64` to `x86_64` in the URLs to get the ARM64 ones). The compat
+launchers are specific to x86-64.
 
 ### Static launchers
 
@@ -454,7 +478,8 @@ $ curl -fL "https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-linux-
 ### Container launchers
 
 These are temporary. These are just like the standard launchers, but built without GraalVM container support
-(using the `-H:-UseContainerSupport` option at build time). These are meant to workaround issues with
+(using the `-H:-UseContainerSupport` option at build time, see
+[#2742](https://github.com/coursier/coursier/pull/2742)). These are meant to workaround issues with
 the GraalVM container support, if ever you run into them. These can be
 downloaded from GitHub release assets, like the standard launchers. Their file names end with `linux-container`.
 

@@ -1,4 +1,6 @@
-# coursier Java API
+---
+title: Java API
+---
 
 coursier can be used from pure Java projects, but also from Scala projects, via its Java API.
 

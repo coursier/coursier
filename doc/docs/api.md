@@ -22,6 +22,32 @@ To get started with the high level API, add the settings below to `build.sbt`
 )
 ```
 
+coursier is built mainly for the JVM, although parts of it are also built for
+[Scala.js](api-scala-js.md),
+and an even more restrained subset of coursier is also built for
+[Scala Native](https://github.com/scala-native/scala-native).
+
+The native CLI of coursier is based on the JVM, and is built using
+[GraalVM native image](https://www.graalvm.org/latest/reference-manual/native-image/).
+Most if not all coursier features ought to work fine from native images.
+
+Most API pages assume that the content of the `coursier` package has been imported,
+like
+```scala
+import coursier._
+```
+
+Besides this page, that goes through the main entry points of the API, other pages document
+how to use specific features of coursier via its API:
+
+- [dependencies](api-dependency.md), including how to pass them [BOMs](api-dependency.md#bill-of-material)
+  or [Gradle Module variants](api-dependency.md#gradle-module-variant),
+- the [cache](api-cache.md) and the [archive cache](api-archive-cache.md),
+- the [low level API](api-low-level.md),
+- the [Scala.js API](api-scala-js.md),
+- the [sub-projects](api-projects.md) some coursier APIs have been moved to,
+- the [Java API](java-api.md), for pure Java projects.
+
 ## Resolve API
 
 `coursier.Resolve` allows to run resolutions, that is

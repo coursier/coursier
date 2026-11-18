@@ -28,10 +28,7 @@ Prefer minimal, local, reversible changes and follow existing patterns.
   - `./mill -j1 __.js.__.compile`
 - Publish all modules locally (heavy):
   - `./mill -i __.publishLocal`
-- Build docs markdown and mkdocs site:
-  - `./mill -i docs.mdoc`
-  - `./mill -i docs.mkdocsBuild`
-- Build legacy docs website output:
+- Build the website (pages under `doc/docs`, processed by mdoc, then Docusaurus):
   - `./mill -i doc.generate --npm-install --yarn-run-build`
 
 ## Lint and formatting
@@ -114,8 +111,7 @@ Notes:
   - `./mill -i -j1 __.js.__.compile`
   - `./mill -i -j1 '__:CsScalaJsTests.testForked'`
 - Docs changes:
-  - `./mill -i docs.mdoc`
-  - `./mill -i docs.mkdocsBuild`
+  - `./mill -i doc.generate --npm-install --yarn-run-build`
 - Public API / compatibility-sensitive changes:
   - `./mill -i -k __.mimaReportBinaryIssues`
 

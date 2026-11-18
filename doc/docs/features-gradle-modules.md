@@ -1,4 +1,6 @@
-# Gradle Modules support
+---
+title: Gradle Modules
+---
 
 coursier has some support for [Gradle Modules](https://docs.gradle.org/current/userguide/publishing_gradle_module_metadata.html). Gradle Modules allow resolutions to be more precise,
 fetching artifacts and dependencies more adapted to your environment. These are especially
@@ -123,8 +125,8 @@ or on the command-line have an empty configuration.
 When a `.module` file is available for a dependency, 3 cases can happen:
 
 * the dependency has an empty configuration or an empty variant attribute set. Then the default attribute
-  set is used. It's the one passed via `--variant` on the command-line or with `Resolve.withDefaultVariantAttributes`
-  or `Fetch.withDefaultVariantAttributes` via the API
+  set is used. It's the one passed via `--variant` on the command-line or with `Resolve#addVariantAttributes`
+  or `Fetch#addVariantAttributes` via the API
 * the dependency has variant attributes. In that case, these are used.
 * the dependency has a configuration. In that case, an equivalent attribute set is computed [as below](#fallback-from-maven-configuration), and added
   to the default attribute set (the entries of former taking precedence over those of the latter)
@@ -132,8 +134,8 @@ When a `.module` file is available for a dependency, 3 cases can happen:
 When no module file is available, and a `.pom` file is used, 3 cases can happen:
 
 * the dependency has an empty configuration or an empty variant attribute set. Then the default configuration
-  is used. It can be passed on the command-line via `--configuration` or `-c`, like `-c compile`, and with
-  `Resolve.withDefaultConfiguration` or `Fetch.withDefaultConfiguration` via the API. It defaults
+  is used. It can be passed on the command-line via `--configuration` or `-c`, like `-c compile`, and via the
+  `defaultConfiguration` field of `ResolutionParams` via the API. It defaults
   to `default(runtime)`, which is equivalent to `runtime` in practice.
 * the dependency has variant attributes. In that case, an equivalent configuration is computed from the attributes
   [as below](#fallback-to-maven-configuration), or the default configuration is used if no configuration can be

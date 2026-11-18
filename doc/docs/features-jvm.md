@@ -1,6 +1,9 @@
-# JVM
+---
+title: JVM management
+---
 
 Coursier can act as a JVM manager like [SDKMAN](https://sdkman.io) or [asdf](https://github.com/halcyon/asdf-java).
+From the command-line, this goes through [the `java` and `java-home` commands](cli-java.md).
 
 One notable feature of it is that it can give you the Java home of a JDK distribution without
 actually "installing" it or "setting it up" on your system, but only relying on the various
@@ -25,7 +28,7 @@ In more detail, when asked for a JVM, coursier first downloads a JVM index. It t
 entry in it adapted to the current OS and CPU architecture, and satisfying the user's request.
 It then uses the [archive cache of coursier](features-archive-cache.md) to get an extracted version
 of that archive on disk. The archive cache itself downloads the archive if needed with
-[the standard coursier cache](features-cache.md), and extracts it under
+[the standard coursier cache](cache.md), and extracts it under
 [its own cache directory](features-archive-cache.md#cache-location).
 
 When the index lists checksums for the archive (the indices with checksums mentioned above do,

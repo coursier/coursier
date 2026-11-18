@@ -3,7 +3,7 @@ package coursierbuild
 object DocHelpers {
 
   /** Environment variables holding secrets, that third-party tools (npm and the packages it
-    * installs, mkdocs and its plugins, …) building the website shouldn't see
+    * installs, …) building the website shouldn't see
     */
   val secretEnvVars: Seq[String] = Seq("GH_TOKEN", "UPLOAD_GH_TOKEN")
 
@@ -16,6 +16,73 @@ object DocHelpers {
   /** Removes [[secretEnvVars]] from `env`, for processes started with `propagateEnv = false` */
   def withoutSecrets(env: Map[String, String]): Map[String, String] =
     env -- secretEnvVars
+
+  /** Pages of the former mkdocs-based website, that used to be published under `/upcoming`, and the
+    * page under `/docs` their content was merged into
+    */
+  private def upcomingPages: Seq[(String, String)] = Seq(
+    "index"                   -> "overview",
+    "features"                -> "overview",
+    "features-cache"          -> "cache",
+    "features-archive-cache"  -> "features-archive-cache",
+    "features-jvm"            -> "features-jvm",
+    "features-bom"            -> "features-bom",
+    "features-gradle-modules" -> "features-gradle-modules",
+    "features-docker"         -> "overview",
+    "api"                     -> "api",
+    "api-dependency"          -> "api-dependency",
+    "api-projects"            -> "api-projects",
+    "api-cache"               -> "api-cache",
+    "api-archive-cache"       -> "api-archive-cache",
+    "api-docker"              -> "api",
+    "java-api"                -> "java-api",
+    "cli"                     -> "cli-overview",
+    "cli-dependency"          -> "cli-dependency",
+    "cli-cache"               -> "cli-cache",
+    "cli-archive-cache"       -> "cli-archive-cache",
+    "cli-binaries"            -> "cli-installation",
+    "cli-report"              -> "json-report",
+    "cli-docker"              -> "cli-overview",
+    "cli-ci-script"           -> "cli-installation",
+    "gha"                     -> "overview",
+    "gha-setup-action"        -> "overview",
+    "gha-cache-action"        -> "overview",
+    "reference-repositories"  -> "other-repositories",
+    "reference-mirrors"       -> "other-mirrors",
+    "contrib"                 -> "dev-contributing",
+    "about-community"         -> "about-community",
+    "about-funding"           -> "about-funding",
+    "about-contact"           -> "about-contact",
+    "about-security"          -> "about-security"
+  )
+
+  /** Writes pages redirecting the URLs of the former mkdocs-based website (`/upcoming/…`) to the
+    * pages its content was merged into, under `siteDir`, the root of the built website
+    *
+    * Fragments (`#some-section`) are kept, as most headings were kept as is.
+    */
+  def writeUpcomingRedirects(siteDir: os.Path): Unit =
+    for ((page, doc) <- upcomingPages) {
+      val target = s"/docs/$doc"
+      val content =
+        s"""<!DOCTYPE html>
+           |<html lang="en">
+           |<head>
+           |<meta charset="utf-8">
+           |<title>Redirecting…</title>
+           |<link rel="canonical" href="https://get-coursier.io$target">
+           |<meta name="robots" content="noindex">
+           |<script>location.replace("$target" + location.hash)</script>
+           |<meta http-equiv="refresh" content="0; url=$target">
+           |</head>
+           |<body>This page moved to <a href="$target">$target</a>.</body>
+           |</html>
+           |""".stripMargin
+      val dest =
+        if (page == "index") siteDir / "upcoming/index.html"
+        else siteDir / "upcoming" / page / "index.html"
+      os.write.over(dest, content, createFolders = true)
+    }
 
   def copyDocusaurusVersionedData(
     repo: String,

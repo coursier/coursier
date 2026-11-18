@@ -1,4 +1,6 @@
-# Funding
+---
+title: Funding
+---
 
 While coursier received contributions from more than a hundred people
 (most notably through [code](https://github.com/coursier/coursier/graphs/contributors)),

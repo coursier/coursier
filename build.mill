@@ -1889,6 +1889,7 @@ object `doc-deps` extends ScalaModule {
   def scalaVersion = docScalaVersion
   def moduleDeps = Seq(
     coursier.jvm(docScalaVersion),
+    `archive-cache`(docScalaVersion),
     interop.cats.jvm(docScalaVersion)
   )
 }
@@ -1916,8 +1917,8 @@ private def websiteVersionOpt(): Option[String] = {
 
 /** Builds the website under doc/website/build, for [[publishWebsite]] to push it
   *
-  * This runs npm, Docusaurus, mdoc, and mkdocs, so it shouldn't be run with secrets (GH_TOKEN, …)
-  * in its environment.
+  * This runs npm, Docusaurus, and mdoc, so it shouldn't be run with secrets (GH_TOKEN, …) in its
+  * environment.
   */
 def buildWebsite(rootDir: String = "") = Task.Command {
 
@@ -1930,8 +1931,7 @@ def buildWebsite(rootDir: String = "") = Task.Command {
 
   // copyDemoFiles()
 
-  val newSiteDir = docs.mkdocsBuild()().path
-  os.copy(newSiteDir, docusaurusDir / "build/coursier/upcoming")
+  DocHelpers.writeUpcomingRedirects(docusaurusDir / "build/coursier")
 }
 
 /** Pushes the website built by [[buildWebsite]] to gh-pages, and the docs of the new version to
@@ -2269,159 +2269,6 @@ object `build-util` extends Module {
     os.proc("git", "rev-parse", "HEAD").call().out.text().trim()
   }
 
-}
-
-// copied from https://github.com/alexarchambault/case-app/blob/fd9e3fcb7d628f166cd0a532addacde49629632a/build.sc#L453-L549
-object docs extends ScalaModule {
-  private def sv   = ScalaVersions.scala213
-  def scalaVersion = sv
-  def moduleDeps = Seq(
-    coursier.jvm(sv),
-    `archive-cache`(sv)
-  )
-  def mvnDeps = Seq(
-    Deps.mdoc
-  )
-  def mainClass = Some("mdoc.Main")
-
-  def mdocInput        = Task.Source(os.sub / "pages")
-  def mkdocsConfigFile = Task.Sources(os.sub / "mkdocs.yml")
-
-  // not sources: these are written by mdoc and mkdocs, and changing them shouldn't make
-  // selective execution consider the website affected
-  def mdocOutput: os.Path   = moduleDir / "docs"
-  def mkdocsOutput: os.Path = moduleDir / "site"
-
-  def mdocArgs = Task.Anon {
-    Args(
-      "--in",
-      mdocInput().path.toString,
-      "--out",
-      mdocOutput.toString,
-      "--site.VERSION",
-      coursier.jvm(sv).publishVersion(),
-      "--classpath",
-      runClasspath().map(_.path.toString).mkString(File.pathSeparator)
-    )
-  }
-  def mdocWatchArgs = Task.Anon {
-    new Args(
-      mdocArgs().value :+ "--watch"
-    )
-  }
-
-  // Like run, but keeping secrets (GH_TOKEN, …) out of the environment of mdoc, that runs code
-  // from the pages and from their dependencies
-  private def runMdoc(args: Task[Args]) = Task.Anon {
-    runner().run(
-      args().value,
-      workingDir = forkWorkingDir(),
-      forkEnv = DocHelpers.withoutSecrets(Task.env) ++ allForkEnv(),
-      propagateEnv = false
-    )
-  }
-  def mdoc() = Task.Command[Unit] {
-    runMdoc(mdocArgs)()
-  }
-  def mdocWatch() = Task.Command[Unit] {
-    runMdoc(mdocWatchArgs)()
-  }
-
-  def mkdocsConfigArgs = Task {
-    val mkdocsConfigFile0 = mkdocsConfigFile().map(_.path)
-    assert(mkdocsConfigFile0.length == 1)
-    Seq("--config-file", mkdocsConfigFile0.head.toString)
-  }
-  def mkdocsSiteDirArgs = Task {
-    Seq("--site-dir", mkdocsOutput.toString)
-  }
-  def mkdocsWatchScript: T[PathRef] = Task {
-    mdoc()()
-    val docsDir = BuildCtx.workspaceRoot / "docs"
-
-    def quoteArg(arg: String): String =
-      "\"" + arg.replace("\"", "\\\"") + "\""
-    def quoteArgs(args: Seq[String]): String =
-      args.map(quoteArg).mkString(" ")
-    val cp         = compileClasspath().map(_.path).mkString(File.pathSeparator)
-    val mainClass0 = mainClass().getOrElse(???)
-    val mdocArgs   = mdocWatchArgs().value
-    val scriptContent =
-      s"""#!/usr/bin/env bash
-         |set -e
-         |
-         |cd ${quoteArg(docsDir.toString)}
-         |
-         |cleanUp() {
-         |  if [ "z$$MKDOCS_PID" != "z" ]; then
-         |    kill "$$MKDOCS_PID"
-         |  fi
-         |  if [ "z$$MDOC_PID" != "z" ]; then
-         |    kill "$$MDOC_PID"
-         |  fi
-         |}
-         |
-         |trap cleanUp EXIT
-         |
-         |mkdocs serve ${quoteArgs(mkdocsConfigArgs())} &
-         |MKDOCS_PID="$$!"
-         |
-         |java -cp ${quoteArg(cp)} ${quoteArg(mainClass0)} ${quoteArgs(mdocArgs)} &
-         |MDOC_PID="$$!"
-         |
-         |wait "$$MKDOCS_PID" "$$MDOC_PID"
-         |""".stripMargin
-    val script = Task.dest / "watch.sh"
-    os.write(script, scriptContent)
-    if (!Properties.isWin)
-      script.toIO.setExecutable(true)
-    PathRef(script)
-  }
-  def mkdocsServe() = Task.Command[Unit] {
-    mdoc()()
-    val docsDir = BuildCtx.workspaceRoot / "docs"
-    val serveProc = os.proc("mkdocs", "serve", mkdocsConfigArgs())
-      .spawn(cwd = docsDir, stdin = os.Inherit, stdout = os.Inherit)
-    val mdocProc = os.proc(
-      "java",
-      "-cp",
-      compileClasspath().map(_.path).mkString(File.pathSeparator),
-      mainClass().getOrElse(???),
-      mdocWatchArgs().value
-    )
-      .spawn(cwd = docsDir, stdin = os.Inherit, stdout = os.Inherit)
-
-    while (serveProc.isAlive() && mdocProc.isAlive())
-      Thread.sleep(1000L)
-
-    serveProc.waitFor()
-    mdocProc.waitFor()
-
-    val serveRetCode = serveProc.exitCode()
-    val mdocRetCode  = mdocProc.exitCode()
-    if (serveRetCode != 0 || mdocRetCode != 0)
-      sys.error(s"Got exit code $serveRetCode for mkdocs serve and $mdocRetCode for mdoc")
-    ()
-  }
-  def mkdocsBuild() = Task.Command[PathRef] {
-    mdoc()()
-    os.proc("mkdocs", "build", mkdocsConfigArgs(), mkdocsSiteDirArgs())
-      .call(
-        cwd = BuildCtx.workspaceRoot / "docs",
-        env = DocHelpers.withoutSecretsEnv,
-        stdin = os.Inherit,
-        stdout = os.Inherit
-      )
-
-    PathRef(mkdocsOutput)
-  }
-  def mkdocsGhDeploy() = Task.Command[Unit] {
-    mdoc()()
-    os.proc("mkdocs", "gh-deploy", mkdocsConfigArgs(), mkdocsSiteDirArgs())
-      .call(cwd = BuildCtx.workspaceRoot / "docs", stdin = os.Inherit, stdout = os.Inherit)
-
-    ()
-  }
 }
 
 // Scala 3 only, like the cli that uses it

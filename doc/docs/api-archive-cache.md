@@ -1,4 +1,7 @@
-# Archive cache
+---
+title: Archive cache API
+sidebar_label: Archive cache
+---
 
 ## Example
 

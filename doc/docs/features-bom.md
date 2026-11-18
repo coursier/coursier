@@ -1,4 +1,6 @@
-# Bill Of Material
+---
+title: Bill of Material
+---
 
 Bills Of Material, or BOMs, allow to:
 

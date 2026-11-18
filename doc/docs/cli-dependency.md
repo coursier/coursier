@@ -1,4 +1,7 @@
-# Dependency
+---
+title: Dependencies on the command-line
+sidebar_label: Dependencies
+---
 
 ## Syntax
 
@@ -29,6 +32,7 @@ com.google.protobuf:protobuf-java-util,bom=com.google.protobuf%protobuf-bom%4.28
 
 Note the use of `%` rather than `:` to separate the components of the BOM coordinates.
 
+See [the BOM page](features-bom.md) for more details about BOMs.
 
 ## Fetching artifacts without POM files
 
@@ -65,3 +69,6 @@ org.jetbrains.kotlinx:kotlinx-html-js:0.11.0,
 Gradle Module attributes are key-value pairs. These are added as parameters to dependencies.
 `variant.` is added as prefix to the key of the attribute, and the parameter value is the attribute
 value.
+
+See [the Gradle Modules page](features-gradle-modules.md) for more details about Gradle Module
+support, which needs to be enabled with `--enable-modules`.
