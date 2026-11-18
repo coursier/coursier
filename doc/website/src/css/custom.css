@@ -1,0 +1,21 @@
+/* Docusaurus 1 primaryColor / secondaryColor: #58B8C1 / #3498DB */
+:root {
+  --ifm-color-primary: #3d9ea7;
+  --ifm-color-primary-dark: #378e96;
+  --ifm-color-primary-darker: #34868e;
+  --ifm-color-primary-darkest: #2b6f75;
+  --ifm-color-primary-light: #4cb0b9;
+  --ifm-color-primary-lighter: #58b8c1;
+  --ifm-color-primary-lightest: #78c6cd;
+  --ifm-code-font-size: 95%;
+}
+
+[data-theme='dark'] {
+  --ifm-color-primary: #58b8c1;
+  --ifm-color-primary-dark: #44aeb8;
+  --ifm-color-primary-darker: #40a5ae;
+  --ifm-color-primary-darkest: #35878f;
+  --ifm-color-primary-light: #6cc2ca;
+  --ifm-color-primary-lighter: #76c6ce;
+  --ifm-color-primary-lightest: #95d3d9;
+}

@@ -9,6 +9,8 @@ metals.sbt
 node_modules/
 
 package-lock.json
+# needed by `npm ci` when building the website
+!doc/website/package-lock.json
 
 # generated site
 generated/
