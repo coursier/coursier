@@ -1,218 +1,220 @@
-<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>Retries and rate limiting · Coursier</title><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="generator" content="Docusaurus"/><meta name="description" content="Coursier fetches metadata and artifacts over HTTP. Repositories occasionally fail a request, and"/><meta name="docsearch:version" content="2.1.26"/><meta name="docsearch:language" content="en"/><meta property="og:title" content="Retries and rate limiting · Coursier"/><meta property="og:type" content="website"/><meta property="og:url" content="https://get-coursier.io/"/><meta property="og:description" content="Coursier fetches metadata and artifacts over HTTP. Repositories occasionally fail a request, and"/><meta name="twitter:card" content="summary"/><link rel="shortcut icon" href="/undefined"/><link rel="stylesheet" href="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.css"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css"/><link rel="alternate" type="application/atom+xml" href="https://get-coursier.io/blog/atom.xml" title="Coursier Blog ATOM Feed"/><link rel="alternate" type="application/rss+xml" href="https://get-coursier.io/blog/feed.xml" title="Coursier Blog RSS Feed"/><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><script src="/js/scrollSpy.js"></script><link rel="stylesheet" href="/css/main.css"/><script src="/js/codetabs.js"></script></head><body class="sideNavVisible separateOnPageNav"><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/"><h2 class="headerTitle">Coursier</h2></a><a href="/versions"><h3>2.1.26</h3></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class="siteNavGroupActive"><a href="/docs/overview" target="_self">Docs</a></li><li class=""><a href="/blog/" target="_self">Blog</a></li><li class=""><a href="https://github.com/coursier/coursier" target="_self">GitHub</a></li><li class="navSearchWrapper reactNavSearchWrapper"><input type="text" id="search_input_react" placeholder="Search" title="Search"/></li></ul></nav></div></header></div></div><div class="navPusher"><div class="docMainWrapper wrapper"><div class="docsNavContainer" id="docsNav"><nav class="toc"><div class="toggleNav"><section class="navWrapper wrapper"><div class="navBreadcrumb wrapper"><div class="navToggle" id="navToggler"><div class="hamburger-menu"><div class="line1"></div><div class="line2"></div><div class="line3"></div></div></div><h2><i>›</i><span>Other</span></h2><div class="tocToggler" id="tocToggler"><i class="icon-toc"></i></div></div><div class="navGroups"><div class="navGroup"><h3 class="navGroupCategoryTitle">Intro</h3><ul class=""><li class="navListItem"><a class="navItem" href="/docs/overview">Overview</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Command-line</h3><ul class=""><li class="navListItem"><a class="navItem" href="/docs/cli-overview">Overview</a></li><li class="navListItem"><a class="navItem" href="/docs/cli-installation">Installation</a></li><li class="navListItem"><a class="navItem" href="/docs/cli-install">install</a></li><li class="navListItem"><a class="navItem" href="/docs/cli-launch">launch</a></li><li class="navListItem"><a class="navItem" href="/docs/cli-bootstrap">bootstrap</a></li><li class="navListItem"><a class="navItem" href="/docs/cli-java">java</a></li><li class="navListItem"><a class="navItem" href="/docs/cli-resolve">resolve</a></li><li class="navListItem"><a class="navItem" href="/docs/cli-fetch">fetch</a></li><li class="navListItem"><a class="navItem" href="/docs/cli-complete">complete-dep</a></li><li class="navListItem"><a class="navItem" href="/docs/cli-setup">setup</a></li><li class="navListItem"><a class="navItem" href="/docs/cli-appdescriptors">Application descriptors</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Motivation</h3><ul class=""><li class="navListItem"><a class="navItem" href="/docs/overview-motivations">Motivations</a></li><li class="navListItem"><a class="navItem" href="/docs/overview-in-the-wild">Users</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">sbt plugins</h3><ul class=""><li class="navListItem"><a class="navItem" href="/docs/sbt-coursier">sbt-coursier</a></li><li class="navListItem"><a class="navItem" href="/docs/sbt-pgp-coursier">sbt-pgp-coursier</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">API</h3><ul class=""><li class="navListItem"><a class="navItem" href="/docs/api">API</a></li><li class="navListItem"><a class="navItem" href="/docs/api-low-level">Low-level API</a></li><li class="navListItem"><a class="navItem" href="/docs/api-scala-js">Scala.js</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Other</h3><ul class=""><li class="navListItem"><a class="navItem" href="/docs/cache">Cache</a></li><li class="navListItem"><a class="navItem" href="/docs/ttl">TTL</a></li><li class="navListItem navListItemActive"><a class="navItem" href="/docs/other-retries">Retries and rate limiting</a></li><li class="navListItem"><a class="navItem" href="/docs/other-repositories">Repositories</a></li><li class="navListItem"><a class="navItem" href="/docs/other-mirrors">Repository mirrors</a></li><li class="navListItem"><a class="navItem" href="/docs/other-credentials">Credentials</a></li><li class="navListItem"><a class="navItem" href="/docs/other-proxy">Proxy</a></li><li class="navListItem"><a class="navItem" href="/docs/json-report">JSON report</a></li><li class="navListItem"><a class="navItem" href="/docs/extra">Extra</a></li><li class="navListItem"><a class="navItem" href="/docs/limitations">Limitations</a></li><li class="navListItem"><a class="navItem" href="/docs/other-version-handling">Version handling</a></li><li class="navListItem"><a class="navItem" href="/docs/faq">FAQ</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Development</h3><ul class=""><li class="navListItem"><a class="navItem" href="/docs/dev-contributing">Contributing</a></li><li class="navListItem"><a class="navItem" href="/docs/dev-website">Website</a></li></ul></div></div></section></div><script>
-            var coll = document.getElementsByClassName('collapsible');
-            var checkActiveCategory = true;
-            for (var i = 0; i < coll.length; i++) {
-              var links = coll[i].nextElementSibling.getElementsByTagName('*');
-              if (checkActiveCategory){
-                for (var j = 0; j < links.length; j++) {
-                  if (links[j].classList.contains('navListItemActive')){
-                    coll[i].nextElementSibling.classList.toggle('hide');
-                    coll[i].childNodes[1].classList.toggle('rotate');
-                    checkActiveCategory = false;
-                    break;
-                  }
-                }
-              }
-
-              coll[i].addEventListener('click', function() {
-                var arrow = this.childNodes[1];
-                arrow.classList.toggle('rotate');
-                var content = this.nextElementSibling;
-                content.classList.toggle('hide');
-              });
-            }
-
-            document.addEventListener('DOMContentLoaded', function() {
-              createToggler('#navToggler', '#docsNav', 'docsSliderActive');
-              createToggler('#tocToggler', 'body', 'tocActive');
-
-              var headings = document.querySelector('.toc-headings');
-              headings && headings.addEventListener('click', function(event) {
-                var el = event.target;
-                while(el !== headings){
-                  if (el.tagName === 'A') {
-                    document.body.classList.remove('tocActive');
-                    break;
-                  } else{
-                    el = el.parentNode;
-                  }
-                }
-              }, false);
-
-              function createToggler(togglerSelector, targetSelector, className) {
-                var toggler = document.querySelector(togglerSelector);
-                var target = document.querySelector(targetSelector);
-
-                if (!toggler) {
-                  return;
-                }
-
-                toggler.onclick = function(event) {
-                  event.preventDefault();
-
-                  target.classList.toggle(className);
-                };
-              }
-            });
-        </script></nav></div><div class="container mainContainer docsContainer"><div class="wrapper"><div class="post"><header class="postHeader"><a class="edit-page-link button" href="https://github.com/coursier/coursier/edit/main/doc/docs/other-retries.md" target="_blank" rel="noreferrer noopener">Edit</a><h1 id="__docusaurus" class="postHeaderTitle">Retries and rate limiting</h1></header><article><div><span><p>Coursier fetches metadata and artifacts over HTTP. Repositories occasionally fail a request, and
+<!doctype html>
+<html lang="en" dir="ltr" class="docs-wrapper plugin-docs plugin-id-default docs-version-2.1.26 docs-doc-page docs-doc-id-other-retries" data-has-hydrated="false">
+<head>
+<meta charset="UTF-8">
+<meta name="generator" content="Docusaurus v3.10.2">
+<title data-rh="true">Retries and rate limiting | Coursier</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://get-coursier.io/docs/other-retries"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="2.1.26"><meta data-rh="true" name="docusaurus_tag" content="docs-default-2.1.26"><meta data-rh="true" name="docsearch:version" content="2.1.26"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-2.1.26"><meta data-rh="true" property="og:title" content="Retries and rate limiting | Coursier"><meta data-rh="true" name="description" content="Coursier fetches metadata and artifacts over HTTP. Repositories occasionally fail a request, and"><meta data-rh="true" property="og:description" content="Coursier fetches metadata and artifacts over HTTP. Repositories occasionally fail a request, and"><link data-rh="true" rel="canonical" href="https://get-coursier.io/docs/other-retries"><link data-rh="true" rel="alternate" href="https://get-coursier.io/docs/other-retries" hreflang="en"><link data-rh="true" rel="alternate" href="https://get-coursier.io/docs/other-retries" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Retries and rate limiting","item":"https://get-coursier.io/docs/other-retries"}]}</script><link rel="alternate" type="application/rss+xml" href="/blog/rss.xml" title="Coursier RSS Feed">
+<link rel="alternate" type="application/atom+xml" href="/blog/atom.xml" title="Coursier Atom Feed"><link rel="stylesheet" href="/assets/css/styles.cdb9fbe2.css">
+<script src="/assets/js/runtime~main.97326ce4.js" defer="defer"></script>
+<script src="/assets/js/main.cf2c7f28.js" defer="defer"></script>
+</head>
+<body>
+<svg style="display: none;"><defs>
+<symbol id="theme-svg-external-link" viewBox="0 0 24 24"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"/></symbol>
+</defs></svg>
+<script>!function(){var t=function(){try{return new URLSearchParams(window.location.search).get("docusaurus-theme")}catch(t){}}()||function(){try{return window.localStorage.getItem("theme")}catch(t){}}();document.documentElement.setAttribute("data-theme",t||"light"),document.documentElement.setAttribute("data-theme-choice",t||"light")}(),function(){try{const c=new URLSearchParams(window.location.search).entries();for(var[t,e]of c)if(t.startsWith("docusaurus-data-")){var a=t.replace("docusaurus-data-","data-");document.documentElement.setAttribute(a,e)}}catch(t){}}()</script><div id="__docusaurus"><div role="region" aria-label="Skip to main content"><a class="skipToContent_fXgn" href="#__docusaurus_skipToContent_fallback">Skip to main content</a></div><nav aria-label="Main" class="theme-layout-navbar navbar navbar--fixed-top"><div class="navbar__inner"><div class="theme-layout-navbar-left navbar__items"><button aria-label="Toggle navigation bar" aria-expanded="false" class="navbar__toggle clean-btn" type="button"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg></button><a class="navbar__brand" href="/"><b class="navbar__title text--truncate">Coursier</b></a><a aria-current="page" class="navbar__item navbar__link navbar__link--active" href="/docs/overview">Docs</a><a class="navbar__item navbar__link" href="/blog">Blog</a></div><div class="theme-layout-navbar-right navbar__items navbar__items--right"><div class="navbar__item dropdown dropdown--hoverable dropdown--right"><a aria-current="page" class="navbar__link active" aria-haspopup="true" aria-expanded="false" role="button" href="/docs/other-retries">2.1.26</a><ul class="dropdown__menu"><li><a class="dropdown__link" href="/docs/next/other-retries">Next</a></li><li><a aria-current="page" class="dropdown__link dropdown__link--active" href="/docs/other-retries">2.1.26</a></li><li><a class="dropdown__link" href="/docs/2.1.25/other-retries">2.1.25</a></li><li><a class="dropdown__link" href="/docs/2.1.25-M26/overview">2.1.25-M26</a></li><li><a class="dropdown__link" href="/docs/2.1.25-M25/overview">2.1.25-M25</a></li><li><a class="dropdown__link" href="/docs/2.1.25-M24/overview">2.1.25-M24</a></li><li><a class="dropdown__link" href="/versions">All versions</a></li></ul></div><a href="https://github.com/coursier/coursier" target="_blank" rel="noopener noreferrer" class="navbar__item navbar__link">GitHub<svg width="13.5" height="13.5" aria-label="(opens in new tab)" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a><div class="toggle_vylO colorModeToggle_DEke"><button class="clean-btn toggleButton_gllP toggleButtonDisabled_aARS" type="button" disabled="" title="system mode" aria-label="Switch between dark and light mode (currently system mode)"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP lightToggleIcon_pyhR"><path fill="currentColor" d="M12,9c1.65,0,3,1.35,3,3s-1.35,3-3,3s-3-1.35-3-3S10.35,9,12,9 M12,7c-2.76,0-5,2.24-5,5s2.24,5,5,5s5-2.24,5-5 S14.76,7,12,7L12,7z M2,13l2,0c0.55,0,1-0.45,1-1s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S1.45,13,2,13z M20,13l2,0c0.55,0,1-0.45,1-1 s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S19.45,13,20,13z M11,2v2c0,0.55,0.45,1,1,1s1-0.45,1-1V2c0-0.55-0.45-1-1-1S11,1.45,11,2z M11,20v2c0,0.55,0.45,1,1,1s1-0.45,1-1v-2c0-0.55-0.45-1-1-1C11.45,19,11,19.45,11,20z M5.99,4.58c-0.39-0.39-1.03-0.39-1.41,0 c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0s0.39-1.03,0-1.41L5.99,4.58z M18.36,16.95 c-0.39-0.39-1.03-0.39-1.41,0c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0c0.39-0.39,0.39-1.03,0-1.41 L18.36,16.95z M19.42,5.99c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06c-0.39,0.39-0.39,1.03,0,1.41 s1.03,0.39,1.41,0L19.42,5.99z M7.05,18.36c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06 c-0.39,0.39-0.39,1.03,0,1.41s1.03,0.39,1.41,0L7.05,18.36z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP darkToggleIcon_wfgR"><path fill="currentColor" d="M9.37,5.51C9.19,6.15,9.1,6.82,9.1,7.5c0,4.08,3.32,7.4,7.4,7.4c0.68,0,1.35-0.09,1.99-0.27C17.45,17.19,14.93,19,12,19 c-3.86,0-7-3.14-7-7C5,9.07,6.81,6.55,9.37,5.51z M12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9s9-4.03,9-9c0-0.46-0.04-0.92-0.1-1.36 c-0.98,1.37-2.58,2.26-4.4,2.26c-2.98,0-5.4-2.42-5.4-5.4c0-1.81,0.89-3.42,2.26-4.4C12.92,3.04,12.46,3,12,3L12,3z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP systemToggleIcon_QzmC"><path fill="currentColor" d="m12 21c4.971 0 9-4.029 9-9s-4.029-9-9-9-9 4.029-9 9 4.029 9 9 9zm4.95-13.95c1.313 1.313 2.05 3.093 2.05 4.95s-0.738 3.637-2.05 4.95c-1.313 1.313-3.093 2.05-4.95 2.05v-14c1.857 0 3.637 0.737 4.95 2.05z"></path></svg></button></div><div class="navbarSearchContainer_Bca1"><div class="navbar__search searchBarContainer_NW3z" dir="ltr"><svg aria-hidden="true" class="searchIcon_T3tP" focusable="false" viewBox="0 0 16 16"><path fill="currentColor" d="M6.02945 10.20327a4.17382 4.17382 0 1 1 4.17382-4.17382 4.15609 4.15609 0 0 1-4.17382 4.17382Zm9.69195 4.2199-4.8225-4.82338A5.88021 5.88021 0 0 0 12.058 6.02856 6.00467 6.00467 0 1 0 9.59979 10.8989l4.82338 4.82338a.89729.89729 0 0 0 1.29912 0 .89749.89749 0 0 0-.00087-1.29909Z"></path></svg><input placeholder="Search" aria-label="Search" class="navbar__search-input searchInput_YFbd" value=""><div class="loadingRing_RJI3 searchBarLoadingRing_YnHq"><div></div><div></div><div></div><div></div></div></div></div></div></div><div role="presentation" class="navbar-sidebar__backdrop"></div></nav><div id="__docusaurus_skipToContent_fallback" class="theme-layout-main main-wrapper mainWrapper_z2l0"><div class="docsWrapper_hBAB"><button aria-label="Scroll back to top" class="clean-btn theme-back-to-top-button backToTopButton_sjWU" type="button"></button><div class="docRoot_UBD9"><aside class="theme-doc-sidebar-container docSidebarContainer_YfHR"><div class="sidebarViewport_aRkj"><div class="sidebar_njMd"><nav aria-label="Docs sidebar" class="menu thin-scrollbar menu_SIkG"><ul class="theme-doc-sidebar-menu menu__list"><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret" role="button" aria-expanded="false" href="/docs/overview"><span class="categoryLinkLabel_W154">Intro</span></a></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret" role="button" aria-expanded="false" href="/docs/cli-overview"><span class="categoryLinkLabel_W154">Command-line</span></a></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret" role="button" aria-expanded="false" href="/docs/overview-motivations"><span class="categoryLinkLabel_W154">Motivation</span></a></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret" role="button" aria-expanded="false" href="/docs/sbt-coursier"><span class="categoryLinkLabel_W154">sbt plugins</span></a></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret" role="button" aria-expanded="false" href="/docs/api"><span class="categoryLinkLabel_W154">API</span></a></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret menu__link--active" role="button" aria-expanded="true" href="/docs/cache"><span class="categoryLinkLabel_W154">Other</span></a></div><ul class="menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/docs/cache"><span class="linkLabel_WmDU">Cache</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/docs/ttl"><span class="linkLabel_WmDU">TTL</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link menu__link--active" aria-current="page" tabindex="0" href="/docs/other-retries"><span class="linkLabel_WmDU">Retries and rate limiting</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/docs/other-repositories"><span class="linkLabel_WmDU">Repositories</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/docs/other-mirrors"><span class="linkLabel_WmDU">Repository mirrors</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/docs/other-credentials"><span class="linkLabel_WmDU">Credentials</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/docs/other-proxy"><span class="linkLabel_WmDU">Proxy</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/docs/json-report"><span class="linkLabel_WmDU">JSON report</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/docs/extra"><span class="linkLabel_WmDU">Extra</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/docs/limitations"><span class="linkLabel_WmDU">Limitations</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/docs/other-version-handling"><span class="linkLabel_WmDU">Version handling</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/docs/faq"><span class="linkLabel_WmDU">FAQ</span></a></li></ul></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret" role="button" aria-expanded="false" href="/docs/dev-contributing"><span class="categoryLinkLabel_W154">Development</span></a></div></li></ul></nav></div></div></aside><main class="docMainContainer_TBSr"><div class="container padding-top--md padding-bottom--lg"><div class="row"><div class="col docItemCol_VOVn"><div class="docItemContainer_Djhp"><article><nav class="theme-doc-breadcrumbs breadcrumbsContainer_Z_bl" aria-label="Breadcrumbs"><ul class="breadcrumbs"><li class="breadcrumbs__item"><a aria-label="Home page" class="breadcrumbs__link" href="/"><svg viewBox="0 0 24 24" class="breadcrumbHomeIcon_YNFT"><path d="M10 19v-5h4v5c0 .55.45 1 1 1h3c.55 0 1-.45 1-1v-7h1.7c.46 0 .68-.57.33-.87L12.67 3.6c-.38-.34-.96-.34-1.34 0l-8.36 7.53c-.34.3-.13.87.33.87H5v7c0 .55.45 1 1 1h3c.55 0 1-.45 1-1z" fill="currentColor"></path></svg></a></li><li class="breadcrumbs__item"><span class="breadcrumbs__link">Other</span></li><li class="breadcrumbs__item breadcrumbs__item--active"><span class="breadcrumbs__link">Retries and rate limiting</span></li></ul></nav><span class="theme-doc-version-badge badge badge--secondary">Version: 2.1.26</span><div class="tocCollapsible_ETCw theme-doc-toc-mobile tocMobile_ITEo"><button type="button" class="clean-btn tocCollapsibleButton_TO0P">On this page</button></div><div class="theme-doc-markdown markdown"><header><h1>Retries and rate limiting</h1></header><p>Coursier fetches metadata and artifacts over HTTP. Repositories occasionally fail a request, and
 public ones increasingly ask clients that send too much traffic to slow down, with an
-<a href="https://central.sonatype.org/faq/429-error/">HTTP 429</a> response. This page describes what coursier
+<a href="https://central.sonatype.org/faq/429-error/" target="_blank" rel="noopener noreferrer" class="">HTTP 429</a> response. This page describes what coursier
 requests, how it retries, what it does when it is rate limited, and how to change each of these.</p>
 <p>It follows the guidance repositories give to build tools, in particular
-<a href="https://central.sonatype.org/faq/429-error/">Maven Central's</a>: cache, back off rather than retry
+<a href="https://central.sonatype.org/faq/429-error/" target="_blank" rel="noopener noreferrer" class="">Maven Central&#x27;s</a>: cache, back off rather than retry
 harder, make it easy to route traffic through a repository manager, and say who is asking.</p>
-<h2><a class="anchor" aria-hidden="true" id="what-coursier-requests"></a><a href="#what-coursier-requests" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>What coursier requests</h2>
-<p>Everything coursier downloads goes to its <a href="/docs/cache">cache</a>, and is only requested again when the
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-coursier-requests">What coursier requests<a href="#what-coursier-requests" class="hash-link" aria-label="Direct link to What coursier requests" title="Direct link to What coursier requests" translate="no">​</a></h2>
+<p>Everything coursier downloads goes to its <a class="" href="/docs/cache">cache</a>, and is only requested again when the
 cache says it can change. In practice, a resolution or a fetch sends:</p>
 <ul>
-<li><strong>one request per module</strong> for its POM, to the first repository that has it - plus one for its
+<li class=""><strong>one request per module</strong> for its POM, to the first repository that has it - plus one for its
 Gradle module file when Gradle module support is enabled. A POM for a given version never changes,
 so it is never requested again once cached;</li>
-<li><strong>one request per version listing</strong> (<code>maven-metadata.xml</code>) for dependencies with a version range
+<li class=""><strong>one request per version listing</strong> (<code>maven-metadata.xml</code>) for dependencies with a version range
 or a <code>latest.*</code> version. Listings can change, so they are requested again once their
-<a href="/docs/ttl">TTL</a> has expired - 24 hours by default;</li>
-<li><strong>one request per artifact</strong>, plus one for its SHA-1 checksum file when the server did not already
+<a class="" href="/docs/ttl">TTL</a> has expired - 24 hours by default;</li>
+<li class=""><strong>one request per artifact</strong>, plus one for its SHA-1 checksum file when the server did not already
 send the checksum in an <code>X-Checksum-SHA1</code> header (Maven Central does). Artifacts of non-snapshot
 versions are never requested again once cached;</li>
-<li><strong>one last-modified check per changing artifact</strong> (<code>-SNAPSHOT</code> versions and the like) once its TTL
+<li class=""><strong>one last-modified check per changing artifact</strong> (<code>-SNAPSHOT</code> versions and the like) once its TTL
 has expired. The artifact itself is downloaded again only when the server reports a newer copy.</li>
 </ul>
 <p>Up to 6 downloads run in parallel by default. The <code>coursier.parallel-download-count</code> Java property,
 or <code>--parallel</code> (<code>-n</code>) on the command line, change that. The command-line progress display prints
 the URL of every file being downloaded.</p>
-<h2><a class="anchor" aria-hidden="true" id="failed-requests"></a><a href="#failed-requests" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Failed requests</h2>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="failed-requests">Failed requests<a href="#failed-requests" class="hash-link" aria-label="Direct link to Failed requests" title="Direct link to Failed requests" translate="no">​</a></h2>
 <p>A request that fails is retried, with an exponential backoff between attempts. By default, coursier
 makes up to 5 attempts in total, whatever made them fail.</p>
 <p>A connection error, a connect or read timeout, or an SSL error is retried after 10 ms, then twice as
 long after each of the next failures, up to 20 seconds.</p>
-<p>The HTTP responses <a href="https://curl.se/docs/manpage.html#--retry">curl's <code>--retry</code></a> retries are retried
+<p>The HTTP responses <a href="https://curl.se/docs/manpage.html#--retry" target="_blank" rel="noopener noreferrer" class="">curl&#x27;s <code>--retry</code></a> retries are retried
 too, with the same backoff as curl: 1 second after the first one, twice as long after each of the
 next ones, up to 10 minutes. These are</p>
 <ul>
-<li>408 (Request Timeout),</li>
-<li>500 (Internal Server Error), 502 (Bad Gateway), 503 (Service Unavailable), 504 (Gateway Timeout),</li>
-<li>522 (Connection Timed Out) and 524 (A Timeout Occurred), which Cloudflare sends when it can't
+<li class="">408 (Request Timeout),</li>
+<li class="">500 (Internal Server Error), 502 (Bad Gateway), 503 (Service Unavailable), 504 (Gateway Timeout),</li>
+<li class="">522 (Connection Timed Out) and 524 (A Timeout Occurred), which Cloudflare sends when it can&#x27;t
 reach the server behind it.</li>
 </ul>
 <p>Other 5xx responses, like 501 (Not Implemented), fail right away. 429 (Too Many Requests) is handled
-separately, see <a href="#rate-limiting">Rate limiting</a> below.</p>
-<table>
-<thead>
-<tr><th>Java property</th><th>Default</th><th>Meaning</th></tr>
-</thead>
-<tbody>
-<tr><td><code>coursier.exception-retry</code></td><td><code>5</code></td><td>Number of attempts, including the first one. <code>1</code> means no retry.</td></tr>
-<tr><td><code>coursier.exception-retry-backoff-initial-delay</code></td><td><code>10 ms</code></td><td>Delay before the next attempt, after a connection error</td></tr>
-<tr><td><code>coursier.exception-retry-backoff-max-delay</code></td><td><code>20 s</code></td><td>Ceiling on that delay</td></tr>
-<tr><td><code>coursier.http-retry-backoff-initial-delay</code></td><td><code>1 s</code></td><td>Delay before the next attempt, after an HTTP error</td></tr>
-<tr><td><code>coursier.http-retry-backoff-max-delay</code></td><td><code>10 min</code></td><td>Ceiling on that delay</td></tr>
-<tr><td><code>coursier.exception-retry-backoff-multiplier</code></td><td><code>2.0</code></td><td>How much both delays grow after each failed attempt</td></tr>
-</tbody>
-</table>
+separately, see <a href="#rate-limiting" class="">Rate limiting</a> below.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Java property</th><th>Default</th><th>Meaning</th></tr></thead><tbody><tr><td><code>coursier.exception-retry</code></td><td><code>5</code></td><td>Number of attempts, including the first one. <code>1</code> means no retry.</td></tr><tr><td><code>coursier.exception-retry-backoff-initial-delay</code></td><td><code>10 ms</code></td><td>Delay before the next attempt, after a connection error</td></tr><tr><td><code>coursier.exception-retry-backoff-max-delay</code></td><td><code>20 s</code></td><td>Ceiling on that delay</td></tr><tr><td><code>coursier.http-retry-backoff-initial-delay</code></td><td><code>1 s</code></td><td>Delay before the next attempt, after an HTTP error</td></tr><tr><td><code>coursier.http-retry-backoff-max-delay</code></td><td><code>10 min</code></td><td>Ceiling on that delay</td></tr><tr><td><code>coursier.exception-retry-backoff-multiplier</code></td><td><code>2.0</code></td><td>How much both delays grow after each failed attempt</td></tr></tbody></table>
 <p>A <code>Retry-After</code> header on those HTTP responses is honoured in place of the delay, up to the
 <code>COURSIER_MAX_HTTP_RETRY_AFTER</code> limit described below.</p>
-<h2><a class="anchor" aria-hidden="true" id="rate-limiting"></a><a href="#rate-limiting" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Rate limiting</h2>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="rate-limiting">Rate limiting<a href="#rate-limiting" class="hash-link" aria-label="Direct link to Rate limiting" title="Direct link to Rate limiting" translate="no">​</a></h2>
 <p>An HTTP 429 response is not a failure: the server works, and asked to be left alone for a while.
 Coursier handles it separately from the failures above.</p>
 <ul>
-<li><strong>It never comes back sooner than asked.</strong> When the response carries a <code>Retry-After</code> header,
+<li class=""><strong>It never comes back sooner than asked.</strong> When the response carries a <code>Retry-After</code> header,
 coursier waits at least that long. Without one, it waits 1 second the first time, twice as long
 each following time, up to 1 minute.</li>
-<li><strong>The pause applies to the whole host, not to one download.</strong> The other downloads in flight
+<li class=""><strong>The pause applies to the whole host, not to one download.</strong> The other downloads in flight
 towards that host, in that JVM, wait it out too, rather than each sending a request that would
 only be rejected - and count against the limit.</li>
-<li><strong>Downloads do not all come back at once.</strong> A small random delay, of up to one second, is added
+<li class=""><strong>Downloads do not all come back at once.</strong> A small random delay, of up to one second, is added
 on top of the pause, so that the downloads that were told to come back at the same time do not
 trip the limit again together.</li>
-<li><strong>Waiting does not consume the retry budget.</strong> The attempts above are kept for actual failures.
+<li class=""><strong>Waiting does not consume the retry budget.</strong> The attempts above are kept for actual failures.
 What bounds a rate-limited download is a budget of wall clock time instead:
 <code>COURSIER_MAX_THROTTLE_WAIT</code>.</li>
-<li><strong>It gives up rather than retrying harder.</strong> A <code>Retry-After</code> longer than
+<li class=""><strong>It gives up rather than retrying harder.</strong> A <code>Retry-After</code> longer than
 <code>COURSIER_MAX_HTTP_RETRY_AFTER</code> is not shortened and retried at that pace: the download fails
 right away, after a single request. A download that has waited for <code>COURSIER_MAX_THROTTLE_WAIT</code>
 in total fails too.</li>
 </ul>
 <p>When a host asks coursier to slow down, the command line logs it once per pause:</p>
-<pre><code class="hljs css language-text">Rate limited by repo1.maven.org, holding off for 30s
-</code></pre>
+<div class="language-text codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-text codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#393A34"><span class="token plain">Rate limited by repo1.maven.org, holding off for 30s</span><br></div></code></pre></div></div>
 <p>and a download that ends up giving up reports the response code and what the server asked for:</p>
-<pre><code class="hljs css language-text">retryable HTTP error: https://repo1.maven.org/maven2/… (HTTP 429, Retry-After: 1 hour)
-</code></pre>
+<div class="language-text codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-text codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#393A34"><span class="token plain">retryable HTTP error: https://repo1.maven.org/maven2/… (HTTP 429, Retry-After: 1 hour)</span><br></div></code></pre></div></div>
 <p>The defaults are higher when the <code>CI</code> environment variable is set - which the usual CI services
 do - as that is where being turned away for a few minutes is both most likely and most worth
 sitting out.</p>
-<table>
-<thead>
-<tr><th>Setting</th><th>Environment variable</th><th>Java property</th><th>Default</th><th>In CI</th></tr>
-</thead>
-<tbody>
-<tr><td>Longest <code>Retry-After</code> honoured</td><td><code>COURSIER_MAX_HTTP_RETRY_AFTER</code></td><td><code>coursier.max-http-retry-after</code></td><td><code>5 s</code></td><td><code>1 min</code></td></tr>
-<tr><td>Total time one download may spend rate limited</td><td><code>COURSIER_MAX_THROTTLE_WAIT</code></td><td><code>coursier.max-throttle-wait</code></td><td><code>1 min</code></td><td><code>5 min</code></td></tr>
-<tr><td>First pause when there is no <code>Retry-After</code></td><td></td><td><code>coursier.retry-throttle-initial-delay</code></td><td><code>1 s</code></td><td></td></tr>
-<tr><td>Ceiling on that pause</td><td></td><td><code>coursier.retry-throttle-max-delay</code></td><td><code>1 min</code></td><td></td></tr>
-<tr><td>How much that pause grows each time</td><td></td><td><code>coursier.exception-retry-backoff-multiplier</code></td><td><code>2.0</code></td><td></td></tr>
-</tbody>
-</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Setting</th><th>Environment variable</th><th>Java property</th><th>Default</th><th>In CI</th></tr></thead><tbody><tr><td>Longest <code>Retry-After</code> honoured</td><td><code>COURSIER_MAX_HTTP_RETRY_AFTER</code></td><td><code>coursier.max-http-retry-after</code></td><td><code>5 s</code></td><td><code>1 min</code></td></tr><tr><td>Total time one download may spend rate limited</td><td><code>COURSIER_MAX_THROTTLE_WAIT</code></td><td><code>coursier.max-throttle-wait</code></td><td><code>1 min</code></td><td><code>5 min</code></td></tr><tr><td>First pause when there is no <code>Retry-After</code></td><td></td><td><code>coursier.retry-throttle-initial-delay</code></td><td><code>1 s</code></td><td></td></tr><tr><td>Ceiling on that pause</td><td></td><td><code>coursier.retry-throttle-max-delay</code></td><td><code>1 min</code></td><td></td></tr><tr><td>How much that pause grows each time</td><td></td><td><code>coursier.exception-retry-backoff-multiplier</code></td><td><code>2.0</code></td><td></td></tr></tbody></table>
 <p>Being rate limited by a public repository is a sign that too much traffic reaches it from your
-network as a whole, and that is what to look at: see <a href="#reducing-traffic">Reducing traffic</a> below.
+network as a whole, and that is what to look at: see <a href="#reducing-traffic" class="">Reducing traffic</a> below.
 Raising these limits only makes coursier wait longer for a block that lifts on its own.</p>
-<h3><a class="anchor" aria-hidden="true" id="setting-the-values"></a><a href="#setting-the-values" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Setting the values</h3>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="setting-the-values">Setting the values<a href="#setting-the-values" class="hash-link" aria-label="Direct link to Setting the values" title="Direct link to Setting the values" translate="no">​</a></h3>
 <p>Durations are parsed with <code>scala.concurrent.duration.Duration</code>, so <code>30s</code>, <code>2 min</code>, and <code>1 hour</code>
 are all fine.</p>
 <p>Java properties are passed to the <code>cs</code> command with <code>-J-D…</code>, before the command:</p>
-<pre><code class="hljs css language-text">cs -J-Dcoursier.max-throttle-wait="10 min" fetch org.scala-lang:scala-library:2.13.16
-</code></pre>
+<div class="language-text codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-text codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#393A34"><span class="token plain">cs -J-Dcoursier.max-throttle-wait=&quot;10 min&quot; fetch org.scala-lang:scala-library:2.13.16</span><br></div></code></pre></div></div>
 <p>When coursier is used from sbt, the properties are prefixed with <code>lmcoursier.internal.shaded.</code>,
 like <code>lmcoursier.internal.shaded.coursier.max-throttle-wait</code>. The environment variables are the
 same everywhere.</p>
-<h2><a class="anchor" aria-hidden="true" id="identifying-coursier-to-repositories"></a><a href="#identifying-coursier-to-repositories" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Identifying coursier to repositories</h2>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="identifying-coursier-to-repositories">Identifying coursier to repositories<a href="#identifying-coursier-to-repositories" class="hash-link" aria-label="Direct link to Identifying coursier to repositories" title="Direct link to Identifying coursier to repositories" translate="no">​</a></h2>
 <p>Every request carries a <code>User-Agent</code> header, <code>Coursier/2.0</code> by default. The <code>coursier.http.agent</code>
 Java property replaces it. Repositories ask that tools identify themselves with a product name, a
 version, and a way to reach whoever runs them, so a tool embedding coursier, or a large
 installation, is better off sending its own:</p>
-<pre><code class="hljs css language-text">-Dcoursier.http.agent="my-tool/1.4.0 (contact: ops@example.com)"
-</code></pre>
+<div class="language-text codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-text codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#393A34"><span class="token plain">-Dcoursier.http.agent=&quot;my-tool/1.4.0 (contact: ops@example.com)&quot;</span><br></div></code></pre></div></div>
 <p>That is also what a repository operator looks for when investigating where traffic comes from.</p>
-<h2><a class="anchor" aria-hidden="true" id="reducing-traffic"></a><a href="#reducing-traffic" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Reducing traffic</h2>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="reducing-traffic">Reducing traffic<a href="#reducing-traffic" class="hash-link" aria-label="Direct link to Reducing traffic" title="Direct link to Reducing traffic" translate="no">​</a></h2>
 <p>Retries and pauses are only there for the occasional failure. What keeps a repository from rate
 limiting you in the first place is sending it fewer requests:</p>
 <ul>
-<li><strong>Keep the cache between runs.</strong> In CI, persist the <a href="/docs/cache">cache directory</a> across jobs, and
+<li class=""><strong>Keep the cache between runs.</strong> In CI, persist the <a class="" href="/docs/cache">cache directory</a> across jobs, and
 in container images, populate it when building the image (with <code>cs fetch</code>, for example) rather
 than at start-up. A fresh environment fetching the same dependency tree on every run is exactly
 the pattern public repositories block.</li>
-<li><strong>Do not fetch at runtime.</strong> Launchers created with <code>cs bootstrap --standalone</code> embed their
+<li class=""><strong>Do not fetch at runtime.</strong> Launchers created with <code>cs bootstrap --standalone</code> embed their
 dependencies instead of downloading them on first run.</li>
-<li><strong>Go through a repository manager.</strong> <a href="/docs/other-mirrors">Mirrors</a> route the requests that would go
+<li class=""><strong>Go through a repository manager.</strong> <a class="" href="/docs/other-mirrors">Mirrors</a> route the requests that would go
 to a public repository to an internal one, without changing any build. <code>COURSIER_REPOSITORIES</code>
 replaces the default repositories altogether.</li>
-<li><strong>Raise the TTL</strong> of changing things, with <a href="/docs/ttl"><code>COURSIER_TTL</code></a>, when snapshots and version
+<li class=""><strong>Raise the TTL</strong> of changing things, with <a class="" href="/docs/ttl"><code>COURSIER_TTL</code></a>, when snapshots and version
 listings are checked more often than needed.</li>
-<li><strong>Work offline</strong> when everything is already cached: <code>--mode offline</code> on the command line, or
+<li class=""><strong>Work offline</strong> when everything is already cached: <code>--mode offline</code> on the command line, or
 <code>COURSIER_MODE=offline</code>.</li>
-<li><strong>Lower the parallelism</strong>, with <code>--parallel</code> or <code>coursier.parallel-download-count</code>, when a
+<li class=""><strong>Lower the parallelism</strong>, with <code>--parallel</code> or <code>coursier.parallel-download-count</code>, when a
 repository limits the number of concurrent connections rather than the request rate.</li>
 </ul>
-<h2><a class="anchor" aria-hidden="true" id="api"></a><a href="#api" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>API</h2>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="api">API<a href="#api" class="hash-link" aria-label="Direct link to API" title="Direct link to API" translate="no">​</a></h2>
 <p>The retry settings are fields of <code>FileCache</code>, and the same defaults apply. Here they are all set
 explicitly:</p>
-<pre><code class="hljs css language-scala"><span class="hljs-keyword">import</span> coursier.cache.<span class="hljs-type">FileCache</span>
-<span class="hljs-keyword">import</span> coursier.util.<span class="hljs-type">Task</span>
-
-<span class="hljs-keyword">import</span> scala.concurrent.duration._
-
-<span class="hljs-keyword">val</span> cache = <span class="hljs-type">FileCache</span>[<span class="hljs-type">Task</span>]().copy(
-  <span class="hljs-comment">// failed requests</span>
-  retry = <span class="hljs-number">5</span>,
-  retryBackoffInitialDelay = <span class="hljs-number">10.</span>millis,
-  retryBackoffMultiplier = <span class="hljs-number">2.0</span>,
-  retryBackoffMaxDelay = <span class="hljs-type">Some</span>(<span class="hljs-number">20.</span>seconds),
-  httpRetryBackoffInitialDelay = <span class="hljs-number">1.</span>second,
-  httpRetryBackoffMaxDelay = <span class="hljs-type">Some</span>(<span class="hljs-number">10.</span>minutes),
-  <span class="hljs-comment">// rate limiting: the total time one download may spend being told to come back later</span>
-  maxThrottleWait = <span class="hljs-type">Some</span>(<span class="hljs-number">1.</span>minute)
-)
-</code></pre>
+<div class="language-scala codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-scala codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#393A34"><span class="token keyword" style="color:#00009f">import</span><span class="token plain"> </span><span class="token namespace" style="opacity:0.7">coursier</span><span class="token namespace punctuation" style="opacity:0.7;color:#393A34">.</span><span class="token namespace" style="opacity:0.7">cache</span><span class="token namespace punctuation" style="opacity:0.7;color:#393A34">.</span><span class="token plain">FileCache</span><br></div><div class="token-line" style="color:#393A34"><span class="token plain"></span><span class="token keyword" style="color:#00009f">import</span><span class="token plain"> </span><span class="token namespace" style="opacity:0.7">coursier</span><span class="token namespace punctuation" style="opacity:0.7;color:#393A34">.</span><span class="token namespace" style="opacity:0.7">util</span><span class="token namespace punctuation" style="opacity:0.7;color:#393A34">.</span><span class="token plain">Task</span><br></div><div class="token-line" style="color:#393A34"><span class="token plain" style="display:inline-block"></span><br></div><div class="token-line" style="color:#393A34"><span class="token plain"></span><span class="token keyword" style="color:#00009f">import</span><span class="token plain"> </span><span class="token namespace" style="opacity:0.7">scala</span><span class="token namespace punctuation" style="opacity:0.7;color:#393A34">.</span><span class="token namespace" style="opacity:0.7">concurrent</span><span class="token namespace punctuation" style="opacity:0.7;color:#393A34">.</span><span class="token namespace" style="opacity:0.7">duration</span><span class="token namespace punctuation" style="opacity:0.7;color:#393A34">.</span><span class="token plain">_</span><br></div><div class="token-line" style="color:#393A34"><span class="token plain" style="display:inline-block"></span><br></div><div class="token-line" style="color:#393A34"><span class="token plain"></span><span class="token keyword" style="color:#00009f">val</span><span class="token plain"> cache </span><span class="token operator" style="color:#393A34">=</span><span class="token plain"> FileCache</span><span class="token punctuation" style="color:#393A34">[</span><span class="token plain">Task</span><span class="token punctuation" style="color:#393A34">]</span><span class="token punctuation" style="color:#393A34">(</span><span class="token punctuation" style="color:#393A34">)</span><span class="token punctuation" style="color:#393A34">.</span><span class="token plain">copy</span><span class="token punctuation" style="color:#393A34">(</span><span class="token plain"></span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">  </span><span class="token comment" style="color:#999988;font-style:italic">// failed requests</span><span class="token plain"></span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">  retry </span><span class="token operator" style="color:#393A34">=</span><span class="token plain"> </span><span class="token number" style="color:#36acaa">5</span><span class="token punctuation" style="color:#393A34">,</span><span class="token plain"></span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">  retryBackoffInitialDelay </span><span class="token operator" style="color:#393A34">=</span><span class="token plain"> </span><span class="token number" style="color:#36acaa">10.</span><span class="token plain">millis</span><span class="token punctuation" style="color:#393A34">,</span><span class="token plain"></span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">  retryBackoffMultiplier </span><span class="token operator" style="color:#393A34">=</span><span class="token plain"> </span><span class="token number" style="color:#36acaa">2.0</span><span class="token punctuation" style="color:#393A34">,</span><span class="token plain"></span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">  retryBackoffMaxDelay </span><span class="token operator" style="color:#393A34">=</span><span class="token plain"> Some</span><span class="token punctuation" style="color:#393A34">(</span><span class="token number" style="color:#36acaa">20.</span><span class="token plain">seconds</span><span class="token punctuation" style="color:#393A34">)</span><span class="token punctuation" style="color:#393A34">,</span><span class="token plain"></span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">  httpRetryBackoffInitialDelay </span><span class="token operator" style="color:#393A34">=</span><span class="token plain"> </span><span class="token number" style="color:#36acaa">1.</span><span class="token plain">second</span><span class="token punctuation" style="color:#393A34">,</span><span class="token plain"></span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">  httpRetryBackoffMaxDelay </span><span class="token operator" style="color:#393A34">=</span><span class="token plain"> Some</span><span class="token punctuation" style="color:#393A34">(</span><span class="token number" style="color:#36acaa">10.</span><span class="token plain">minutes</span><span class="token punctuation" style="color:#393A34">)</span><span class="token punctuation" style="color:#393A34">,</span><span class="token plain"></span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">  </span><span class="token comment" style="color:#999988;font-style:italic">// rate limiting: the total time one download may spend being told to come back later</span><span class="token plain"></span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">  maxThrottleWait </span><span class="token operator" style="color:#393A34">=</span><span class="token plain"> Some</span><span class="token punctuation" style="color:#393A34">(</span><span class="token number" style="color:#36acaa">1.</span><span class="token plain">minute</span><span class="token punctuation" style="color:#393A34">)</span><span class="token plain"></span><br></div><div class="token-line" style="color:#393A34"><span class="token plain"></span><span class="token punctuation" style="color:#393A34">)</span><br></div></code></pre></div></div>
 <p>The per-host pause is kept by a <code>HostThrottle</code> shared by all the caches of a JVM, since a rate limit
 applies to the process as a whole. <code>FileCache</code> accepts one of its own through its <code>hostThrottle</code>
 field, which is mostly useful in tests. <code>HostThrottle</code> is a trait, so that field also takes
@@ -220,24 +222,6 @@ field, which is mostly useful in tests. <code>HostThrottle</code> is a trait, so
 bounded by <code>maxThrottleWait</code> only.</p>
 <p>A <code>CacheLogger</code> is told about rate limits through its <code>rateLimited(url, duration)</code> method, called
 once per pause: it is what prints the message above on the command line, and what to override to
-surface it elsewhere.</p>
-</span></div></article></div><div class="docs-prevnext"><a class="docs-prev button" href="/docs/ttl"><span class="arrow-prev">← </span><span>TTL</span></a><a class="docs-next button" href="/docs/other-repositories"><span>Repositories</span><span class="arrow-next"> →</span></a></div></div></div><nav class="onPageNav"><ul class="toc-headings"><li><a href="#what-coursier-requests">What coursier requests</a></li><li><a href="#failed-requests">Failed requests</a></li><li><a href="#rate-limiting">Rate limiting</a><ul class="toc-headings"><li><a href="#setting-the-values">Setting the values</a></li></ul></li><li><a href="#identifying-coursier-to-repositories">Identifying coursier to repositories</a></li><li><a href="#reducing-traffic">Reducing traffic</a></li><li><a href="#api">API</a></li></ul></nav></div><footer class="nav-footer" id="footer"><section class="sitemap"><h2><a href="/" class="nav-home">Coursier</a></h2><div><h5><a href="/docs/overview">Docs</a></h5><a href="/docs/overview">Overview</a><a href="/docs/cli-installation">Install CLI</a><a href="/docs/sbt-coursier">Setup sbt</a><a href="/docs/api">Use the API</a></div><div><h5><a href="https://gitter.im/coursier/coursier" target="_blank">Community</a></h5><a href="https://gitter.im/coursier/coursier" target="_blank"><img src="https://img.shields.io/gitter/room/coursier/coursier.svg?logo=gitter&amp;style=social"/></a><a href="https://github.com/coursier/coursier" target="_blank"><img src="https://img.shields.io/github/stars/coursier/coursier.svg?color=%23087e8b&amp;label=stars&amp;logo=github&amp;style=social"/></a></div></section><section class="copyright">Copyright © 2026 coursier contributors</section></footer></div><script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script><script>
-                document.addEventListener('keyup', function(e) {
-                  if (e.target !== document.body) {
-                    return;
-                  }
-                  // keyCode for '/' (slash)
-                  if (e.keyCode === 191) {
-                    const search = document.getElementById('search_input_react');
-                    search && search.focus();
-                  }
-                });
-              </script><script>
-              var search = docsearch({
-                
-                apiKey: '53a7a919d6905f94dafd59e25d0f5e5d',
-                indexName: 'get-coursier',
-                inputSelector: '#search_input_react',
-                algoliaOptions: {}
-              });
-            </script></body></html>
+surface it elsewhere.</p></div></article><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/docs/ttl"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">TTL</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/docs/other-repositories"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">Repositories</div></a></nav></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#what-coursier-requests" class="table-of-contents__link toc-highlight">What coursier requests</a></li><li><a href="#failed-requests" class="table-of-contents__link toc-highlight">Failed requests</a></li><li><a href="#rate-limiting" class="table-of-contents__link toc-highlight">Rate limiting</a><ul><li><a href="#setting-the-values" class="table-of-contents__link toc-highlight">Setting the values</a></li></ul></li><li><a href="#identifying-coursier-to-repositories" class="table-of-contents__link toc-highlight">Identifying coursier to repositories</a></li><li><a href="#reducing-traffic" class="table-of-contents__link toc-highlight">Reducing traffic</a></li><li><a href="#api" class="table-of-contents__link toc-highlight">API</a></li></ul></div></div></div></div></main></div></div></div><footer class="theme-layout-footer footer footer--dark"><div class="container container-fluid"><div class="row footer__links"><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Docs</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/docs/overview">Overview</a></li><li class="footer__item"><a class="footer__link-item" href="/docs/cli-installation">Install CLI</a></li><li class="footer__item"><a class="footer__link-item" href="/docs/sbt-coursier">Setup sbt</a></li><li class="footer__item"><a class="footer__link-item" href="/docs/api">Use the API</a></li></ul></div><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Community</div><ul class="footer__items clean-list"><li class="footer__item"><a href="https://gitter.im/coursier/coursier" target="_blank" rel="noopener noreferrer" class="footer__link-item">Gitter<svg width="13.5" height="13.5" aria-label="(opens in new tab)" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a></li><li class="footer__item"><a href="https://github.com/coursier/coursier" target="_blank" rel="noopener noreferrer" class="footer__link-item">GitHub<svg width="13.5" height="13.5" aria-label="(opens in new tab)" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a></li></ul></div></div><div class="footer__bottom text--center"><div class="footer__copyright">Copyright © 2026 coursier contributors</div></div></div></footer></div>
+</body>
+</html>

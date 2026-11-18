@@ -2,29 +2,90 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://get-coursier.io/blog</id>
     <title>Coursier Blog</title>
-    <updated>2019-07-12T06:00:00.000Z</updated>
+    <updated>2019-07-12T00:00:00.000Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://get-coursier.io/blog"/>
-    <subtitle>The best place to stay up-to-date with the latest Coursier news and events.</subtitle>
-    <logo>https://get-coursier.io/undefined</logo>
-    <rights>Copyright © 2026 coursier contributors</rights>
+    <subtitle>Coursier Blog</subtitle>
     <entry>
-        <title type="html"><![CDATA[2.0.0-RC2]]></title>
-        <id>https://get-coursier.io/blog/2019/07/12/2.0.0-RC2.html</id>
-        <link href="https://get-coursier.io/blog/2019/07/12/2.0.0-RC2.html"/>
-        <updated>2019-07-12T06:00:00.000Z</updated>
-        <summary type="html"><![CDATA[<p>coursier <code>2.0.0-RC2</code> was released some time ago. This release brings much less changes than <code>2.0.0-RC1</code>. It mostly add scala <code>2.13.0</code> support, and a few fixes in the experimental <code>install</code> command.</p> ]]></summary>
+        <title type="html"><![CDATA[2.0.0-RC1]]></title>
+        <id>https://get-coursier.io/blog/2019/07/12/2.0.0-RC1</id>
+        <link href="https://get-coursier.io/blog/2019/07/12/2.0.0-RC1"/>
+        <updated>2019-07-12T00:00:00.000Z</updated>
+        <summary type="html"><![CDATA[This post describes the most notables changes of coursier 2.0.0-RC1.]]></summary>
+        <content type="html"><![CDATA[<p>This post describes the most notables changes of coursier <code>2.0.0-RC1</code>.</p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="strict-conflict-manager">Strict conflict manager<a href="https://get-coursier.io/blog/2019/07/12/2.0.0-RC1#strict-conflict-manager" class="hash-link" aria-label="Direct link to Strict conflict manager" title="Direct link to Strict conflict manager" translate="no">​</a></h2>
+<p>The CLI now accepts options to enable and configure the new strict
+conflict manager.</p>
+<ul>
+<li class=""><code>--strict</code> enables the strict conflict manager,</li>
+<li class=""><code>--strict-exclude org:name</code> excludes some modules from being inspected by the strict conflict manager,</li>
+<li class=""><code>--strict-include org:name</code> includes some modules (even if they were excluded by <code>--strict-exclude</code>).</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="install-command"><code>install</code> command<a href="https://get-coursier.io/blog/2019/07/12/2.0.0-RC1#install-command" class="hash-link" aria-label="Direct link to install-command" title="Direct link to install-command" translate="no">​</a></h2>
+<p>The CLI of coursier now has an <code>install</code> command. This command was demo-ed
+during the Scala Days talk <a href="https://www.youtube.com/watch?v=b06iQB_It8o" target="_blank" rel="noopener noreferrer" class="">"All the fancy things you can do with flexible dependency management"</a>.</p>
+<p>The environment variable <code>COURSIER_EXPERIMENTAL</code> needs to be <code>true</code> for this
+command to be enabled. It then allows things like</p>
+<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#393A34"><span class="token plain">$ coursier </span><span class="token function" style="color:#d73a49">install</span><span class="token plain"> scalac sbt-launcher</span><br></div></code></pre></div></div>
+<p>It installs launchers for these applications in an OS-specific directory
+(<code>~/Library/Application Support/Coursier/bin</code> on OS X,
+<code>~/.local/share/coursier/bin</code> on Linux), and will warn you if that directory
+isn't in your <code>PATH</code>.</p>
+<p>It also allows to install GraalVM applications if <code>GRAALVM_HOME</code> is set
+(<code>coursier install coursier-graalvm</code>), and scala-native ones too if
+<a href="https://www.scala-native.org/en/v0.3.9-docs/user/setup.html#installing-clang-and-runtime-dependencies" target="_blank" rel="noopener noreferrer" class="">LLVM is installed</a>
+(<code>coursier install echo-native</code>).</p>
+<p>It should be described in more detail in a later post and / or dedicated
+page in the coursier website.</p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="publish-command"><code>publish</code> command<a href="https://get-coursier.io/blog/2019/07/12/2.0.0-RC1#publish-command" class="hash-link" aria-label="Direct link to publish-command" title="Direct link to publish-command" translate="no">​</a></h2>
+<p>The CLI of coursier now has a <code>publish</code> command, allowing to publish
+arbitrary sbt projects and directories with a Maven repository-like structure.
+It's quite experimental, and should be documented in a later time.</p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="dynamically-load-scala-native-tools">Dynamically load scala-native tools<a href="https://get-coursier.io/blog/2019/07/12/2.0.0-RC1#dynamically-load-scala-native-tools" class="hash-link" aria-label="Direct link to Dynamically load scala-native tools" title="Direct link to Dynamically load scala-native tools" translate="no">​</a></h2>
+<p>The <code>--native</code> option of the <code>bootstrap</code> command can now deal with several
+scala-native versions. It automatically detects the scala-native version
+of the dependencies it is passed, and downloads and uses the scala-native
+tools from that scala-native version</p>
+<p>For example, both of these command work, and use either scala-native
+<code>0.3.9</code>, or <code>0.4.0-M2</code>:</p>
+<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#393A34"><span class="token plain">$ coursier bootstrap io.get-coursier:echo_native0.3_2.11:1.0.1 </span><span class="token punctuation" style="color:#393A34">\</span><span class="token plain"></span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">    </span><span class="token parameter variable" style="color:#36acaa">-o</span><span class="token plain"> echo-native-0.3 </span><span class="token punctuation" style="color:#393A34">\</span><span class="token plain"></span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">    </span><span class="token parameter variable" style="color:#36acaa">--native</span><span class="token plain"></span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">$ coursier bootstrap io.get-coursier:echo_native0.4.0-M2_2.11:1.0.3 </span><span class="token punctuation" style="color:#393A34">\</span><span class="token plain"></span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">    </span><span class="token parameter variable" style="color:#36acaa">-o</span><span class="token plain"> echo-native-0.4.0-M2 </span><span class="token punctuation" style="color:#393A34">\</span><span class="token plain"></span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">    </span><span class="token parameter variable" style="color:#36acaa">--native</span><br></div></code></pre></div></div>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="dependency-string-completion">Dependency string completion<a href="https://get-coursier.io/blog/2019/07/12/2.0.0-RC1#dependency-string-completion" class="hash-link" aria-label="Direct link to Dependency string completion" title="Direct link to Dependency string completion" translate="no">​</a></h2>
+<p>coursier now has an API and a CLI command to complete dependency strings,
+like</p>
+<div class="language-scala codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-scala codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#393A34"><span class="token keyword" style="color:#00009f">val</span><span class="token plain"> </span><span class="token punctuation" style="color:#393A34">(</span><span class="token plain">fromIndex</span><span class="token punctuation" style="color:#393A34">,</span><span class="token plain"> completions</span><span class="token punctuation" style="color:#393A34">)</span><span class="token plain"> </span><span class="token operator" style="color:#393A34">=</span><span class="token plain"> coursier</span><span class="token punctuation" style="color:#393A34">.</span><span class="token plain">Complete</span><span class="token punctuation" style="color:#393A34">(</span><span class="token punctuation" style="color:#393A34">)</span><span class="token plain"></span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">  </span><span class="token punctuation" style="color:#393A34">.</span><span class="token plain">withInput</span><span class="token punctuation" style="color:#393A34">(</span><span class="token string" style="color:#e3116c">"com.chuusai::shapeless:"</span><span class="token punctuation" style="color:#393A34">)</span><span class="token plain"></span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">  </span><span class="token punctuation" style="color:#393A34">.</span><span class="token plain">withScalaVersion</span><span class="token punctuation" style="color:#393A34">(</span><span class="token string" style="color:#e3116c">"2.12.8"</span><span class="token punctuation" style="color:#393A34">)</span><span class="token plain"></span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">  </span><span class="token punctuation" style="color:#393A34">.</span><span class="token plain">complete</span><span class="token punctuation" style="color:#393A34">(</span><span class="token punctuation" style="color:#393A34">)</span><br></div></code></pre></div></div>
+<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#393A34"><span class="token plain">$ coursier complete --scala-version </span><span class="token number" style="color:#36acaa">2.12</span><span class="token plain">.8 com.chuusai::shapeless:</span><br></div><div class="token-line" style="color:#393A34"><span class="token plain"></span><span class="token number" style="color:#36acaa">2.3</span><span class="token plain">.2</span><br></div><div class="token-line" style="color:#393A34"><span class="token plain"></span><span class="token number" style="color:#36acaa">2.3</span><span class="token plain">.3</span><br></div></code></pre></div></div>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="fixes">Fixes<a href="https://get-coursier.io/blog/2019/07/12/2.0.0-RC1#fixes" class="hash-link" aria-label="Direct link to Fixes" title="Direct link to Fixes" translate="no">​</a></h2>
+<p>Fix bug in resolution preventing <code>software.amazon.awssdk:utils:2.5.17</code>
+and <code>software.amazon.awssdk:auth:2.5.17</code> to be resolved fine.</p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="other">Other<a href="https://get-coursier.io/blog/2019/07/12/2.0.0-RC1#other" class="hash-link" aria-label="Direct link to Other" title="Direct link to Other" translate="no">​</a></h2>
+<ul>
+<li class=""><code>--what-depends-on</code> now accepts patterns like <code>org:*</code> or <code>foo-*:name</code>
+(thanks to <a href="https://github.com/viqueen" target="_blank" rel="noopener noreferrer" class="">@viqueen</a></li>
+<li class="">upon checksum error, both the underlying file and checksum file are deleted
+from the cache, and downloaded again (no other attempt / deletion is the second
+one still fails)</li>
+<li class="">global exclusions can be passed to <code>coursier.Resolve</code> and <code>coursier.Fetch</code>
+(rather than manually applied to each dependency)</li>
+<li class="">early support for <code>latest.release</code> and <code>latest.integration</code> versions
+(improved upon in later versions)</li>
+<li class="">versions like <code>0+</code> are now handled fine</li>
+<li class="">launchers generated by the <code>bootstrap</code> command now read the environment
+variable <code>JAVA_OPTS</code> when they invoke <code>java</code></li>
+</ul>]]></content>
         <author>
             <name>Alexandre Archambault</name>
             <uri>https://github.com/alexarchambault</uri>
         </author>
     </entry>
     <entry>
-        <title type="html"><![CDATA[2.0.0-RC1]]></title>
-        <id>https://get-coursier.io/blog/2019/07/12/2.0.0-RC1.html</id>
-        <link href="https://get-coursier.io/blog/2019/07/12/2.0.0-RC1.html"/>
-        <updated>2019-07-12T06:00:00.000Z</updated>
-        <summary type="html"><![CDATA[<p>This post describes the most notables changes of coursier <code>2.0.0-RC1</code>.</p> <h2><a class="anchor" aria-hidden="true" id="strict-conflict-manager"></a><a href="#strict-conflict-manager" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Strict conflict manager</h2> <p>The CLI now accepts options to enable and configure the new strict conflict manager.</p> <ul> <li><code>--strict</code> enables the strict conflict manager,</li> <li><code>--strict-exclude org:name...</code></li></ul>]]></summary>
+        <title type="html"><![CDATA[2.0.0-RC2]]></title>
+        <id>https://get-coursier.io/blog/2019/07/12/2.0.0-RC2</id>
+        <link href="https://get-coursier.io/blog/2019/07/12/2.0.0-RC2"/>
+        <updated>2019-07-12T00:00:00.000Z</updated>
+        <summary type="html"><![CDATA[coursier 2.0.0-RC2 was released some time ago. This release brings much]]></summary>
+        <content type="html"><![CDATA[<p>coursier <code>2.0.0-RC2</code> was released some time ago. This release brings much
+less changes than <code>2.0.0-RC1</code>. It mostly add scala <code>2.13.0</code> support, and
+a few fixes in the experimental <code>install</code> command.</p>]]></content>
         <author>
             <name>Alexandre Archambault</name>
             <uri>https://github.com/alexarchambault</uri>
@@ -32,10 +93,53 @@
     </entry>
     <entry>
         <title type="html"><![CDATA[1.1.0-M14]]></title>
-        <id>https://get-coursier.io/blog/2019/07/05/1.1.0-M14.html</id>
-        <link href="https://get-coursier.io/blog/2019/07/05/1.1.0-M14.html"/>
-        <updated>2019-07-05T06:00:00.000Z</updated>
-        <summary type="html"><![CDATA[<p>This post describes the most notables changes of coursier <code>1.1.0-M14</code>.</p> <h2><a class="anchor" aria-hidden="true" id="mirrors"></a><a href="#mirrors" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Mirrors</h2> <p>coursier got support for mirrors, kind of like Maven has. Mirrors allow to substitute some repositories for others. This can be useful with internal Maven repositories mirro...</p>]]></summary>
+        <id>https://get-coursier.io/blog/2019/07/05/1.1.0-M14</id>
+        <link href="https://get-coursier.io/blog/2019/07/05/1.1.0-M14"/>
+        <updated>2019-07-05T00:00:00.000Z</updated>
+        <summary type="html"><![CDATA[This post describes the most notables changes of coursier 1.1.0-M14.]]></summary>
+        <content type="html"><![CDATA[<p>This post describes the most notables changes of coursier <code>1.1.0-M14</code>.</p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="mirrors">Mirrors<a href="https://get-coursier.io/blog/2019/07/05/1.1.0-M14#mirrors" class="hash-link" aria-label="Direct link to Mirrors" title="Direct link to Mirrors" translate="no">​</a></h2>
+<p>coursier got support for mirrors, kind of like Maven has.
+Mirrors allow to substitute some repositories for others. This can be useful
+with internal Maven repositories mirroring Maven Central for example. In that
+case, you'd prefer requests to go to that mirror rather than to Maven
+Central.</p>
+<p>Mirrors are automatically picked from the API (unless explicitly disabled)
+and the CLI.</p>
+<p>They can be configured via configuration files, namely
+<code>~/.config/coursier/mirror.properties</code> on Linux, and
+<code>~/Library/Preferences/Coursier/mirror.properties</code> on OS X.
+For example, these settings allow to replace Maven Central with JCenter</p>
+<div class="language-text codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-text codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#393A34"><span class="token plain">jcenter.from=https://repo1.maven.org/maven2</span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">jcenter.to=https://jcenter.bintray.com</span><br></div></code></pre></div></div>
+<p>Mirrors should be described in more detail in the coursier documentation
+in a later time.</p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="new-ways-of-passing-credentials">New ways of passing credentials<a href="https://get-coursier.io/blog/2019/07/05/1.1.0-M14#new-ways-of-passing-credentials" class="hash-link" aria-label="Direct link to New ways of passing credentials" title="Direct link to New ways of passing credentials" translate="no">​</a></h2>
+<p>The CLI and API of coursier now accepts credentials via the environment,
+via Java properties, or configuration files.
+These are described in more detail in the
+<a class="" href="https://get-coursier.io/docs/other-credentials">dedicated documentation page</a>.
+Beware that some details may change a bit before the release of <code>2.0.0</code>
+final.</p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="refactoring">Refactoring<a href="https://get-coursier.io/blog/2019/07/05/1.1.0-M14#refactoring" class="hash-link" aria-label="Direct link to Refactoring" title="Direct link to Refactoring" translate="no">​</a></h2>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="redirections">Redirections<a href="https://get-coursier.io/blog/2019/07/05/1.1.0-M14#redirections" class="hash-link" aria-label="Direct link to Redirections" title="Direct link to Redirections" translate="no">​</a></h3>
+<p>HTTP redirections are now handled by some custom code, rather than by
+<code>java.net.HttpURLConnection</code>. (This introduced some regressions, now fixed
+in subsequent releases.) This allows a more refined handling of credentials
+when redirections happen (credentials can be stripped, or added if their
+settings allow it, in particular).</p>
+<p>This should also allow users to more finely tune whether credentials
+should be sent upfront, without waiting for a 403 Unauthorized response
+(to be added to the <a class="" href="https://get-coursier.io/docs/other-credentials">dedicated documentation page</a>).</p>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="parsers">Parsers<a href="https://get-coursier.io/blog/2019/07/05/1.1.0-M14#parsers" class="hash-link" aria-label="Direct link to Parsers" title="Direct link to Parsers" translate="no">​</a></h3>
+<p>Most parsers were moved in dedicated objects under the <code>coursier.parse</code>
+namespace. That includes <code>DependencyParser</code>, <code>ModuleParser</code>, and
+<code>RepositoryParser</code> in particular.</p>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="high-level-api">High level API<a href="https://get-coursier.io/blog/2019/07/05/1.1.0-M14#high-level-api" class="hash-link" aria-label="Direct link to High level API" title="Direct link to High level API" translate="no">​</a></h3>
+<p>The new high level API kept evolving / getting refined.</p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="fixes">Fixes<a href="https://get-coursier.io/blog/2019/07/05/1.1.0-M14#fixes" class="hash-link" aria-label="Direct link to Fixes" title="Direct link to Fixes" translate="no">​</a></h2>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="xml-errors">XML errors<a href="https://get-coursier.io/blog/2019/07/05/1.1.0-M14#xml-errors" class="hash-link" aria-label="Direct link to XML errors" title="Direct link to XML errors" translate="no">​</a></h3>
+<p>A regression in the code handling XML, since <code>1.1.0-12</code>,
+giving <code>SAXParseException</code>, was fixed.</p>]]></content>
         <author>
             <name>Alexandre Archambault</name>
             <uri>https://github.com/alexarchambault</uri>
@@ -43,10 +147,47 @@
     </entry>
     <entry>
         <title type="html"><![CDATA[1.1.0-M13]]></title>
-        <id>https://get-coursier.io/blog/2019/03/05/1.1.0-M13.html</id>
-        <link href="https://get-coursier.io/blog/2019/03/05/1.1.0-M13.html"/>
-        <updated>2019-03-05T06:00:00.000Z</updated>
-        <summary type="html"><![CDATA[<p>coursier <code>1.1.0-M13</code> was just released.</p> <p>The most notable changes of this milestone happened in the new high level API, that is nearing completion. A notion of "rules" or constraints is also being added to coursier, and should be described in more detai...</p>]]></summary>
+        <id>https://get-coursier.io/blog/2019/03/05/1.1.0-M13</id>
+        <link href="https://get-coursier.io/blog/2019/03/05/1.1.0-M13"/>
+        <updated>2019-03-05T00:00:00.000Z</updated>
+        <summary type="html"><![CDATA[coursier 1.1.0-M13 was just released.]]></summary>
+        <content type="html"><![CDATA[<p>coursier <code>1.1.0-M13</code> was just released.</p>
+<p>The most notable changes of this milestone happened in the new high level API,
+that is nearing completion. A notion of "rules" or constraints is also being
+added to coursier, and should be described in more detail in a later post.</p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="high-level-api">High level API<a href="https://get-coursier.io/blog/2019/03/05/1.1.0-M13#high-level-api" class="hash-link" aria-label="Direct link to High level API" title="Direct link to High level API" translate="no">​</a></h2>
+<p>This API aims at being as simple to use as the CLI of coursier, while retaining
+the purity of the former low level API - without all its traps.</p>
+<p>For example, one can fetch a few dependencies with</p>
+<div class="language-scala codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-scala codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#393A34"><span class="token keyword" style="color:#00009f">import</span><span class="token plain"> </span><span class="token namespace" style="opacity:0.7">coursier</span><span class="token namespace punctuation" style="opacity:0.7;color:#393A34">.</span><span class="token plain">_</span><br></div><div class="token-line" style="color:#393A34"><span class="token plain" style="display:inline-block"></span><br></div><div class="token-line" style="color:#393A34"><span class="token plain"></span><span class="token keyword" style="color:#00009f">val</span><span class="token plain"> files </span><span class="token operator" style="color:#393A34">=</span><span class="token plain"> Fetch</span><span class="token punctuation" style="color:#393A34">(</span><span class="token punctuation" style="color:#393A34">)</span><span class="token plain"></span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">  </span><span class="token punctuation" style="color:#393A34">.</span><span class="token plain">addDependencies</span><span class="token punctuation" style="color:#393A34">(</span><span class="token plain"></span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">    </span><span class="token string-interpolation id function" style="color:#d73a49">dep</span><span class="token string-interpolation string" style="color:#e3116c">"org.http4s:http4s-dsl_2.12:0.18.22"</span><span class="token punctuation" style="color:#393A34">,</span><span class="token plain"></span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">    </span><span class="token string-interpolation id function" style="color:#d73a49">dep</span><span class="token string-interpolation string" style="color:#e3116c">"org.tpolecat:doobie-core_2.12:0.6.0"</span><span class="token plain"></span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">  </span><span class="token punctuation" style="color:#393A34">)</span><span class="token plain"></span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">  </span><span class="token punctuation" style="color:#393A34">.</span><span class="token plain">run</span><span class="token punctuation" style="color:#393A34">(</span><span class="token punctuation" style="color:#393A34">)</span><span class="token plain"></span><br></div><div class="token-line" style="color:#393A34"><span class="token plain" style="display:inline-block"></span><br></div><div class="token-line" style="color:#393A34"><span class="token plain"></span><span class="token comment" style="color:#999988;font-style:italic">// files: Seq[java.io.File]</span><br></div></code></pre></div></div>
+<p>It relies on a "builder pattern", not unlike
+<a href="https://softwaremill.com/introducing-sttp-the-scala-http-client" target="_blank" rel="noopener noreferrer" class="">sttp</a>.
+Numerous parameters can be adjusted by calling other methods before <code>run</code>, such
+as <code>addRepositories</code>, <code>withResolutionParams</code>, <code>withCache</code>, etc.</p>
+<p><code>run()</code> runs resolutions and downloads artifacts synchronously, but can be
+substituted by <code>future()</code> or <code>io</code> to run things
+in the background, via a <code>Future</code> or the IO monad of your choice.</p>
+<p>More details can be found <a class="" href="https://get-coursier.io/docs/1.1.0-M13/api">in the documentation</a>.</p>
+<p>The CLI and the sbt plugins of coursier already rely on this API. In the future,
+this should ensure that more advanced features, added in the CLI or the sbt
+plugin of coursier, are available to API users straightaway. It's also easier
+to evolve this API while retaining binary compatibility.</p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="rules">Rules<a href="https://get-coursier.io/blog/2019/03/05/1.1.0-M13#rules" class="hash-link" aria-label="Direct link to Rules" title="Direct link to Rules" translate="no">​</a></h2>
+<p>Motivated by
+<a href="https://github.com/scalacenter/advisoryboard/blob/master/proposals/020-sbt-transitive-dependencies-conflicts.md" target="_blank" rel="noopener noreferrer" class="">SCP-20</a>,
+support for enforcing some "rules" or constraints is being added to coursier.
+These are a bit similar to those of the
+<a href="https://maven.apache.org/enforcer/maven-enforcer-plugin" target="_blank" rel="noopener noreferrer" class="">Maven enforcer plugin</a>,
+and allow to emulate the
+<a href="http://ant.apache.org/ivy/history/2.5.0-rc1/settings/conflict-managers.html" target="_blank" rel="noopener noreferrer" class="">strict conflict manager of Ivy</a> in particular.</p>
+<p>While details are still being ironed out, the CLI already accepts rules.</p>
+<p>For example, one can require all the jackson modules to have the same version
+with</p>
+<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#393A34"><span class="token plain">$ coursier resolve org.apache.spark:spark-sql_2.12:2.4.0 </span><span class="token punctuation" style="color:#393A34">\</span><span class="token plain"></span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">    </span><span class="token parameter variable" style="color:#36acaa">--rules</span><span class="token plain"> </span><span class="token string" style="color:#e3116c">'SameVersion(com.fasterxml.jackson.*:jackson-*)'</span><span class="token plain"></span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">…</span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">com.fasterxml.jackson.core:jackson-annotations:2.7.9:default</span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">com.fasterxml.jackson.core:jackson-core:2.7.9:default</span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">com.fasterxml.jackson.core:jackson-databind:2.7.9:default</span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">com.fasterxml.jackson.module:jackson-module-paranamer:2.7.9:default</span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">com.fasterxml.jackson.module:jackson-module-scala_2.12:2.7.9:default</span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">…</span><br></div></code></pre></div></div>
+<p>By default, if a rule doesn't pass, it can try to address the underlying issue.
+One can instead require resolution to fail, with</p>
+<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#393A34"><span class="token plain">$ coursier resolve org.apache.spark:spark-sql_2.12:2.4.0 </span><span class="token punctuation" style="color:#393A34">\</span><span class="token plain"></span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">    </span><span class="token parameter variable" style="color:#36acaa">--rules</span><span class="token plain"> </span><span class="token string" style="color:#e3116c">'fail:SameVersion(com.fasterxml.jackson.*:jackson-*)'</span><span class="token plain"></span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">Resolution error: Unsatisfiable rule …</span><br></div></code></pre></div></div>
+<p>An upcoming post should describe rules and future plans in more detail.</p>]]></content>
         <author>
             <name>Alexandre Archambault</name>
             <uri>https://github.com/alexarchambault</uri>
@@ -54,10 +195,11 @@
     </entry>
     <entry>
         <title type="html"><![CDATA[1.1.0-M12]]></title>
-        <id>https://get-coursier.io/blog/2019/03/04/1.1.0-M12.html</id>
-        <link href="https://get-coursier.io/blog/2019/03/04/1.1.0-M12.html"/>
-        <updated>2019-03-04T06:00:00.000Z</updated>
-        <summary type="html"><![CDATA[<p>Changes in <code>1.1.0-M12</code> are discussed along those of <a href="/blog/2019/03/05/1.1.0-M13"><code>1.1.0-M13</code></a>.</p> ]]></summary>
+        <id>https://get-coursier.io/blog/2019/03/04/1.1.0-M12</id>
+        <link href="https://get-coursier.io/blog/2019/03/04/1.1.0-M12"/>
+        <updated>2019-03-04T00:00:00.000Z</updated>
+        <summary type="html"><![CDATA[Changes in 1.1.0-M12 are discussed along those of 1.1.0-M13.]]></summary>
+        <content type="html"><![CDATA[<p>Changes in <code>1.1.0-M12</code> are discussed along those of <a class="" href="https://get-coursier.io/blog/2019/03/05/1.1.0-M13"><code>1.1.0-M13</code></a>.</p>]]></content>
         <author>
             <name>Alexandre Archambault</name>
             <uri>https://github.com/alexarchambault</uri>
@@ -65,10 +207,99 @@
     </entry>
     <entry>
         <title type="html"><![CDATA[1.1.0-M11]]></title>
-        <id>https://get-coursier.io/blog/2019/02/05/1.1.0-M11.html</id>
-        <link href="https://get-coursier.io/blog/2019/02/05/1.1.0-M11.html"/>
-        <updated>2019-02-05T06:00:00.000Z</updated>
-        <summary type="html"><![CDATA[<p>coursier <code>1.1.0-M11</code> was just released. This release contains <a href="#tweaking-enhancements">numerous enhancements</a> both in the core of coursier and its CLI, along with <a href="#fixes">a few fixes</a> for the CLI.</p> <p>It occurs in the midst of the addition of the higher level API for coursier, that should b...</p>]]></summary>
+        <id>https://get-coursier.io/blog/2019/02/05/1.1.0-M11</id>
+        <link href="https://get-coursier.io/blog/2019/02/05/1.1.0-M11"/>
+        <updated>2019-02-05T00:00:00.000Z</updated>
+        <summary type="html"><![CDATA[coursier 1.1.0-M11 was just released.]]></summary>
+        <content type="html"><![CDATA[<p>coursier <code>1.1.0-M11</code> was just released.
+This release contains <a href="https://get-coursier.io/blog/2019/02/05/1.1.0-M11#tweaking-enhancements" class="">numerous enhancements</a> both in
+the core of coursier and its CLI, along with <a href="https://get-coursier.io/blog/2019/02/05/1.1.0-M11#fixes" class="">a few fixes</a> for the CLI.</p>
+<p>It occurs in the midst of the addition of the higher level API for coursier,
+that should be discussed in a later release.
+This higher level API aims at being as simple to use as the CLI of coursier.</p>
+<blockquote>
+<p>The <code>resolve</code>, <code>fetch</code>, and <code>launch</code> commands were heavily refactored,
+to extract bits of the high level API from them. Although best efforts were made
+to prevent them, these refactoring may come with some regressions. Don't
+hesitate to report any if ever you run into one.</p>
+</blockquote>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="tweaking--enhancements">Tweaking / enhancements<a href="https://get-coursier.io/blog/2019/02/05/1.1.0-M11#tweaking--enhancements" class="hash-link" aria-label="Direct link to Tweaking / enhancements" title="Direct link to Tweaking / enhancements" translate="no">​</a></h2>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="optimizations">Optimizations<a href="https://get-coursier.io/blog/2019/02/05/1.1.0-M11#optimizations" class="hash-link" aria-label="Direct link to Optimizations" title="Direct link to Optimizations" translate="no">​</a></h3>
+<p>Regular expressions were used during resolution to process Maven properties.
+Some handcrafted code now handles those, which provides nice
+<a href="https://github.com/coursier/coursier/pull/1026#issuecomment-456380505" target="_blank" rel="noopener noreferrer" class="">performance gains</a>.</p>
+<p>Maven POM parsing used to be handled by parsing the POM file itself, then
+processing the resulting XML AST. It's now handled by a SAX parser, which
+brought some <a href="https://github.com/coursier/coursier/pull/1029#issuecomment-456832973" target="_blank" rel="noopener noreferrer" class="">performance gains</a> too.</p>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="default-repositories">Default repositories<a href="https://get-coursier.io/blog/2019/02/05/1.1.0-M11#default-repositories" class="hash-link" aria-label="Direct link to Default repositories" title="Direct link to Default repositories" translate="no">​</a></h3>
+<p>In the CLI, and in the upcoming high level API, the default repositories are</p>
+<ul>
+<li class="">the local Ivy2 repository (<code>~/.ivy2/local</code>),</li>
+<li class=""><a href="https://repo1.maven.org/maven2" target="_blank" rel="noopener noreferrer" class="">Maven Central</a>.</li>
+</ul>
+<p>These can now be tweaked via the environment, via</p>
+<ul>
+<li class=""><code>COURSIER_REPOSITORIES</code> in the environment,</li>
+<li class="">the <code>coursier.repositories</code> Java property.</li>
+</ul>
+<p>This environment variable or Java property are expected to contain a list
+of repositories, separated by <code>|</code>, like <code>central|sonatype:releases</code>.
+The repositories themselves are parsed the same way as those passed via
+the <code>-r</code> or <code>--repository</code> options of the CLI.</p>
+<p>Note that this does <em>not</em> affect the sbt plugin.</p>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="cli">CLI<a href="https://get-coursier.io/blog/2019/02/05/1.1.0-M11#cli" class="hash-link" aria-label="Direct link to CLI" title="Direct link to CLI" translate="no">​</a></h3>
+<h4 class="anchor anchorTargetStickyNavbar_Vzrq" id="download-initial-jar-from-central-rather-than-sonatype-releases">Download initial JAR from Central rather than Sonatype releases<a href="https://get-coursier.io/blog/2019/02/05/1.1.0-M11#download-initial-jar-from-central-rather-than-sonatype-releases" class="hash-link" aria-label="Direct link to Download initial JAR from Central rather than Sonatype releases" title="Direct link to Download initial JAR from Central rather than Sonatype releases" translate="no">​</a></h4>
+<p>The coursier launcher downloads <a href="https://repo1.maven.org/maven2/io/get-coursier/coursier-cli_2.12/1.1.0-M11/coursier-cli_2.12-1.1.0-M11-standalone.jar" target="_blank" rel="noopener noreferrer" class="">a proguarded version</a>
+of the CLI of coursier upon first launch. It is now ensured this proguarded JAR is downloaded
+from <a href="https://repo1.maven.org/maven2" target="_blank" rel="noopener noreferrer" class="">Maven Central</a>, rather than
+<a href="https://oss.sonatype.org/content/repositories/releases" target="_blank" rel="noopener noreferrer" class="">Sonatype releases</a>,
+the former being usually faster than the latter.</p>
+<h4 class="anchor anchorTargetStickyNavbar_Vzrq" id="ship-completions-with-launcher">Ship completions with launcher<a href="https://get-coursier.io/blog/2019/02/05/1.1.0-M11#ship-completions-with-launcher" class="hash-link" aria-label="Direct link to Ship completions with launcher" title="Direct link to Ship completions with launcher" translate="no">​</a></h4>
+<p>The completions of coursier now ship with the launcher itself. Run</p>
+<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#393A34"><span class="token plain">$ coursier </span><span class="token parameter variable" style="color:#36acaa">--completions</span><span class="token plain"> </span><span class="token function" style="color:#d73a49">zsh</span><br></div></code></pre></div></div>
+<p>to print the Zsh ones. (Zsh is the only supported shell for now.)</p>
+<h4 class="anchor anchorTargetStickyNavbar_Vzrq" id="--sbt-plugin-option"><code>--sbt-plugin</code> option<a href="https://get-coursier.io/blog/2019/02/05/1.1.0-M11#--sbt-plugin-option" class="hash-link" aria-label="Direct link to --sbt-plugin-option" title="Direct link to --sbt-plugin-option" translate="no">​</a></h4>
+<p>The <code>resolve</code> and <code>fetch</code> commands now accept a <code>--sbt-plugin</code> option to
+accept sbt plugin dependencies. Use like</p>
+<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#393A34"><span class="token plain">$ coursier resolve --sbt-plugin com.typesafe.sbt:sbt-native-packager:1.3.3</span><br></div></code></pre></div></div>
+<p>Adjust the scala and sbt versions with the <code>--scala-version</code> and <code>sbt-version</code>
+options, like</p>
+<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#393A34"><span class="token plain">$ coursier resolve </span><span class="token punctuation" style="color:#393A34">\</span><span class="token plain"></span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">    --sbt-plugin com.typesafe.sbt:sbt-native-packager:1.3.3 </span><span class="token punctuation" style="color:#393A34">\</span><span class="token plain"></span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">    --scala-version </span><span class="token number" style="color:#36acaa">2.10</span><span class="token plain">.7 </span><span class="token punctuation" style="color:#393A34">\</span><span class="token plain"></span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">    --sbt-version </span><span class="token number" style="color:#36acaa">0.13</span><span class="token plain">.8</span><br></div></code></pre></div></div>
+<h4 class="anchor anchorTargetStickyNavbar_Vzrq" id="dont-automatically-resolve-unrecognized-dependencies-against-scaladex">Don't automatically resolve unrecognized dependencies against Scaladex<a href="https://get-coursier.io/blog/2019/02/05/1.1.0-M11#dont-automatically-resolve-unrecognized-dependencies-against-scaladex" class="hash-link" aria-label="Direct link to Don't automatically resolve unrecognized dependencies against Scaladex" title="Direct link to Don't automatically resolve unrecognized dependencies against Scaladex" translate="no">​</a></h4>
+<p>Formerly, things passed to the CLI not recognized as dependencies were
+assumed to be <a href="https://index.scala-lang.org/" target="_blank" rel="noopener noreferrer" class="">Scaladex</a> queries, like</p>
+<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#393A34"><span class="token plain">$ coursier launch ammonite</span><br></div></code></pre></div></div>
+<p>(Note that the Scaladex resolves this against the wrong module for now.)</p>
+<p>Scaladex queries now have to be passed explicitly, like</p>
+<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#393A34"><span class="token plain">$ coursier launch </span><span class="token parameter variable" style="color:#36acaa">--scaladex</span><span class="token plain"> ammonite</span><br></div></code></pre></div></div>
+<h4 class="anchor anchorTargetStickyNavbar_Vzrq" id="conflicts-handling-from-cli-work-in-progress">Conflicts handling from CLI (work in progress)<a href="https://get-coursier.io/blog/2019/02/05/1.1.0-M11#conflicts-handling-from-cli-work-in-progress" class="hash-link" aria-label="Direct link to Conflicts handling from CLI (work in progress)" title="Direct link to Conflicts handling from CLI (work in progress)" translate="no">​</a></h4>
+<p>The <code>resolve</code> command can now print potential conflicts among dependencies, like</p>
+<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#393A34"><span class="token plain">$ coursier resolve io.get-coursier:coursier-cli_2.12:1.1.0-M10 </span><span class="token parameter variable" style="color:#36acaa">--conflicts</span><span class="token plain"></span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">org.scala-lang:scala-library:2.12.8 was selected, but</span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">  com.chuusai:shapeless_2.12:2.3.3                                wanted version </span><span class="token number" style="color:#36acaa">2.12</span><span class="token plain">.4</span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">  com.github.alexarchambault:argonaut-shapeless_6.2_2.12:1.2.0-M8 wanted version </span><span class="token number" style="color:#36acaa">2.12</span><span class="token plain">.4</span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">  com.github.alexarchambault:case-app-annotations_2.12:2.0.0-M5   wanted version </span><span class="token number" style="color:#36acaa">2.12</span><span class="token plain">.7</span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">  com.github.alexarchambault:case-app-util_2.12:2.0.0-M5          wanted version </span><span class="token number" style="color:#36acaa">2.12</span><span class="token plain">.7</span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">  com.github.alexarchambault:case-app_2.12:2.0.0-M5               wanted version </span><span class="token number" style="color:#36acaa">2.12</span><span class="token plain">.7</span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">  org.scala-lang:scala-reflect:2.12.6                             wanted version </span><span class="token number" style="color:#36acaa">2.12</span><span class="token plain">.6</span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">  org.scala-lang.modules:scala-xml_2.12:1.1.1                     wanted version </span><span class="token number" style="color:#36acaa">2.12</span><span class="token plain">.6</span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">  org.typelevel:cats-core_2.12:1.5.0                              wanted version </span><span class="token number" style="color:#36acaa">2.12</span><span class="token plain">.7</span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">  org.typelevel:cats-kernel_2.12:1.5.0                            wanted version </span><span class="token number" style="color:#36acaa">2.12</span><span class="token plain">.7</span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">  org.typelevel:cats-macros_2.12:1.5.0                            wanted version </span><span class="token number" style="color:#36acaa">2.12</span><span class="token plain">.7</span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">  org.typelevel:machinist_2.12:0.6.6                              wanted version </span><span class="token number" style="color:#36acaa">2.12</span><span class="token plain">.6</span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">  org.typelevel:macro-compat_2.12:1.1.1                           wanted version </span><span class="token number" style="color:#36acaa">2.12</span><span class="token plain">.0</span><br></div><div class="token-line" style="color:#393A34"><span class="token plain" style="display:inline-block"></span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">org.scala-lang:scala-reflect:2.12.6 was selected, but</span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">  io.argonaut:argonaut_2.12:6.2.1 wanted version </span><span class="token number" style="color:#36acaa">2.12</span><span class="token plain">.4</span><br></div><div class="token-line" style="color:#393A34"><span class="token plain" style="display:inline-block"></span><br></div></code></pre></div></div>
+<p>Pass <code>--fail-if-conflicts</code> to have a non-zero exit code in case of conflicts.</p>
+<p>Beware that these options are a work in progress, more options to filter out
+conflicts should be added in the future.</p>
+<h4 class="anchor anchorTargetStickyNavbar_Vzrq" id="reworked-bootstrap-launchers">Reworked bootstrap launchers<a href="https://get-coursier.io/blog/2019/02/05/1.1.0-M11#reworked-bootstrap-launchers" class="hash-link" aria-label="Direct link to Reworked bootstrap launchers" title="Direct link to Reworked bootstrap launchers" translate="no">​</a></h4>
+<p>The launchers generated by the <code>bootstrap</code> command underwent significant
+changes, most notably the "standalone" launchers.</p>
+<p>Standalone launchers contain the JARs they're supposed to launch as resources.
+Previously, they were setting up a custom
+<code>java.net.URLStreamHandlerFactory</code>, to handle custom URL protocols for
+these JARs. This is no longer the case. Thanks to bits of code imported
+from the <a href="https://github.com/spring-projects/spring-boot/tree/32b14f30987c4fb40d1ac69ecba47c7b876b60ce/spring-boot-project/spring-boot-tools/spring-boot-loader/src/main/java/org/springframework/boot/loader/jar" target="_blank" rel="noopener noreferrer" class="">Spring boot loader</a>,
+these JARs are handled via the <code>jar</code> protocol, resulting in URLs like
+<code>jar:file:…!/</code>. The logic imported from Spring also has the advantage
+of exposing those JARs to <code>java.net.URLClassLoader</code> in a way allowing
+for a performance on par with standard files.</p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="fixes">Fixes<a href="https://get-coursier.io/blog/2019/02/05/1.1.0-M11#fixes" class="hash-link" aria-label="Direct link to Fixes" title="Direct link to Fixes" translate="no">​</a></h2>
+<h4 class="anchor anchorTargetStickyNavbar_Vzrq" id="fix-stack-overflow-when-printing-trees-with-cyclic-dependencies">Fix stack overflow when printing trees with cyclic dependencies<a href="https://get-coursier.io/blog/2019/02/05/1.1.0-M11#fix-stack-overflow-when-printing-trees-with-cyclic-dependencies" class="hash-link" aria-label="Direct link to Fix stack overflow when printing trees with cyclic dependencies" title="Direct link to Fix stack overflow when printing trees with cyclic dependencies" translate="no">​</a></h4>
+<p>Regression since <code>1.1.0-M2</code>. For example, the following command works again</p>
+<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#393A34"><span class="token plain">$ coursier resolve </span><span class="token parameter variable" style="color:#36acaa">-t</span><span class="token plain"> </span><span class="token punctuation" style="color:#393A34">\</span><span class="token plain"></span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">    </span><span class="token parameter variable" style="color:#36acaa">-r</span><span class="token plain"> http://cogcomp.cs.illinois.edu/m2repo </span><span class="token punctuation" style="color:#393A34">\</span><span class="token plain"></span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">    edu.illinois.cs.cogcomp:illinois-nlp-pipeline:0.1.21</span><br></div></code></pre></div></div>
+<h4 class="anchor anchorTargetStickyNavbar_Vzrq" id="fail-loudly-on-interrupted-downloads-from-the-launcher">Fail loudly on interrupted downloads from the launcher<a href="https://get-coursier.io/blog/2019/02/05/1.1.0-M11#fail-loudly-on-interrupted-downloads-from-the-launcher" class="hash-link" aria-label="Direct link to Fail loudly on interrupted downloads from the launcher" title="Direct link to Fail loudly on interrupted downloads from the launcher" translate="no">​</a></h4>
+<p>The coursier launcher, and the bootstraps it generates, can download some JARs
+upon first launch. These downloads rely on <code>java.net.HttpURLConnection</code> for
+http and https, which sometimes succeeds even if the connection is abruptly
+interrupted, resulting in invalid JARs. These are now detected in the launcher,
+which then requests users to try running the launcher again.</p>]]></content>
         <author>
             <name>Alexandre Archambault</name>
             <uri>https://github.com/alexarchambault</uri>
@@ -76,10 +307,68 @@
     </entry>
     <entry>
         <title type="html"><![CDATA[1.1.0-M10]]></title>
-        <id>https://get-coursier.io/blog/2019/01/14/1.1.0-M10.html</id>
-        <link href="https://get-coursier.io/blog/2019/01/14/1.1.0-M10.html"/>
-        <updated>2019-01-14T06:00:00.000Z</updated>
-        <summary type="html"><![CDATA[<p>coursier <code>1.1.0-M10</code> was just released. This is the first release of coursier while it's <a href="https://get-coursier.io">new website</a> is up and running, and <a href="https://github.com/olafurpg/sbt-ci-release">sbt-ci-release</a> handles publishing, from Travis CI.</p> <p>Note that this is a milestone release, not necessarily aiming at retaining bi...</p>]]></summary>
+        <id>https://get-coursier.io/blog/2019/01/14/1.1.0-M10</id>
+        <link href="https://get-coursier.io/blog/2019/01/14/1.1.0-M10"/>
+        <updated>2019-01-14T00:00:00.000Z</updated>
+        <summary type="html"><![CDATA[coursier 1.1.0-M10 was just released.]]></summary>
+        <content type="html"><![CDATA[<p>coursier <code>1.1.0-M10</code> was just released.
+This is the first release of coursier while it's
+<a href="https://get-coursier.io/" target="_blank" rel="noopener noreferrer" class="">new website</a> is up and running, and
+<a href="https://github.com/olafurpg/sbt-ci-release" target="_blank" rel="noopener noreferrer" class="">sbt-ci-release</a> handles
+publishing, from Travis CI.</p>
+<p>Note that this is a milestone release, not necessarily aiming at retaining
+binary / source compatibility of the API with earlier versions. If you're using
+coursier via its API, it is recommended to stay on former versions unless
+you're interested in the very latest features and are ready to update the way
+you use the API in later versions.</p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="new-launcher-url">New launcher URL<a href="https://get-coursier.io/blog/2019/01/14/1.1.0-M10#new-launcher-url" class="hash-link" aria-label="Direct link to New launcher URL" title="Direct link to New launcher URL" translate="no">​</a></h2>
+<p>One notable change of this release is that the launchers of coursier are now
+being pushed
+to <a href="https://github.com/coursier/coursier/releases" target="_blank" rel="noopener noreferrer" class="">GitHub release pages</a>
+rather than in the <code>master</code> branch of the coursier git repository. The URL to
+download it thus changes.</p>
+<p>Download the latest launcher at either</p>
+<ul>
+<li class=""><a href="https://git.io/coursier-cli" target="_blank" rel="noopener noreferrer" class=""><code>https://git.io/coursier-cli</code></a></li>
+<li class=""><a href="https://github.com/coursier/coursier/raw/gh-pages/coursier" target="_blank" rel="noopener noreferrer" class=""><code>https://github.com/coursier/coursier/raw/gh-pages/coursier</code></a></li>
+<li class=""><a href="https://get-coursier.io/coursier" target="_blank" rel="noopener noreferrer" class=""><code>https://get-coursier.io/coursier</code></a></li>
+</ul>
+<p>Download a specific version via the release assets, e.g.</p>
+<ul>
+<li class=""><a href="https://github.com/coursier/coursier/releases/download/v1.1.0-M9/coursier" target="_blank" rel="noopener noreferrer" class=""><code>https://github.com/coursier/coursier/releases/download/v1.1.0-M9/coursier</code></a></li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="also">Also<a href="https://get-coursier.io/blog/2019/01/14/1.1.0-M10#also" class="hash-link" aria-label="Direct link to Also" title="Direct link to Also" translate="no">​</a></h2>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="--what-depends-on-option"><code>--what-depends-on</code> option<a href="https://get-coursier.io/blog/2019/01/14/1.1.0-M10#--what-depends-on-option" class="hash-link" aria-label="Direct link to --what-depends-on-option" title="Direct link to --what-depends-on-option" translate="no">​</a></h3>
+<p>Add a <code>--what-depends-on</code> option to the <code>resolve</code> command, to quickly
+know which dependencies bring a particular dependency (<a href="https://github.com/coursier/coursier/pull/997" target="_blank" rel="noopener noreferrer" class="">#997</a>), e.g.</p>
+<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#393A34"><span class="token plain">$ coursier resolve </span><span class="token punctuation" style="color:#393A34">\</span><span class="token plain"></span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">    --what-depends-on org.htrace:htrace-core </span><span class="token punctuation" style="color:#393A34">\</span><span class="token plain"></span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">    org.apache.spark:spark-sql_2.12:2.4.0</span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">  Result:</span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">└─ org.htrace:htrace-core:3.0.4</span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">   ├─ org.apache.hadoop:hadoop-common:2.6.5</span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">   │  └─ org.apache.hadoop:hadoop-client:2.6.5</span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">   │     └─ org.apache.spark:spark-core_2.12:2.4.0</span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">   │        ├─ org.apache.spark:spark-catalyst_2.12:2.4.0</span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">   │        │  └─ org.apache.spark:spark-sql_2.12:2.4.0</span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">   │        └─ org.apache.spark:spark-sql_2.12:2.4.0</span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">   └─ org.apache.hadoop:hadoop-hdfs:2.6.5</span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">      └─ org.apache.hadoop:hadoop-client:2.6.5</span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">         └─ org.apache.spark:spark-core_2.12:2.4.0</span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">            ├─ org.apache.spark:spark-catalyst_2.12:2.4.0</span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">            │  └─ org.apache.spark:spark-sql_2.12:2.4.0</span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">            └─ org.apache.spark:spark-sql_2.12:2.4.0</span><br></div></code></pre></div></div>
+<p>(Adapted from the <code>coursierWhatDependsOn</code> command of sbt-coursier, itself
+inspired by the <code>whatDependsOn</code> command of <a href="https://github.com/jrudolph/sbt-dependency-graph" target="_blank" rel="noopener noreferrer" class="">sbt-dependency-graph</a>.)</p>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="coursier-bootstrap-library"><code>coursier-bootstrap</code> library<a href="https://get-coursier.io/blog/2019/01/14/1.1.0-M10#coursier-bootstrap-library" class="hash-link" aria-label="Direct link to coursier-bootstrap-library" title="Direct link to coursier-bootstrap-library" translate="no">​</a></h3>
+<p>Move the bootstrap generation logic of the <code>bootstrap</code> command to a separate
+standalone library (<code>io.get-coursier::coursier-bootstrap:1.1.0-M10</code>, <a href="https://github.com/coursier/coursier/pull/991" target="_blank" rel="noopener noreferrer" class="">#991</a>).</p>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="leaking-of-classes-from-the-bootstraps">Leaking of classes from the bootstraps<a href="https://get-coursier.io/blog/2019/01/14/1.1.0-M10#leaking-of-classes-from-the-bootstraps" class="hash-link" aria-label="Direct link to Leaking of classes from the bootstraps" title="Direct link to Leaking of classes from the bootstraps" translate="no">​</a></h3>
+<p>Prevent classes from the coursier launcher or of the logic of coursier
+bootstrap to leak in apps launched via the <code>fetch</code> command or bootstrap
+generated via the <code>bootstrap</code> command (<a href="https://github.com/coursier/coursier/pull/983" target="_blank" rel="noopener noreferrer" class="">#983</a> - <code>coursier.CachePath</code> or
+the classes of <a href="https://github.com/soc/directories-jvm" target="_blank" rel="noopener noreferrer" class="">directories</a> could
+leak in the launched application classpath.)</p>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="ldflags-for-scala-native-executable-generation"><code>LDFLAGS</code> for scala-native executable generation<a href="https://get-coursier.io/blog/2019/01/14/1.1.0-M10#ldflags-for-scala-native-executable-generation" class="hash-link" aria-label="Direct link to ldflags-for-scala-native-executable-generation" title="Direct link to ldflags-for-scala-native-executable-generation" translate="no">​</a></h3>
+<p>Accept linking flags via <code>LDFLAGS</code> in the environment, when
+<a class="" href="https://get-coursier.io/blog/2019/01/docs/cli-native-bootstrap">generating scala-native executables</a> (<a href="https://github.com/coursier/coursier/pull/981" target="_blank" rel="noopener noreferrer" class="">#981</a>).</p>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="other">Other<a href="https://get-coursier.io/blog/2019/01/14/1.1.0-M10#other" class="hash-link" aria-label="Direct link to Other" title="Direct link to Other" translate="no">​</a></h3>
+<ul>
+<li class="">force fetching artifacts from the CLI with <code>--force-fetch</code>, even if
+resolution failed (<a href="https://github.com/coursier/coursier/pull/980" target="_blank" rel="noopener noreferrer" class="">#980</a>)</li>
+<li class="">fix JARs landing in the wrong classloader, when using the classloader
+isolation capabilities of the <code>bootstrap</code> command (<a href="https://github.com/coursier/coursier/pull/982" target="_blank" rel="noopener noreferrer" class="">#982</a>)</li>
+<li class="">refactoring of the cache module (<a href="https://github.com/coursier/coursier/pull/984" target="_blank" rel="noopener noreferrer" class="">#984</a>)</li>
+<li class="">switch to scala <code>2.12.8</code> (<a href="https://github.com/coursier/coursier/pull/986" target="_blank" rel="noopener noreferrer" class="">#986</a>), add support for scala <code>2.13.0-M5</code></li>
+<li class="">switch to fastparse 2 (<a href="https://github.com/coursier/coursier/pull/990" target="_blank" rel="noopener noreferrer" class="">#990</a>, still shaded so that it doesn't appear as a
+dependency to downstream users of coursier)</li>
+<li class="">allow to adjust the default number of parallel downloads via the
+<code>coursier.parallel-download-count</code> Java property (<a href="https://github.com/coursier/coursier/pull/994" target="_blank" rel="noopener noreferrer" class="">#994</a>)</li>
+</ul>]]></content>
         <author>
             <name>Alexandre Archambault</name>
             <uri>https://github.com/alexarchambault</uri>
