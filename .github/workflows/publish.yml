@@ -8,10 +8,9 @@ jobs:
     runs-on: ubuntu-latest
     # for the PGP and Sonatype secrets
     environment: release
-    # can only narrow down the permissions of the calling job in ci.yml
-    permissions:
-      contents: read
-      packages: write
+    # No 'permissions' here: the job gets those of the calling job in ci.yml. Stating them here
+    # would replace them (capped by the caller's), and these differ between callers: releases
+    # also need 'id-token: write' and 'attestations: write', for the attestation step below.
     # Never publish to Sonatype Central from two jobs at a time (nightlies of successive pushes,
     # or a nightly and a release). A job waits for the running one rather than cancelling it.
     # GitHub keeps only one waiting job per group though, and cancels an older waiting one.
