@@ -1,6 +1,7 @@
 package coursier.cli.config
 
-import java.nio.file.Files
+import java.nio.file.{Files, Paths}
+import java.nio.file.attribute.PosixFilePermissions
 
 import utest._
 
@@ -13,6 +14,7 @@ import scala.cli.config.{
   RepositoryCredentials,
   Secret
 }
+import scala.util.Properties
 
 object ConfigTests extends TestSuite {
 
@@ -89,6 +91,64 @@ object ConfigTests extends TestSuite {
         val shown = lines(db, Keys.publishCredentials, showSecrets = true)
         assert(shown.contains(s"alice:$password@repo.example.com"))
       }
+    }
+
+    test("wrong directory permissions") {
+      if (Properties.isWin) "disabled"
+      else {
+        val dir = Files.createTempDirectory("coursier-config-tests")
+        try {
+          Files.setPosixFilePermissions(dir, PosixFilePermissions.fromString("rwxr-xr-x"))
+          val path = dir.resolve("config.json")
+          val db   = ConfigDb.open(path).fold(e => throw e, identity)
+          db.set(Keys.repositoryMirrors, List("maven:*=https://repo.example.com/maven"))
+          val error   = db.save(path).swap.getOrElse(sys.error("Expected an error"))
+          val message = Config.configError(error, path).getMessage
+          val expected = Seq(
+            s"$dir has wrong permissions rwxr-xr-x (expected at most rwx------)",
+            s"Restrict the directory permissions with 'chmod 700 $dir', or pass --config-file " +
+              "with a file in another directory."
+          )
+          assert(message.linesIterator.toSeq == expected)
+          assert(!Files.exists(path))
+        }
+        finally Files.deleteIfExists(dir)
+      }
+    }
+
+    test("inline credentials") {
+      withDb { db =>
+        val path = Files.createTempDirectory("coursier-config-tests").resolve("config.json")
+        val error = db
+          .setFromString(Keys.repositoryCredentials, Seq("repo.example.com", "value:a", "value:b"))
+          .swap
+          .getOrElse(sys.error("Expected an error"))
+        val message = Config.configError(error, path).getMessage
+        assert(message.contains("Inline credentials not accepted"))
+        assert(message.linesIterator.toSeq.last == s"Config file: $path")
+        Files.delete(path.getParent)
+      }
+    }
+
+    test("malformed config file") {
+      val content = "{bad".getBytes("UTF-8")
+      val error = ConfigDb(content, Some("config.json")).swap.getOrElse(
+        sys.error("Expected an error")
+      )
+      val message = Config.configError(error, Paths.get("config.json")).getMessage
+      // the first line of the JSON error, not its hex dump
+      assert(message.linesIterator.length == 1)
+      assert(message.startsWith("Error parsing config DB config.json: expected '\"'"))
+    }
+
+    test("help lists keys") {
+      val help = ConfigOptions.helpMessage
+      for (key <- Keys.all if !key.hidden)
+        assert(help.contains(s"  ${key.fullName} "))
+      for (key <- Keys.all if key.hidden)
+        assert(!help.contains(s"  ${key.fullName} "))
+      assert(help.contains("SCALA_CLI_CONFIG"))
+      assert(help.contains("--config-file"))
     }
   }
 }
