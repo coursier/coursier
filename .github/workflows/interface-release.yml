@@ -6,6 +6,8 @@ name: Interface release
 # workflow publishes nothing. For that, push both tags at once
 # ('git push --atomic origin vX.Y.Z interface-vA.B.C'): the 'v*' run only includes the interface
 # modules if the 'interface-v*' tag already exists when its publish job checks out the repository.
+# Its publish job fails otherwise (unless the commit message opts out, see publish.yml), and
+# re-running it once the 'interface-v*' tag is pushed releases both.
 on:
   push:
     tags:

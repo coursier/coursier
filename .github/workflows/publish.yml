@@ -29,6 +29,24 @@ jobs:
           for tag in $(git tag --points-at HEAD); do
             git tag -d "$tag"
           done
+      # A 'v*' release must come with an 'interface-v*' tag on the same commit, so that the
+      # interface gets released too (forgetting it is easy, and only noticed after the release).
+      # A release can opt out with a commit whose first line contains "No interface release".
+      - name: Check for an interface tag
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          interface_tags="$(git tag -l 'interface-v*' --points-at HEAD)"
+          first_line="$(git log -1 --format=%B HEAD | head -n 1)"
+          if [ -n "$interface_tags" ]; then
+            echo "Releasing the interface too, from $(echo $interface_tags)"
+          elif [[ "$first_line" == *"No interface release"* ]]; then
+            echo "No 'interface-v*' tag on this commit, not releasing the interface, as asked by its commit message"
+          else
+            echo "No 'interface-v*' tag on $GITHUB_SHA, push one alongside ${GITHUB_REF#refs/tags/}" >&2
+            echo "(e.g. 'git push --atomic origin ${GITHUB_REF#refs/tags/} interface-vX.Y.Z'), and re-run this job." >&2
+            echo "To release without the interface, tag a commit whose first line contains \"No interface release\"." >&2
+            exit 1
+          fi
       - uses: coursier/cache-action@ee0650f98295f27a505e4bfd284c9bfaa913a465 # v9.0.1
         with:
           disableFallback: true
