@@ -21,8 +21,462 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  compile-publish-all:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    name: Compile and publish everything locally
+    steps:
+    - name: Don't convert LF to CRLF during checkout
+      if: runner.os == 'Windows'
+      run: |
+        git config --global core.autocrlf false
+        git config --global core.eol lf
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        fetch-depth: 0
+        submodules: true
+    - uses: coursier/cache-action@ee0650f98295f27a505e4bfd284c9bfaa913a465 # v9.0.1
+      with:
+        disableFallback: true
+    - run: |
+        ./mill -i -j1 __.js.__.compile
+        ./mill -i __.compile
+    - name: No test modules with no test classes
+      run: ./mill -i ci.noEmptyDiscoveredTestClasses --tasks __.discoveredTestClasses
+    - name: No class path mixing Scala binary versions
+      run: ./mill -i ci.noMixedScalaBinaryVersions --tasks __.resolvedRunMvnDeps
+    # Runs here rather than in the 'test' jobs, as it reads the JARs of all the published modules,
+    # for all Scala versions and platforms, that the steps above already compiled
+    - name: Class file versions of the published JARs
+      run: ./mill -i class-file-version-check.test.testForked
+    - run: ./mill -i __.publishLocal
+
+  scala-versions:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    name: Scala versions
+    outputs:
+      scala-versions: ${{ steps.versions.outputs.scala-versions }}
+      scala213: ${{ steps.versions.outputs.scala213 }}
+      scala212: ${{ steps.versions.outputs.scala212 }}
+      scala3: ${{ steps.versions.outputs.scala3 }}
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        fetch-depth: 0
+    - uses: coursier/cache-action@ee0650f98295f27a505e4bfd284c9bfaa913a465 # v9.0.1
+      with:
+        disableFallback: true
+    - name: Get Scala versions from the build
+      id: versions
+      run: |
+        ./mill -i --ticker false show ci.scalaVersions \
+          | jq -r 'to_entries[] | "\(.key)=\(.value | if type == "array" then tojson else . end)"' \
+          >> "$GITHUB_OUTPUT"
+
+  test:
+    needs: scala-versions
+    runs-on: ${{ matrix.OS }}
+    name: ${{ matrix.OS }} Scala ${{ matrix.SCALA_VERSION }}
+    timeout-minutes: 50
+    strategy:
+      fail-fast: false
+      matrix:
+        OS: ["ubuntu-latest"]
+        SCALA_VERSION: ["${{ needs.scala-versions.outputs.scala213 }}"]
+        include:
+          - OS: "ubuntu-24.04-arm"
+            SCALA_VERSION: "${{ needs.scala-versions.outputs.scala213 }}"
+          - OS: "macos-15-intel"
+            SCALA_VERSION: "${{ needs.scala-versions.outputs.scala213 }}"
+          - OS: "macos-15"
+            SCALA_VERSION: "${{ needs.scala-versions.outputs.scala213 }}"
+          - OS: "windows-latest"
+            SCALA_VERSION: "${{ needs.scala-versions.outputs.scala213 }}"
+          - OS: "ubuntu-latest"
+            SCALA_VERSION: "${{ needs.scala-versions.outputs.scala212 }}"
+          - OS: "ubuntu-latest"
+            SCALA_VERSION: "${{ needs.scala-versions.outputs.scala3 }}"
+    steps:
+    - name: Don't convert LF to CRLF during checkout
+      if: runner.os == 'Windows'
+      run: |
+        git config --global core.autocrlf false
+        git config --global core.eol lf
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        fetch-depth: 0
+        submodules: true
+    - uses: coursier/cache-action@ee0650f98295f27a505e4bfd284c9bfaa913a465 # v9.0.1
+      with:
+        disableFallback: true
+    - run: sudo apt-get install -y nailgun
+      if: runner.os == 'Linux'
+    # - run: .github/scripts/scala-native-setup.sh
+    #   if: runner.os != 'Windows'
+    # The tests of the cross-built modules run in the jobs of their Scala version, the other JVM
+    # tests and the Docker ones (which don't depend on the job's Scala version) in the Scala 2.13
+    # jobs only, see JvmCiTests in mill-build. The proxy tests start containers (Nexus, proxies)
+    # via a Docker daemon, that only the Linux x86-64 runners have.
+    - name: Select tests
+      run: |
+        jvm_tests="__[$SCALA_VERSION].__:CrossJvmCiTests"
+        docker_tests=""
+        if [ "$SCALA_VERSION" = "$SCALA213" ]; then
+          jvm_tests="$jvm_tests,__:JvmCiTests"
+          docker_tests="docker[_].test.testForked"
+        fi
+        if [ "$OS" = "ubuntu-latest" ]; then
+          jvm_tests="$jvm_tests,proxy-tests[$SCALA_VERSION].it"
+        fi
+        case "$jvm_tests" in
+          *,*) jvm_tests="{$jvm_tests}" ;;
+        esac
+        echo "JVM_TESTS=$jvm_tests.testForked" >> "$GITHUB_ENV"
+        echo "DOCKER_TESTS=$docker_tests" >> "$GITHUB_ENV"
+      shell: bash
+      env:
+        OS: ${{ matrix.OS }}
+        SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
+        SCALA213: ${{ needs.scala-versions.outputs.scala213 }}
+    # On pull requests, only the tests affected by the changes run, see the script
+    - name: Snapshot test inputs at the base commit
+      run: .github/scripts/selective-tests.sh prepare "$DOCKER_TESTS" "$JVM_TESTS"
+      shell: bash
+      env:
+        SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
+        COURSIER_JNI: force
+        SELECTIVE_TESTS_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+    - name: Run Docker tests
+      id: docker-tests
+      if: env.DOCKER_TESTS != ''
+      continue-on-error: true
+      run: .github/scripts/selective-tests.sh run "$DOCKER_TESTS"
+      shell: bash
+      env:
+        SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
+        COURSIER_JNI: force
+    - name: Retry Docker tests with a fresh VM
+      id: docker-tests-retry
+      if: steps.docker-tests.outcome == 'failure' && matrix.OS == 'macos-15-intel'
+      continue-on-error: true
+      run: .github/scripts/selective-tests.sh run "$DOCKER_TESTS"
+      shell: bash
+      env:
+        SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
+        COURSIER_JNI: force
+    - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+      if: steps.docker-tests.outcome == 'failure'
+      continue-on-error: true
+      with:
+        name: docker-vm-output-${{ matrix.OS }}-${{ matrix.SCALA_VERSION }}
+        path: ~/Library/Application Support/Coursier/vm/output/
+        if-no-files-found: ignore
+    - name: Propagate Docker test failure
+      if: >-
+        steps.docker-tests.outcome == 'failure' &&
+        (matrix.OS != 'macos-15-intel' || steps.docker-tests-retry.outcome == 'failure')
+      run: exit 1
+    - name: Run JVM tests
+      run: .github/scripts/selective-tests.sh run "$JVM_TESTS"
+      shell: bash
+      env:
+        SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
+        COURSIER_JNI: force
+
+  # Runs the CLI tests against the coursier and coursier.jar launchers, built like the released
+  # ones: from the published coursier-cli artifact and its POM (via a local repository here),
+  # rather than from the class path the build computes. Their class path can differ (#3865).
+  jar-launcher-tests:
+    runs-on: ubuntu-latest
+    name: JAR launchers
+    timeout-minutes: 50
+    env:
+      JAR_LAUNCHER_TESTS: cli-tests.jar-launcher-tests.testForked
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        fetch-depth: 0
+        submodules: true
+    - uses: coursier/cache-action@ee0650f98295f27a505e4bfd284c9bfaa913a465 # v9.0.1
+      with:
+        disableFallback: true
+    - run: sudo apt-get install -y nailgun
+    # On pull requests, only run if affected by the changes, see the script
+    - name: Snapshot test inputs at the base commit
+      run: .github/scripts/selective-tests.sh prepare "$JAR_LAUNCHER_TESTS"
+      env:
+        COURSIER_JNI: force
+        SELECTIVE_TESTS_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+    - run: .github/scripts/selective-tests.sh run "$JAR_LAUNCHER_TESTS"
+      env:
+        COURSIER_JNI: force
+
+  js-test:
+    runs-on: ubuntu-latest
+    name: Scala.js
+    timeout-minutes: 30
+    env:
+      JS_TESTS: "__:CsScalaJsTests.testForked"
+    steps:
+    - name: Don't convert LF to CRLF during checkout
+      if: runner.os == 'Windows'
+      run: |
+        git config --global core.autocrlf false
+        git config --global core.eol lf
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        fetch-depth: 0
+        submodules: true
+    - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+      with:
+        node-version: '18'
+    - uses: coursier/cache-action@ee0650f98295f27a505e4bfd284c9bfaa913a465 # v9.0.1
+      with:
+        disableFallback: true
+    - run: npm install --ignore-scripts
+    # On pull requests, only the tests affected by the changes run, see the script
+    - name: Snapshot test inputs at the base commit
+      run: .github/scripts/selective-tests.sh prepare "$JS_TESTS"
+      shell: bash
+      env:
+        SELECTIVE_TESTS_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+    # -j1, as compiling the Scala.js modules in parallel is not reliable
+    - run: .github/scripts/selective-tests.sh run -j1 "$JS_TESTS"
+      shell: bash
+
+  interface-test:
+    needs: scala-versions
+    runs-on: ubuntu-latest
+    name: Interface Scala ${{ matrix.SCALA_VERSION }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        SCALA_VERSION: ${{ fromJSON(needs.scala-versions.outputs.scala-versions) }}
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        fetch-depth: 0
+        submodules: true
+    - uses: coursier/cache-action@ee0650f98295f27a505e4bfd284c9bfaa913a465 # v9.0.1
+      with:
+        disableFallback: true
+    # `interface` is built with Scala 2.13 only, its tests run in the Scala 2.13 job
+    - name: Select tests
+      run: |
+        interface_tests="interface-test[$SCALA_VERSION].test"
+        if [ "$SCALA_VERSION" = "$SCALA213" ]; then
+          interface_tests="{interface.test,$interface_tests}"
+        fi
+        echo "INTERFACE_TESTS=$interface_tests.testForked" >> "$GITHUB_ENV"
+      env:
+        SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
+        SCALA213: ${{ needs.scala-versions.outputs.scala213 }}
+    # On pull requests, only the tests affected by the changes run, see the script
+    - name: Snapshot test inputs at the base commit
+      run: .github/scripts/selective-tests.sh prepare "$INTERFACE_TESTS" testInterfacePublishedDeps
+      env:
+        SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
+        SELECTIVE_TESTS_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+    - run: .github/scripts/selective-tests.sh run "$INTERFACE_TESTS"
+      env:
+        SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
+    - name: Test published dependencies
+      run: .github/scripts/selective-tests.sh run testInterfacePublishedDeps
+      env:
+        SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
+
+  bin-compat:
+    runs-on: ubuntu-latest
+    name: Binary compatibility
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        fetch-depth: 0
+        submodules: true
+    - uses: coursier/cache-action@ee0650f98295f27a505e4bfd284c9bfaa913a465 # v9.0.1
+      with:
+        disableFallback: true
+    # On pull requests, only the checks affected by the changes run, see the script
+    - name: Snapshot MiMa inputs at the base commit
+      run: .github/scripts/selective-tests.sh prepare "__.mimaReportBinaryIssues"
+      env:
+        SELECTIVE_TESTS_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+    - run: .github/scripts/selective-tests.sh run -k "__.mimaReportBinaryIssues"
+
+  website-check:
+    runs-on: ubuntu-latest
+    name: Website check
+    env:
+      MKDOCS_TASKS: "{docs.mdoc,docs.mkdocsBuild}"
+      DOCUSAURUS_TASKS: "doc.generate"
+    steps:
+    - name: Don't convert LF to CRLF during checkout
+      if: runner.os == 'Windows'
+      run: |
+        git config --global core.autocrlf false
+        git config --global core.eol lf
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        fetch-depth: 0
+        submodules: true
+    - uses: coursier/cache-action@ee0650f98295f27a505e4bfd284c9bfaa913a465 # v9.0.1
+      with:
+        disableFallback: true
+    # On pull requests, each website is only built if the changes affect it
+    - name: Snapshot the inputs of the websites at the base commit
+      run: .github/scripts/selective-tests.sh prepare "$MKDOCS_TASKS" "$DOCUSAURUS_TASKS"
+      shell: bash
+      env:
+        # scripts run by the steps below, which Mill doesn't track
+        SELECTIVE_TESTS_EXTRA_PATHS: .github/scripts/setup-mkdocs.sh
+        SELECTIVE_TESTS_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+    - name: Check whether the changes affect the mkdocs website
+      id: mkdocs
+      run: .github/scripts/selective-tests.sh affected "$MKDOCS_TASKS"
+      shell: bash
+    - name: Check whether the changes affect the Docusaurus website
+      id: docusaurus
+      run: .github/scripts/selective-tests.sh affected "$DOCUSAURUS_TASKS"
+      shell: bash
+    - run: ./mill -i docs.mdoc
+      if: steps.mkdocs.outputs.affected != 'false'
+      env:
+        COURSIER_JNI: force
+    - run: .github/scripts/setup-mkdocs.sh
+      if: steps.mkdocs.outputs.affected != 'false'
+    - run: ./mill -i docs.mkdocsBuild
+      if: steps.mkdocs.outputs.affected != 'false'
+      env:
+        COURSIER_JNI: force
+    - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+      if: steps.docusaurus.outputs.affected != 'false'
+      with:
+        node-version: '24'
+    - run: ./mill -i doc.generate --npm-install --yarn-run-build
+      if: steps.docusaurus.outputs.affected != 'false'
+      env:
+        COURSIER_JNI: force
+
+  test-selective-tests-script:
+    # The logic deciding which parts of this file matter to a job, in selective-tests.sh, is plain
+    # bash and awk, whose versions differ between OSes (bash 3.2 and BSD awk on macOS)
+    name: ${{ matrix.OS }} selective-tests.sh
+    runs-on: ${{ matrix.OS }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        OS: ["ubuntu-latest", "macos-15", "windows-latest"]
+    steps:
+    - name: Don't convert LF to CRLF during checkout
+      if: runner.os == 'Windows'
+      run: |
+        git config --global core.autocrlf false
+        git config --global core.eol lf
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+    - run: .github/scripts/selective-tests-test.sh
+      shell: bash
+      env:
+        # the Linux runners have yq, so that the layout of ci.yml is checked at least there
+        SELECTIVE_TESTS_TEST_REQUIRE_YAML_PARSER: ${{ runner.os == 'Linux' && 'true' || '' }}
+
+  format:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        fetch-depth: 0
+        submodules: true
+    - uses: coursier/cache-action@ee0650f98295f27a505e4bfd284c9bfaa913a465 # v9.0.1
+      with:
+        disableFallback: true
+    - uses: coursier/setup-action@d5a17f9aaeb260f9ba336a5b582fb49f79c64ac4 # v3.1.0
+    - run: cs launch scalafmt -- --check
+
+  scalafix:
+    runs-on: ubuntu-latest
+    name: Scalafix
+    timeout-minutes: 30
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        fetch-depth: 0
+        submodules: true
+    - uses: coursier/cache-action@ee0650f98295f27a505e4bfd284c9bfaa913a465 # v9.0.1
+      with:
+        disableFallback: true
+    # On pull requests, only the modules affected by the changes are checked, see the script
+    - name: Snapshot Scalafix inputs at the base commit
+      run: .github/scripts/selective-tests.sh prepare "__.fix"
+      env:
+        SELECTIVE_TESTS_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+    - run: .github/scripts/selective-tests.sh run "__.fix" -- --check
+
+  test-cs-sh:
+    name: ${{ matrix.OS }} cs.sh
+    runs-on: ${{ matrix.OS }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        OS: ["ubuntu-latest"]
+        include:
+          - OS: "ubuntu-24.04-arm"
+          - OS: "macos-15-intel"
+          - OS: "macos-15"
+          - OS: "windows-latest"
+    steps:
+    - name: Don't convert LF to CRLF during checkout
+      if: runner.os == 'Windows'
+      run: |
+        git config --global core.autocrlf false
+        git config --global core.eol lf
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        fetch-depth: 0
+        submodules: true
+    - uses: coursier/cache-action@ee0650f98295f27a505e4bfd284c9bfaa913a465 # v9.0.1
+      with:
+        disableFallback: true
+    # On pull requests, cs.sh is only tested if the changes affect it
+    - name: Check whether the changes affect cs.sh
+      id: selective
+      uses: ./.github/actions/selective-affected
+      with:
+        selector: csShTests
+    - run: ./mill -i csShTests
+      if: steps.selective.outputs.affected != 'false'
+    - name: Test cs.sh with CS_VERSION=nightly
+      if: steps.selective.outputs.affected != 'false'
+      run: ./mill -i csShTests --version nightly
+
+  # 'needs' cannot be made conditional, and a job's 'if' is only evaluated once its
+  # 'needs' are over anyway, so we need two jobs here: nightlies are published straightaway,
+  # while releases wait for the whole CI to pass.
+  publish-nightly:
+    name: Publish nightly
+    if: github.event_name == 'push' && !startsWith(github.ref, 'refs/tags/')
+    # to publish to GitHub Packages
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/publish.yml
+    secrets: inherit
+
   publish:
     name: Publish release
+    needs:
+      - "compile-publish-all"
+      - "test"
+      - "jar-launcher-tests"
+      - "js-test"
+      - "interface-test"
+      - "bin-compat"
+      - "website-check"
+      - "format"
+      - "scalafix"
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
     # to publish to GitHub Packages, and get build provenance attestations for the published files
     permissions:
@@ -384,6 +838,33 @@ jobs:
         if-no-files-found: error
         retention-days: 2
 
+  # same as 'generate-jar-launchers', for nightlies (no build provenance attestation, we only
+  # attest the launchers we release)
+  generate-jar-launchers-nightly:
+    name: Upload JAR launchers (nightly)
+    needs: publish-nightly
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        fetch-depth: 0
+        submodules: true
+    - uses: coursier/cache-action@ee0650f98295f27a505e4bfd284c9bfaa913a465 # v9.0.1
+      with:
+        disableFallback: true
+    - name: Wait for sync to Central
+      run: ./mill -i waitForSync
+    - name: Copy artifacts
+      run: ./mill -i copyJarLaunchers
+    - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+      with:
+        name: launchers-jar
+        path: artifacts/
+        if-no-files-found: error
+        retention-days: 2
+
   generate-bat-launcher:
     name: Upload bat launcher
     needs: publish
@@ -625,6 +1106,37 @@ jobs:
         gh workflow run update-coursier-version.yml \
           --repo coursier/sbt-coursier \
           --ref main
+
+  upload-nightly-launchers:
+    name: Upload launchers to nightly GitHub release
+    needs:
+      - generate-native-launchers
+      - generate-compat-native-launchers
+      - generate-native-static-launcher
+      - generate-native-container-launcher
+      - generate-standalone-launchers
+      - generate-standalone-launcher-windows-arm-tmp
+      - generate-jar-launchers-nightly
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    # for GH_TOKEN
+    environment: release
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        fetch-depth: 0
+        submodules: true
+    - uses: coursier/cache-action@ee0650f98295f27a505e4bfd284c9bfaa913a465 # v9.0.1
+      with:
+        disableFallback: true
+    - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+      with:
+        pattern: launchers-*
+        path: artifacts/
+        merge-multiple: true
+    - run: ./mill -i uploadNightlyLaunchers --directory artifacts/
+      env:
+        UPLOAD_GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
   upload-launchers-special-repo:
     name: Upload launchers to dedicated repository
