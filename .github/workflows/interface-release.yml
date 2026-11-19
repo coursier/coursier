@@ -1,9 +1,11 @@
 name: Interface release
 
 # Releases the interface modules (io.get-coursier:interface), versioned from the 'interface-v*'
-# tags, independently of the other coursier modules (released from the 'v*' tags by ci.yml).
-# Each kind of tag only releases its own modules, so that a commit carrying both tags gets each
-# module released once, whichever order the tags get pushed in (see publish.yml).
+# tags, on their own, when the tagged commit doesn't have a 'v*' tag. When it does, the 'v*' tag
+# run of ci.yml releases them alongside the other modules, in the same Sonatype bundle, and this
+# workflow publishes nothing. For that, push both tags at once
+# ('git push --atomic origin vX.Y.Z interface-vA.B.C'): the 'v*' run only includes the interface
+# modules if the 'interface-v*' tag already exists when its publish job checks out the repository.
 on:
   push:
     tags:
@@ -13,8 +15,28 @@ permissions:
   contents: read
 
 jobs:
+  check-v-tag:
+    name: Look for a 'v*' tag on the same commit
+    runs-on: ubuntu-latest
+    outputs:
+      has-v-tag: ${{ steps.check.outputs.has-v-tag }}
+    steps:
+      - id: check
+        run: |
+          # GITHUB_SHA is the tagged commit. Annotated tags are listed twice, as the tag object,
+          # and as 'refs/tags/…^{}' with the commit they point to, which is the one matching here.
+          v_tags="$(git ls-remote --tags "https://github.com/$GITHUB_REPOSITORY" 'refs/tags/v*' | awk -v sha="$GITHUB_SHA" '$1 == sha { print $2 }')"
+          if [ -n "$v_tags" ]; then
+            echo "Found $(echo $v_tags) on $GITHUB_SHA, the interface gets released by its ci.yml run"
+            echo "has-v-tag=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has-v-tag=false" >> "$GITHUB_OUTPUT"
+          fi
+
   publish:
     name: Publish interface release
+    needs: check-v-tag
+    if: needs.check-v-tag.outputs.has-v-tag == 'false'
     # to publish to GitHub Packages, and get build provenance attestations for the published files
     permissions:
       contents: read

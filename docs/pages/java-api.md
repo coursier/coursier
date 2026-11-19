@@ -5,8 +5,8 @@ coursier can be used from pure Java projects, but also from Scala projects, via 
 The coursier Java API used to be handled from [an external repository](https://github.com/coursier/interface),
 but its sources now live in this repository, under `modules/interface`. It keeps its own versioning
 scheme, unrelated to the one of the other coursier modules, and driven by the `interface-v*` tags of
-this repository (rather than the `v*` ones). Pushing an `interface-v*` tag releases it, on its own,
-whether or not a `v*` tag sits on the same commit.
+this repository (rather than the `v*` ones). Pushing an `interface-v*` tag releases it, either on
+its own, or along with the other modules if a `v*` tag is pushed on the same commit at the same time.
 
 It is published as `io.get-coursier:interface`, and aims at minimizing binary compatibility
 breakages - it basically never broke binary compatibility since its very first release (but

@@ -2084,9 +2084,9 @@ object ci extends Module {
     *
     * The coursier modules are versioned from the `v*` tags, the interface ones from the
     * `interface-v*` tags. The coursier modules must either be all snapshots or all releases, and so
-    * must the interface ones. Both kinds of modules are released independently: a `v*` tag releases
-    * the coursier modules, an `interface-v*` tag the interface ones, and the publish workflow only
-    * publishes the modules of the tag it runs for (the other ones can be snapshots).
+    * must the interface ones. A `v*` tag releases the coursier modules, along with the interface
+    * ones if an `interface-v*` tag sits on the same commit, and an `interface-v*` tag alone
+    * releases the interface ones only. The publish workflow leaves the snapshot ones out.
     */
   def checkPublishVersions() = Task.Command[Unit] {
     val versions = allPublishVersions()
@@ -2461,9 +2461,10 @@ trait CacheServer extends CsModule with CoursierPublishModule with CsMima {
 // here, rather than dependencies on published coursier artifacts.
 //
 // Their versioning scheme (1.0.x) is unrelated to the tags of this repository: it is driven
-// by the `interface-v*` tags, see `InterfaceVersion`. An `interface-v*` tag releases these
-// modules only (see `.github/workflows/interface-release.yml`), while a `v*` tag releases all
-// the other modules, and leaves these ones out.
+// by the `interface-v*` tags, see `InterfaceVersion`. A `v*` tag releases all the other
+// modules, along with these ones if an `interface-v*` tag sits on the same commit, while an
+// `interface-v*` tag alone releases these modules only (see
+// `.github/workflows/interface-release.yml`).
 
 object interface extends Interface
 

@@ -32,7 +32,8 @@ jobs:
       - uses: coursier/cache-action@ee0650f98295f27a505e4bfd284c9bfaa913a465 # v9.0.1
         with:
           disableFallback: true
-      # a 'v*' tag (ci.yml) releases the coursier modules, an 'interface-v*' tag
+      # a 'v*' tag (ci.yml) releases the coursier modules, and the interface ones too if an
+      # 'interface-v*' tag sits on the same commit, an 'interface-v*' tag alone
       # (interface-release.yml) the interface ones, see 'Select artifacts to publish' below
       - name: Check publish versions
         run: ./mill -i ci.checkPublishVersions
@@ -40,16 +41,21 @@ jobs:
         run: |
           # LocalOnlyPublishModule modules are never published to remote repositories. The
           # interface modules are versioned from the 'interface-v*' tags, the other ones from the
-          # 'v*' tags. Each kind of tag only releases its own modules: when a commit carries both
-          # kinds, each tag gets a workflow run of its own, and each module gets released once
-          # (by the run of its tag), whichever order the tags were pushed in.
+          # 'v*' tags. A 'v*' tag releases the interface modules too, in the same bundle, if an
+          # 'interface-v*' tag sits on the same commit (they are snapshots, and get left out,
+          # otherwise). An 'interface-v*' tag only releases the interface modules, and only runs
+          # this when no 'v*' tag sits on the same commit (see interface-release.yml).
           case "$GITHUB_REF" in
             refs/tags/interface-v*)
               echo "PUBLISH_ARTIFACTS=__:InterfacePublishModule:^LocalOnlyPublishModule.publishArtifacts" >> "$GITHUB_ENV"
               echo "BUNDLE_NAME=coursier-interface-${GITHUB_REF#refs/tags/interface-v}" >> "$GITHUB_ENV"
               ;;
             refs/tags/v*)
-              echo "PUBLISH_ARTIFACTS=__:PublishModule:^InterfacePublishModule:^LocalOnlyPublishModule.publishArtifacts" >> "$GITHUB_ENV"
+              if [ -n "$(git tag -l 'interface-v*' --points-at HEAD)" ]; then
+                echo "PUBLISH_ARTIFACTS=__:PublishModule:^LocalOnlyPublishModule.publishArtifacts" >> "$GITHUB_ENV"
+              else
+                echo "PUBLISH_ARTIFACTS=__:PublishModule:^InterfacePublishModule:^LocalOnlyPublishModule.publishArtifacts" >> "$GITHUB_ENV"
+              fi
               echo "BUNDLE_NAME=coursier-${GITHUB_REF#refs/tags/v}" >> "$GITHUB_ENV"
               ;;
             refs/tags/*)
