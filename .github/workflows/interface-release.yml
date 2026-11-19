@@ -1,0 +1,25 @@
+name: Interface release
+
+# Releases the interface modules (io.get-coursier:interface), versioned from the 'interface-v*'
+# tags, independently of the other coursier modules (released from the 'v*' tags by ci.yml).
+# Each kind of tag only releases its own modules, so that a commit carrying both tags gets each
+# module released once, whichever order the tags get pushed in (see publish.yml).
+on:
+  push:
+    tags:
+    - "interface-v*"
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    name: Publish interface release
+    # to publish to GitHub Packages, and get build provenance attestations for the published files
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+      attestations: write
+    uses: ./.github/workflows/publish.yml
+    secrets: inherit

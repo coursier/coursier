@@ -8,9 +8,10 @@ jobs:
     runs-on: ubuntu-latest
     # for the PGP and Sonatype secrets
     environment: release
-    # No 'permissions' here: the job gets those of the calling job in ci.yml. Stating them here
-    # would replace them (capped by the caller's), and these differ between callers: releases
-    # also need 'id-token: write' and 'attestations: write', for the attestation step below.
+    # No 'permissions' here: the job gets those of the calling job (in ci.yml or
+    # interface-release.yml). Stating them here would replace them (capped by the caller's), and
+    # these differ between callers: releases also need 'id-token: write' and
+    # 'attestations: write', for the attestation step below.
     # Never publish to Sonatype Central from two jobs at a time (nightlies of successive pushes,
     # or a nightly and a release). A job waits for the running one rather than cancelling it.
     # GitHub keeps only one waiting job per group though, and cancels an older waiting one.
@@ -31,20 +32,35 @@ jobs:
       - uses: coursier/cache-action@ee0650f98295f27a505e4bfd284c9bfaa913a465 # v9.0.1
         with:
           disableFallback: true
-      # a 'v*' tag releases the coursier modules, and the interface ones too if an
-      # 'interface-v*' tag sits on the same commit (they are left out of the release otherwise)
+      # a 'v*' tag (ci.yml) releases the coursier modules, an 'interface-v*' tag
+      # (interface-release.yml) the interface ones, see 'Select artifacts to publish' below
       - name: Check publish versions
         run: ./mill -i ci.checkPublishVersions
       - name: Select artifacts to publish
         run: |
-          # LocalOnlyPublishModule modules are never published to remote repositories. On tags,
-          # the interface modules are versioned from the 'interface-v*' tags: with no such tag on
-          # this commit, they are snapshots, and get left out of the release too.
-          if [[ "$GITHUB_REF" == refs/tags/* ]] && [ -z "$(git tag -l 'interface-v*' --points-at HEAD)" ]; then
-            echo "PUBLISH_ARTIFACTS=__:PublishModule:^InterfacePublishModule:^LocalOnlyPublishModule.publishArtifacts" >> "$GITHUB_ENV"
-          else
-            echo "PUBLISH_ARTIFACTS=__:PublishModule:^LocalOnlyPublishModule.publishArtifacts" >> "$GITHUB_ENV"
-          fi
+          # LocalOnlyPublishModule modules are never published to remote repositories. The
+          # interface modules are versioned from the 'interface-v*' tags, the other ones from the
+          # 'v*' tags. Each kind of tag only releases its own modules: when a commit carries both
+          # kinds, each tag gets a workflow run of its own, and each module gets released once
+          # (by the run of its tag), whichever order the tags were pushed in.
+          case "$GITHUB_REF" in
+            refs/tags/interface-v*)
+              echo "PUBLISH_ARTIFACTS=__:InterfacePublishModule:^LocalOnlyPublishModule.publishArtifacts" >> "$GITHUB_ENV"
+              echo "BUNDLE_NAME=coursier-interface-${GITHUB_REF#refs/tags/interface-v}" >> "$GITHUB_ENV"
+              ;;
+            refs/tags/v*)
+              echo "PUBLISH_ARTIFACTS=__:PublishModule:^InterfacePublishModule:^LocalOnlyPublishModule.publishArtifacts" >> "$GITHUB_ENV"
+              echo "BUNDLE_NAME=coursier-${GITHUB_REF#refs/tags/v}" >> "$GITHUB_ENV"
+              ;;
+            refs/tags/*)
+              echo "Unexpected tag $GITHUB_REF, expected a 'v*' or an 'interface-v*' one" >&2
+              exit 1
+              ;;
+            *)
+              # snapshots, from a branch
+              echo "PUBLISH_ARTIFACTS=__:PublishModule:^LocalOnlyPublishModule.publishArtifacts" >> "$GITHUB_ENV"
+              ;;
+          esac
       # Write the files to publish to out/staged-repository, then publish these rather than
       # publishArtifacts below: our JARs aren't reproducible, so this makes sure the attested
       # files are the published ones
@@ -53,10 +69,11 @@ jobs:
           ./mill -i ci.stageAll --publishArtifacts "$PUBLISH_ARTIFACTS"
           echo "STAGED_ARTIFACTS=${PUBLISH_ARTIFACTS%.publishArtifacts}.stagedPublishArtifacts" >> "$GITHUB_ENV"
       # Like the launchers, only releases get attested (needs the 'id-token: write' and
-      # 'attestations: write' permissions, granted by the 'publish' job in ci.yml). Check with
+      # 'attestations: write' permissions, granted by the 'publish' jobs of ci.yml and
+      # interface-release.yml). Check with
       # 'gh attestation verify coursier_2.13-X.Y.Z.jar --repo coursier/coursier'.
       - uses: actions/attest-build-provenance@v4
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: startsWith(github.ref, 'refs/tags/')
         with:
           subject-path: out/staged-repository/**
       - name: Publish to Sonatype Central
@@ -64,7 +81,7 @@ jobs:
           if [[ "$GITHUB_REF" == refs/tags/* ]]; then
             # --shouldRelease false: the bundle is uploaded and validated on Sonatype Central, but has
             # to be published manually from https://central.sonatype.com/publishing/deployments
-            ./mill -i mill.scalalib.SonatypeCentralPublishModule/ --publishArtifacts "$STAGED_ARTIFACTS" --bundleName "coursier-${GITHUB_REF#refs/tags/v}" --shouldRelease false
+            ./mill -i mill.scalalib.SonatypeCentralPublishModule/ --publishArtifacts "$STAGED_ARTIFACTS" --bundleName "$BUNDLE_NAME" --shouldRelease false
           else
             ./mill -i mill.scalalib.SonatypeCentralPublishModule/ --publishArtifacts "$STAGED_ARTIFACTS"
           fi
@@ -74,7 +91,7 @@ jobs:
           MILL_SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
           MILL_SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
       # Same artifacts, snapshots included, to https://github.com/orgs/coursier/packages
-      # (needs the 'packages: write' permission, granted by the calling jobs in ci.yml).
+      # (needs the 'packages: write' permission, granted by the calling jobs).
       # Best effort: Sonatype Central is the source of truth, so a failure here shouldn't hold
       # back the jobs uploading launchers and bumping versions after a release.
       - name: Publish to GitHub Packages
