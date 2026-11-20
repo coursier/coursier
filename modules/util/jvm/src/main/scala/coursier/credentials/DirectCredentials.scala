@@ -23,7 +23,10 @@ import dataclass.{data, since}
   @since
   matchHost: Boolean = DirectCredentials.defaultMatchHost,
   httpsOnly: Boolean = DirectCredentials.defaultHttpsOnly,
-  passOnRedirect: Boolean = DirectCredentials.defaultPassOnRedirect
+  passOnRedirect: Boolean = DirectCredentials.defaultPassOnRedirect,
+  // whether these match any host, like the `default` entry of netrc files - `host` is ignored then
+  @since
+  anyHost: Boolean = false
 ) extends Credentials {
 
   def withUsername(username: String): DirectCredentials =
@@ -73,9 +76,12 @@ import dataclass.{data, since}
       .filter(_ >= 0)
       .orElse(schemeOpt.flatMap(DirectCredentials.defaultPort))
     val expectedPortOpt = hostPortOpt.orElse(hostSchemeOpt.flatMap(DirectCredentials.defaultPort))
-    schemeMatches &&
-    Option(uri.getHost).contains(hostName) &&
-    expectedPortOpt.forall(portOpt.contains)
+    // host names are case-insensitive, and java.net.URI keeps them as is
+    schemeMatches && (
+      anyHost ||
+      Option(uri.getHost).exists(_.equalsIgnoreCase(hostName)) &&
+      expectedPortOpt.forall(portOpt.contains)
+    )
   }
 
   def authentication: Authentication =

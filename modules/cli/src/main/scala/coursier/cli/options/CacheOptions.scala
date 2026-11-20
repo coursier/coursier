@@ -7,10 +7,11 @@ import cats.data.{NonEmptyList, Validated, ValidatedNel}
 import cats.implicits._
 import coursier.cache.{CacheDefaults, CacheEnv}
 import coursier.cli.params.CacheParams
-import coursier.credentials.FileCredentials
+import coursier.credentials.{FileCredentials, NetrcCredentials}
 import coursier.parse.{CachePolicyParser, CredentialsParser}
 
 import scala.concurrent.duration.Duration
+import scala.util.control.NonFatal
 
 // format: off
 final case class CacheOptions(
@@ -78,6 +79,19 @@ final case class CacheOptions(
   @Hidden
   @HelpMessage("Whether to read credentials from COURSIER_CREDENTIALS (env) or coursier.credentials (Java property), along those passed with --credentials and --credential-file")
     useEnvCredentials: Boolean = true,
+
+  @Group(OptionGroup.cache)
+  @HelpMessage("Read credentials from the netrc file, and fail if it doesn't exist or can't be parsed. Without this option, the netrc file is still read, but ignored if it doesn't exist or can't be parsed (like --netrc-optional). Pass --netrc=false not to read it. The netrc file is the one --netrc-file, or else the COURSIER_NETRC or NETRC environment variables, point at, or ~/.netrc (~/.netrc or ~/_netrc on Windows)")
+    netrc: Option[Boolean] = None,
+
+  @Group(OptionGroup.cache)
+  @HelpMessage("Read credentials from the netrc file if it exists and can be parsed, ignore it otherwise (the default, unless --netrc-file is passed)")
+    netrcOptional: Boolean = false,
+
+  @Group(OptionGroup.cache)
+  @HelpMessage("Path to the netrc file to read credentials from. It's an error if it doesn't exist or can't be parsed, unless --netrc-optional is passed")
+  @ValueDescription("path")
+    netrcFile: Option[String] = None,
 
   @Group(OptionGroup.cache)
   @HelpMessage("User agent to send when fetching metadata or artifacts (default: \"Coursier/2.1 (+https://github.com/coursier; cli)\", plus a \"ci\" comment token when the CI environment variable is set, and a \"json\" one when a JSON report is written). Repositories ask tools to identify themselves with a name, a version, and a contact, like \"Coursier/2.1 (contact: ops@example.com)\" - see https://central.sonatype.org/faq/429-tooling-provider/")
@@ -171,8 +185,40 @@ final case class CacheOptions(
       FileCredentials(f)
     }
 
-    (cachePoliciesV, ttlV, parallelV, checksumV, retryCountV, credentialsV).mapN {
-      (cachePolicy, ttl, parallel, checksum, retryCount, credentials0) =>
+    // like curl: --netrc and --netrc-file make the netrc file mandatory, unless --netrc-optional
+    // is passed too - but unlike curl, it's read by default, as if --netrc-optional was passed
+    val netrcV: ValidatedNel[String, Option[NetrcCredentials]] =
+      netrc match {
+        case Some(false) if netrcOptional || netrcFile.nonEmpty =>
+          Validated.invalidNel(
+            "--netrc=false can't be combined with --netrc-optional or --netrc-file"
+          )
+        case Some(false) =>
+          Validated.validNel(None)
+        case Some(true) if netrcOptional =>
+          Validated.invalidNel("--netrc and --netrc-optional can't be combined")
+        case _ =>
+          val required = (netrc.contains(true) || netrcFile.nonEmpty) && !netrcOptional
+          val creds    = NetrcCredentials(netrcFile, optional = !required)
+          // report a missing or malformed mandatory file now, rather than when downloading
+          val checked =
+            if (required)
+              try {
+                val _ = creds.get()
+                None
+              }
+              catch {
+                case NonFatal(e) => Some(e.getMessage)
+              }
+            else None
+          checked match {
+            case Some(error) => Validated.invalidNel(error)
+            case None        => Validated.validNel(Some(creds))
+          }
+      }
+
+    (cachePoliciesV, ttlV, parallelV, checksumV, retryCountV, credentialsV, netrcV).mapN {
+      (cachePolicy, ttl, parallel, checksum, retryCount, credentials0, netrc0) =>
         val baseParams = CacheParams(
           cache0,
           cachePolicy,
@@ -186,6 +232,7 @@ final case class CacheOptions(
         baseParams
           .withCredentials(credentials0 ++ credentialFiles)
           .withUseEnvCredentials(useEnvCredentials)
+          .withNetrc(netrc0)
           .withUserAgent(userAgent0)
           .withUserAgentComments(Seq("cli"))
           .withRejectNonAuthoritativeResponses(rejectNonAuthoritativeResponses)
