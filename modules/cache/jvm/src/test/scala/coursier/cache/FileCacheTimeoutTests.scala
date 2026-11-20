@@ -115,6 +115,35 @@ object FileCacheTimeoutTests extends TestSuite {
       }
     }
 
+    test("a host that refuses connections is not tried again for every artifact") {
+      val port = {
+        val socket = new ServerSocket(0, 0, InetAddress.getLoopbackAddress)
+        try socket.getLocalPort
+        finally socket.close()
+      }
+      def url(name: String) = s"http://127.0.0.1:$port/dir/$name.jar"
+
+      withTmpDir { dir =>
+        val cache = cacheOf(dir).copy(
+          hostThrottle = HostThrottle(
+            initialDelay = 1.second,
+            maxDelay = Some(1.minute),
+            delayMultiplier = 2.0,
+            maxRetryAfter = Some(5.minutes),
+            clock = java.time.Clock.systemUTC(),
+            unreachableAfter = Some(3),
+            unreachableFor = 1.minute
+          )
+        )
+
+        val first = fetch(cache, url("foo"))
+        assert(first.left.exists(e => causes(e).exists(_.isInstanceOf[java.net.ConnectException])))
+
+        val second = fetch(cache, url("bar"))
+        assert(second.left.exists(_.getMessage.contains("connections to its host kept failing")))
+      }
+    }
+
     test("waiting on a download in flight doesn't outlast it") {
 
       // the delay between polls used to double without bound, so a waiter only noticed the
