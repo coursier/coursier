@@ -170,7 +170,10 @@ import scala.util.control.NonFatal
             case other => Some(other)
           }
         } {
-          case _: java.net.SocketTimeoutException  => Retry.Failed(None)
+          case e: java.net.SocketTimeoutException =>
+            Downloader.connectFailed(hostThrottle, url, e, Retry.Failed(None))
+          case e: IOException if Downloader.isConnectFailure(e) =>
+            Downloader.connectFailed(hostThrottle, url, e, Retry.GiveUp)
           case _: ArtifactError.RetryableHttpError => Downloader.throttleOutcome(hostThrottle, url)
         }
       catch {
@@ -197,8 +200,9 @@ import scala.util.control.NonFatal
       hostThrottle.holdOff(url) match {
         case HostThrottle.Clear =>
           urlLastModifiedOnce0(url, currentLastModifiedOpt, logger, allCredentials0)
-        case HostThrottle.Wait(left)    => Left(Downloader.heldOff(url, left))
-        case HostThrottle.TooLong(left) => Left(Downloader.heldOff(url, left))
+        case HostThrottle.Wait(left)        => Left(Downloader.heldOff(url, left))
+        case HostThrottle.TooLong(left)     => Left(Downloader.heldOff(url, left))
+        case HostThrottle.Unreachable(left) => Left(Downloader.unreachable(url, left))
       }
 
     private def urlLastModifiedOnce0(
@@ -334,8 +338,9 @@ import scala.util.control.NonFatal
       hostThrottle.holdOff(url) match {
         case HostThrottle.Clear =>
           doDownload0(file, url, keepHeaderChecksums, allCredentials0, tmp)
-        case HostThrottle.Wait(left)    => Left(Downloader.heldOff(url, left))
-        case HostThrottle.TooLong(left) => Left(Downloader.heldOff(url, left))
+        case HostThrottle.Wait(left)        => Left(Downloader.heldOff(url, left))
+        case HostThrottle.TooLong(left)     => Left(Downloader.heldOff(url, left))
+        case HostThrottle.Unreachable(left) => Left(Downloader.unreachable(url, left))
       }
 
     private def doDownload0(
@@ -1116,10 +1121,55 @@ object Downloader {
     */
   private def throttleOutcome(hostThrottle: HostThrottle, url: String): Retry.Outcome =
     hostThrottle.holdOff(url) match {
-      case HostThrottle.Clear      => Retry.Throttled(None)
-      case HostThrottle.Wait(d)    => Retry.Throttled(Some(d))
-      case HostThrottle.TooLong(_) => Retry.GiveUp
+      case HostThrottle.Clear          => Retry.Throttled(None)
+      case HostThrottle.Wait(d)        => Retry.Throttled(Some(d))
+      case HostThrottle.TooLong(_)     => Retry.GiveUp
+      case HostThrottle.Unreachable(_) => Retry.GiveUp
     }
+
+  /** Whether `e` says that no connection to the host could be established
+    *
+    * A read timeout is not one: the host answered, it is only slow. The JDK reports both timeouts
+    * with the same exception, so its message is all that tells them apart.
+    */
+  private def isConnectFailure(e: Throwable): Boolean =
+    e match {
+      case _: java.net.ConnectException       => true
+      case _: java.net.NoRouteToHostException => true
+      case _: java.net.UnknownHostException   => true
+      case e: java.net.SocketTimeoutException =>
+        Option(e.getMessage).exists(_.equalsIgnoreCase("connect timed out"))
+      case _ => false
+    }
+
+  /** What a failed request means for the retry loop, once a connection failure is recorded
+    *
+    * The attempt that makes its host unreachable gives up right away, as the other requests to that
+    * host now do too, rather than going through the retries left to it.
+    */
+  private def connectFailed(
+    hostThrottle: HostThrottle,
+    url: String,
+    e: Throwable,
+    otherwise: Retry.Outcome
+  ): Retry.Outcome =
+    if (isConnectFailure(e)) {
+      hostThrottle.unreachable(url)
+      hostThrottle.holdOff(url) match {
+        case HostThrottle.Unreachable(_) => Retry.GiveUp
+        case _                           => otherwise
+      }
+    }
+    else
+      otherwise
+
+  /** Stands for "this host could not be reached lately, so no request was sent" */
+  private def unreachable(url: String, left: FiniteDuration): ArtifactError.DownloadError =
+    new ArtifactError.DownloadError(
+      s"Not downloading $url: connections to its host kept failing, not trying it again for " +
+        s"${(left.toMillis + 999L) / 1000L} s",
+      None
+    )
 
   /** Records a host's pause, and reports it if this 429 is what started it
     *
@@ -1196,12 +1246,15 @@ object Downloader {
         case _: AccessDeniedException if Properties.isWin => Retry.Failed(None)
         case _: javax.net.ssl.SSLException                => Retry.Failed(None)
         // a DNS lookup failure, which is transient often enough to be worth another attempt
-        case _: java.net.UnknownHostException => Retry.Failed(None)
-        case _: java.net.SocketException      => Retry.Failed(None)
+        case e: java.net.UnknownHostException =>
+          connectFailed(hostThrottle, url, e, Retry.Failed(None))
+        case e: java.net.SocketException =>
+          connectFailed(hostThrottle, url, e, Retry.Failed(None))
         // a connect or read timeout: the connection went quiet rather than failed, and the next
         // attempt resumes from what the .part file already holds. Note this is an
         // InterruptedIOException, not a SocketException, so the case above doesn't cover it.
-        case _: java.net.SocketTimeoutException => Retry.Failed(None)
+        case e: java.net.SocketTimeoutException =>
+          connectFailed(hostThrottle, url, e, Retry.Failed(None))
         // Is that case really necessary?
         case e: IOException
             if Downloader.retryableHttpResponseCode(e).nonEmpty =>

@@ -1,6 +1,6 @@
 package coursier.cache
 
-import coursier.cache.HostThrottle.{Clear, TooLong, Wait}
+import coursier.cache.HostThrottle.{Clear, TooLong, Unreachable, Wait}
 import utest._
 
 import java.time.{Clock, Instant, ZoneId, ZoneOffset}
@@ -136,6 +136,40 @@ object HostThrottleTests extends TestSuite {
 
       assert(t.rateLimited("file:///tmp/test/file.txt", None).isEmpty)
       assert(t.holdOff("file:///tmp/test/file.txt") == Clear)
+    }
+
+    test("a host becomes unreachable after connection failures in a row") {
+      val clock = new ManualClock(0L)
+      val t = HostThrottle(
+        initialDelay = 1.second,
+        maxDelay = Some(1.minute),
+        delayMultiplier = 2.0,
+        maxRetryAfter = Some(5.minutes),
+        clock = clock,
+        unreachableAfter = Some(3),
+        unreachableFor = 1.minute
+      )
+
+      t.unreachable(url)
+      t.unreachable(other(1))
+      assert(t.holdOff(url) == Clear)
+
+      t.unreachable(other(2))
+      assert(t.holdOff(url) == Unreachable(1.minute))
+      assert(t.holdOff("https://other.host/test/file.txt") == Clear)
+
+      clock.advance(1.minute)
+      assert(t.holdOff(url) == Clear)
+      // still no answer since: the next failure is enough
+      t.unreachable(url)
+      assert(t.holdOff(url) == Unreachable(1.minute))
+
+      // an answer starts the count over
+      t.succeeded(url)
+      assert(t.holdOff(url) == Clear)
+      t.unreachable(url)
+      t.unreachable(url)
+      assert(t.holdOff(url) == Clear)
     }
 
     test("the nop throttle holds nothing off") {
