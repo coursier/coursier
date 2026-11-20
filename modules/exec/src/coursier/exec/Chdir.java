@@ -85,8 +85,9 @@ public final class Chdir {
 
   // Substituted in native images, see coursier.exec.graalvm.ChdirGraalvm
   private static void chdir0(String path) throws ErrnoException {
-    if (Libc.functions().chdir(path) != 0)
-      throw Libc.exception("chdir " + path, path, Native.getLastError());
+    int errno = Libc.chdir(path);
+    if (errno != 0)
+      throw Libc.exception("chdir " + path, path, errno);
   }
 
 }
