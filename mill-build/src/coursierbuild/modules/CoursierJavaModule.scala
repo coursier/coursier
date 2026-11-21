@@ -24,6 +24,9 @@ trait CoursierJavaModule extends JavaModule {
   def javacSystemJvmId = Task {
     if (Properties.isMac && CoursierJavaModule.isArm64) s"zulu:$jvmRelease"
     else if (Properties.isWin && CoursierJavaModule.isArm64) s"liberica:$jvmRelease"
+    // The Windows x64 JDK zip of adoptium 8u512-b09 is broken on GitHub (it serves a 1.8 KB
+    // Azure block list instead of the archive), and 8u514 has no Windows x64 zip yet
+    else if (Properties.isWin && jvmRelease == "8") "adoptium:8.0-504"
     else s"adoptium:$jvmRelease"
   }
   def javacSystemJvm = Task {
