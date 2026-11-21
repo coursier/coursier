@@ -59,6 +59,8 @@ object CoursierProperties {
     "coursier.structure-lock-retry-initial-delay-ms",
     "coursier.structure-lock-retry-multiplier",
     "coursier.ttl",
+    "coursier.unreachable-after",
+    "coursier.unreachable-for",
     "coursier.windows.disable-ffm"
   )
 
