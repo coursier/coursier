@@ -560,8 +560,12 @@ import scala.util.control.NonFatal
       watchedLength: Downloader.WatchedLength
     ): Option[Either[ArtifactError, Unit]] = {
 
+      // Only for the progress display: a host found unreachable is not sent this request, which
+      // would wait out a connect timeout just to show a length. Nothing is kept either, so that
+      // the length is asked for again once the host can be tried.
       def lengthOnce(): Option[Long] =
-        watchedLength.getOrElseUpdate {
+        if (hostThrottle.unreachable(url).isDefined) watchedLength.get
+        else watchedLength.getOrElseUpdate {
           Downloader.contentLength(
             url,
             artifact.authentication,
