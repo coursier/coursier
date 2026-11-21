@@ -1,6 +1,6 @@
 package coursier.cache
 
-import coursier.cache.HostThrottle.{Clear, TooLong, Unreachable, Wait}
+import coursier.cache.HostThrottle.{Clear, TooLong, Wait}
 import utest._
 
 import java.time.{Clock, Instant, ZoneId, ZoneOffset}
@@ -150,26 +150,28 @@ object HostThrottleTests extends TestSuite {
         unreachableFor = 1.minute
       )
 
-      t.unreachable(url)
-      t.unreachable(other(1))
-      assert(t.holdOff(url) == Clear)
+      t.connectionFailed(url)
+      t.connectionFailed(other(1))
+      assert(t.unreachable(url).isEmpty)
 
-      t.unreachable(other(2))
-      assert(t.holdOff(url) == Unreachable(1.minute))
-      assert(t.holdOff("https://other.host/test/file.txt") == Clear)
+      t.connectionFailed(other(2))
+      assert(t.unreachable(url) == Some(1.minute))
+      assert(t.unreachable("https://other.host/test/file.txt").isEmpty)
+      // it is not a rate limit
+      assert(t.holdOff(url) == Clear)
 
       clock.advance(1.minute)
-      assert(t.holdOff(url) == Clear)
+      assert(t.unreachable(url).isEmpty)
       // still no answer since: the next failure is enough
-      t.unreachable(url)
-      assert(t.holdOff(url) == Unreachable(1.minute))
+      t.connectionFailed(url)
+      assert(t.unreachable(url) == Some(1.minute))
 
       // an answer starts the count over
       t.succeeded(url)
-      assert(t.holdOff(url) == Clear)
-      t.unreachable(url)
-      t.unreachable(url)
-      assert(t.holdOff(url) == Clear)
+      assert(t.unreachable(url).isEmpty)
+      t.connectionFailed(url)
+      t.connectionFailed(url)
+      assert(t.unreachable(url).isEmpty)
     }
 
     test("the nop throttle holds nothing off") {

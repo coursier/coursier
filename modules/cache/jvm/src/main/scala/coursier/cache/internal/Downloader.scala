@@ -197,12 +197,15 @@ import scala.util.control.NonFatal
       logger: CacheLogger,
       allCredentials0: Seq[DirectCredentials]
     ): Either[ArtifactError, Option[Long]] =
-      hostThrottle.holdOff(url) match {
-        case HostThrottle.Clear =>
-          urlLastModifiedOnce0(url, currentLastModifiedOpt, logger, allCredentials0)
-        case HostThrottle.Wait(left)        => Left(Downloader.heldOff(url, left))
-        case HostThrottle.TooLong(left)     => Left(Downloader.heldOff(url, left))
-        case HostThrottle.Unreachable(left) => Left(Downloader.unreachable(url, left))
+      hostThrottle.unreachable(url) match {
+        case Some(left) => Left(Downloader.unreachable(url, left))
+        case None =>
+          hostThrottle.holdOff(url) match {
+            case HostThrottle.Clear =>
+              urlLastModifiedOnce0(url, currentLastModifiedOpt, logger, allCredentials0)
+            case HostThrottle.Wait(left)    => Left(Downloader.heldOff(url, left))
+            case HostThrottle.TooLong(left) => Left(Downloader.heldOff(url, left))
+          }
       }
 
     private def urlLastModifiedOnce0(
@@ -335,12 +338,15 @@ import scala.util.control.NonFatal
       // This host already told another download to slow down. Sending it a request it would only
       // reject is one more for its limiter to count, so we sit out the pause it asked for too,
       // rather than each thread having to discover the limit for itself.
-      hostThrottle.holdOff(url) match {
-        case HostThrottle.Clear =>
-          doDownload0(file, url, keepHeaderChecksums, allCredentials0, tmp)
-        case HostThrottle.Wait(left)        => Left(Downloader.heldOff(url, left))
-        case HostThrottle.TooLong(left)     => Left(Downloader.heldOff(url, left))
-        case HostThrottle.Unreachable(left) => Left(Downloader.unreachable(url, left))
+      hostThrottle.unreachable(url) match {
+        case Some(left) => Left(Downloader.unreachable(url, left))
+        case None =>
+          hostThrottle.holdOff(url) match {
+            case HostThrottle.Clear =>
+              doDownload0(file, url, keepHeaderChecksums, allCredentials0, tmp)
+            case HostThrottle.Wait(left)    => Left(Downloader.heldOff(url, left))
+            case HostThrottle.TooLong(left) => Left(Downloader.heldOff(url, left))
+          }
       }
 
     private def doDownload0(
@@ -1121,10 +1127,9 @@ object Downloader {
     */
   private def throttleOutcome(hostThrottle: HostThrottle, url: String): Retry.Outcome =
     hostThrottle.holdOff(url) match {
-      case HostThrottle.Clear          => Retry.Throttled(None)
-      case HostThrottle.Wait(d)        => Retry.Throttled(Some(d))
-      case HostThrottle.TooLong(_)     => Retry.GiveUp
-      case HostThrottle.Unreachable(_) => Retry.GiveUp
+      case HostThrottle.Clear      => Retry.Throttled(None)
+      case HostThrottle.Wait(d)    => Retry.Throttled(Some(d))
+      case HostThrottle.TooLong(_) => Retry.GiveUp
     }
 
   /** Whether `e` says that no connection to the host could be established
@@ -1154,11 +1159,9 @@ object Downloader {
     otherwise: Retry.Outcome
   ): Retry.Outcome =
     if (isConnectFailure(e)) {
-      hostThrottle.unreachable(url)
-      hostThrottle.holdOff(url) match {
-        case HostThrottle.Unreachable(_) => Retry.GiveUp
-        case _                           => otherwise
-      }
+      hostThrottle.connectionFailed(url)
+      if (hostThrottle.unreachable(url).isDefined) Retry.GiveUp
+      else otherwise
     }
     else
       otherwise

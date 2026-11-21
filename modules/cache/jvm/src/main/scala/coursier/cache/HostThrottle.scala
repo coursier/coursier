@@ -45,7 +45,14 @@ trait HostThrottle {
     * of reach (a VPN that dropped, say), every request to it waits out its connect timeout, then
     * its retries, one artifact after the other.
     */
-  def unreachable(url: String): Unit = ()
+  def connectionFailed(url: String): Unit = ()
+
+  /** How long requests to `url`'s host should still fail without being sent, if they should
+    *
+    * Kept apart from [[holdOff]], rather than being one more [[HostThrottle.HoldOff]], so that the
+    * matches on the latter written before it existed stay exhaustive.
+    */
+  def unreachable(url: String): Option[FiniteDuration] = None
 }
 
 object HostThrottle {
@@ -168,11 +175,8 @@ object HostThrottle {
       hostKey(url).flatMap(key => Option(states.get(key))) match {
         case None => Clear
         case Some(state0) =>
-          val now             = clock.millis()
-          val unreachableLeft = state0.unreachableUntil - now
-          val left            = state0.notBefore - now
-          if (unreachableLeft > 0L) Unreachable(FiniteDuration(unreachableLeft, MILLISECONDS))
-          else if (left <= 0L) Clear
+          val left = state0.notBefore - clock.millis()
+          if (left <= 0L) Clear
           else if (state0.tooLong) TooLong(FiniteDuration(left, MILLISECONDS))
           else Wait(FiniteDuration(left, MILLISECONDS))
       }
@@ -193,7 +197,7 @@ object HostThrottle {
       * The failures are counted until the host answers again, so once it has been unreachable, the
       * first request that fails after the pause starts a new one.
       */
-    override def unreachable(url: String): Unit =
+    override def connectionFailed(url: String): Unit =
       for {
         after  <- unreachableAfter
         state0 <- state(url)
@@ -202,6 +206,14 @@ object HostThrottle {
         if (state0.connectFailures >= after)
           state0.unreachableUntil = clock.millis() + unreachableFor.toMillis
       }
+
+    override def unreachable(url: String): Option[FiniteDuration] =
+      for {
+        key    <- hostKey(url)
+        state0 <- Option(states.get(key))
+        left = state0.unreachableUntil - clock.millis()
+        if left > 0L
+      } yield FiniteDuration(left, MILLISECONDS)
 
     private def capped(delay: Duration, max: Option[FiniteDuration]): FiniteDuration = {
       val delay0 = delay match {
@@ -240,9 +252,6 @@ object HostThrottle {
     * extended, so the only thing left is to give up - see `COURSIER_MAX_HTTP_RETRY_AFTER`.
     */
   final case class TooLong(delay: FiniteDuration) extends HoldOff
-
-  /** Connections to the host kept failing, so requests to it fail for `delay` without being sent */
-  final case class Unreachable(delay: FiniteDuration) extends HoldOff
 
   private final class State(initialDelay: FiniteDuration) {
 
