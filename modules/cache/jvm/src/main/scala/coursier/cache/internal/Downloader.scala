@@ -160,7 +160,8 @@ import scala.util.control.NonFatal
       currentLastModifiedOpt: Option[Long], // for the logger
       logger: CacheLogger,
       allCredentials0: Seq[DirectCredentials]
-    ): Either[ArtifactError, Option[Long]] =
+    ): Either[ArtifactError, Option[Long]] = {
+      val connectionMark = hostThrottle.connectionMark(url)
       try
         retry.retryOpt0 {
           urlLastModifiedOnce(url, currentLastModifiedOpt, logger, allCredentials0) match {
@@ -170,10 +171,7 @@ import scala.util.control.NonFatal
             case other => Some(other)
           }
         } {
-          case e: java.net.SocketTimeoutException =>
-            Downloader.connectFailed(hostThrottle, url, e, Retry.Failed(None))
-          case e: IOException if Downloader.isConnectFailure(e) =>
-            Downloader.connectFailed(hostThrottle, url, e, Retry.GiveUp)
+          case _: java.net.SocketTimeoutException  => Retry.Failed(None)
           case _: ArtifactError.RetryableHttpError => Downloader.throttleOutcome(hostThrottle, url)
         }
       catch {
@@ -182,6 +180,7 @@ import scala.util.control.NonFatal
             throw ex
           Left(ex)
         case NonFatal(e) =>
+          Downloader.recordConnectFailure(hostThrottle, url, connectionMark, e)
           val ex = new ArtifactError.DownloadError(
             s"Caught $e${Option(e.getMessage).fold("")(" (" + _ + ")")} while getting last modified time of $url",
             Some(e)
@@ -190,6 +189,7 @@ import scala.util.control.NonFatal
             throw ex
           Left(ex)
       }
+    }
 
     private def urlLastModifiedOnce(
       url: String,
@@ -1147,24 +1147,20 @@ object Downloader {
       case _ => false
     }
 
-  /** What a failed request means for the retry loop, once a connection failure is recorded
+  /** Records `e` against `url`'s host if it is a connection failure
     *
-    * The attempt that makes its host unreachable gives up right away, as the other requests to that
-    * host now do too, rather than going through the retries left to it.
+    * Called once the retry loop of a download is over, rather than for each of its attempts: a few
+    * failed attempts in a row are what the retries are there for, and counting each of them had a
+    * DNS lookup failing for a few milliseconds leave the whole host unreachable for a minute.
     */
-  private def connectFailed(
+  private def recordConnectFailure(
     hostThrottle: HostThrottle,
     url: String,
-    e: Throwable,
-    otherwise: Retry.Outcome
-  ): Retry.Outcome =
-    if (isConnectFailure(e)) {
-      hostThrottle.connectionFailed(url)
-      if (hostThrottle.unreachable(url).isDefined) Retry.GiveUp
-      else otherwise
-    }
-    else
-      otherwise
+    mark: Long,
+    e: Throwable
+  ): Unit =
+    if (isConnectFailure(e))
+      hostThrottle.connectionFailed(url, mark)
 
   /** Stands for "this host could not be reached lately, so no request was sent" */
   private def unreachable(url: String, left: FiniteDuration): ArtifactError.DownloadError =
@@ -1215,7 +1211,8 @@ object Downloader {
   )(
     f: => Either[ArtifactError, T],
     ifLocked: => Option[Either[ArtifactError, T]]
-  ): Either[ArtifactError, T] =
+  ): Either[ArtifactError, T] = {
+    val connectionMark = hostThrottle.connectionMark(url)
     try
       retry.retryOpt0 {
         val res0 = CacheLocks.withUrlLock(url) {
@@ -1249,15 +1246,12 @@ object Downloader {
         case _: AccessDeniedException if Properties.isWin => Retry.Failed(None)
         case _: javax.net.ssl.SSLException                => Retry.Failed(None)
         // a DNS lookup failure, which is transient often enough to be worth another attempt
-        case e: java.net.UnknownHostException =>
-          connectFailed(hostThrottle, url, e, Retry.Failed(None))
-        case e: java.net.SocketException =>
-          connectFailed(hostThrottle, url, e, Retry.Failed(None))
+        case _: java.net.UnknownHostException => Retry.Failed(None)
+        case _: java.net.SocketException      => Retry.Failed(None)
         // a connect or read timeout: the connection went quiet rather than failed, and the next
         // attempt resumes from what the .part file already holds. Note this is an
         // InterruptedIOException, not a SocketException, so the case above doesn't cover it.
-        case e: java.net.SocketTimeoutException =>
-          connectFailed(hostThrottle, url, e, Retry.Failed(None))
+        case _: java.net.SocketTimeoutException => Retry.Failed(None)
         // Is that case really necessary?
         case e: IOException
             if Downloader.retryableHttpResponseCode(e).nonEmpty =>
@@ -1288,6 +1282,7 @@ object Downloader {
         else
           Left(ex)
       case NonFatal(e) =>
+        recordConnectFailure(hostThrottle, url, connectionMark, e)
         val ex = new ArtifactError.DownloadError(
           s"Caught ${e.getClass().getName()}${Option(e.getMessage).fold("")(" (" + _ + ")")} while downloading $url",
           Some(e)
@@ -1297,6 +1292,7 @@ object Downloader {
         else
           Left(ex)
     }
+  }
 
   private object UnknownProtocol {
     def unapply(t: Throwable): Option[(MalformedURLException, String)] = t match {

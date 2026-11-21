@@ -5,7 +5,7 @@ import coursier.util.{Artifact, Sync, Task}
 import utest._
 
 import java.io.{BufferedReader, File, InputStreamReader}
-import java.net.{InetAddress, ServerSocket, Socket, SocketTimeoutException}
+import java.net.{ConnectException, InetAddress, ServerSocket, Socket, SocketTimeoutException}
 import java.nio.charset.StandardCharsets.US_ASCII
 import java.util.concurrent.{Executors, ThreadFactory}
 import java.util.concurrent.atomic.{AtomicInteger, AtomicReference}
@@ -61,6 +61,31 @@ object FileCacheTimeoutTests extends TestSuite {
     finally pool.shutdown()
   }
 
+  /** A throttle that finds a host unreachable after `after` downloads failed to connect to it */
+  private def unreachableThrottle(after: Int): HostThrottle =
+    HostThrottle(
+      initialDelay = 1.second,
+      maxDelay = Some(1.minute),
+      delayMultiplier = 2.0,
+      maxRetryAfter = Some(5.minutes),
+      clock = java.time.Clock.systemUTC(),
+      unreachableAfter = Some(after),
+      unreachableFor = 1.minute
+    )
+
+  /** A port nothing listens on, so that connections to it are refused */
+  private def closedPort(): Int = {
+    val socket = new ServerSocket(0, 0, InetAddress.getLoopbackAddress)
+    try socket.getLocalPort
+    finally socket.close()
+  }
+
+  private def refused(res: Either[ArtifactError, File]): Boolean =
+    res.left.exists(e => causes(e).exists { case _: ConnectException => true; case _ => false })
+
+  private def skipped(res: Either[ArtifactError, File]): Boolean =
+    res.left.exists(_.getMessage.contains("connections to its host kept failing"))
+
   private def causes(t: Throwable): List[Throwable] =
     if (t == null) Nil else t :: causes(t.getCause)
 
@@ -94,9 +119,12 @@ object FileCacheTimeoutTests extends TestSuite {
 
       RawServer.withServer(RawServer.stallAfterHeaders(bodyLength = 23450)) { server =>
         withTmpDir { dir =>
+          // a single failure would be enough, if a read timeout counted as one
+          val throttle = unreachableThrottle(after = 1)
           val cache = cacheOf(dir).copy(
             readTimeout = Some(readTimeout),
-            retry = attempts
+            retry = attempts,
+            hostThrottle = throttle
           )
 
           // the fetch runs on a thread of its own: without a read timeout it never returns at
@@ -111,36 +139,54 @@ object FileCacheTimeoutTests extends TestSuite {
           }
           // the point of the test: the read timed out, rather than blocking forever
           assert(causes(err).exists(_.isInstanceOf[SocketTimeoutException]))
+          // the host answered, it is only slow: that is not a host to stop trying
+          assert(throttle.unreachable(server.url("/dir/bar.jar")).isEmpty)
         }
       }
     }
 
     test("a host that refuses connections is not tried again for every artifact") {
-      val port = {
-        val socket = new ServerSocket(0, 0, InetAddress.getLoopbackAddress)
-        try socket.getLocalPort
-        finally socket.close()
-      }
+      val port              = closedPort()
       def url(name: String) = s"http://127.0.0.1:$port/dir/$name.jar"
 
       withTmpDir { dir =>
+        // more attempts than it takes failures to find the host unreachable, so that a download
+        // counting each of its attempts as one would show
+        val cache = cacheOf(dir).copy(retry = 5, hostThrottle = unreachableThrottle(after = 3))
+
+        for (name <- Seq("a", "b", "c")) {
+          val res = fetch(cache, url(name))
+          assert(refused(res))
+        }
+
+        val res = fetch(cache, url("d"))
+        assert(skipped(res))
+      }
+    }
+
+    test("downloads failing to connect together count once") {
+      val port              = closedPort()
+      def url(name: String) = s"http://127.0.0.1:$port/dir/$name.jar"
+
+      withTmpDir { dir =>
+        // retries spread over a second and a half, so that all the downloads started well before
+        // any of them is done failing
         val cache = cacheOf(dir).copy(
-          hostThrottle = HostThrottle(
-            initialDelay = 1.second,
-            maxDelay = Some(1.minute),
-            delayMultiplier = 2.0,
-            maxRetryAfter = Some(5.minutes),
-            clock = java.time.Clock.systemUTC(),
-            unreachableAfter = Some(3),
-            unreachableFor = 1.minute
-          )
+          retry = 3,
+          retryBackoffInitialDelay = 500.millis,
+          hostThrottle = unreachableThrottle(after = 2)
         )
 
-        val first = fetch(cache, url("foo"))
-        assert(first.left.exists(e => causes(e).exists(_.isInstanceOf[java.net.ConnectException])))
+        // a single connection failure, as far as the host is concerned
+        val results = runConcurrently(6)(idx => fetch(cache, url(s"parallel-$idx")))
+        for (res <- results)
+          assert(refused(res))
 
-        val second = fetch(cache, url("bar"))
-        assert(second.left.exists(_.getMessage.contains("connections to its host kept failing")))
+        val second = fetch(cache, url("second"))
+        assert(refused(second))
+
+        val third = fetch(cache, url("third"))
+        assert(skipped(third))
       }
     }
 

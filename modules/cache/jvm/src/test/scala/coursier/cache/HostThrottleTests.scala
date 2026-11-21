@@ -138,9 +138,8 @@ object HostThrottleTests extends TestSuite {
       assert(t.holdOff("file:///tmp/test/file.txt") == Clear)
     }
 
-    test("a host becomes unreachable after connection failures in a row") {
-      val clock = new ManualClock(0L)
-      val t = HostThrottle(
+    def unreachableThrottle(clock: Clock) =
+      HostThrottle(
         initialDelay = 1.second,
         maxDelay = Some(1.minute),
         delayMultiplier = 2.0,
@@ -150,11 +149,19 @@ object HostThrottleTests extends TestSuite {
         unreachableFor = 1.minute
       )
 
-      t.connectionFailed(url)
-      t.connectionFailed(other(1))
+    /** A download that started, then failed to connect to `url0`'s host */
+    def failedDownload(t: HostThrottle, url0: String): Unit =
+      t.connectionFailed(url0, t.connectionMark(url0))
+
+    test("a host becomes unreachable after downloads failing to connect in a row") {
+      val clock = new ManualClock(0L)
+      val t     = unreachableThrottle(clock)
+
+      failedDownload(t, url)
+      failedDownload(t, other(1))
       assert(t.unreachable(url).isEmpty)
 
-      t.connectionFailed(other(2))
+      failedDownload(t, other(2))
       assert(t.unreachable(url) == Some(1.minute))
       assert(t.unreachable("https://other.host/test/file.txt").isEmpty)
       // it is not a rate limit
@@ -163,15 +170,60 @@ object HostThrottleTests extends TestSuite {
       clock.advance(1.minute)
       assert(t.unreachable(url).isEmpty)
       // still no answer since: the next failure is enough
-      t.connectionFailed(url)
+      failedDownload(t, url)
       assert(t.unreachable(url) == Some(1.minute))
 
       // an answer starts the count over
       t.succeeded(url)
       assert(t.unreachable(url).isEmpty)
-      t.connectionFailed(url)
-      t.connectionFailed(url)
+      failedDownload(t, url)
+      failedDownload(t, url)
       assert(t.unreachable(url).isEmpty)
+    }
+
+    test("downloads failing together are one failure") {
+      val clock = new ManualClock(0L)
+      val t     = unreachableThrottle(clock)
+
+      // six parallel downloads, all started before any of them failed
+      val marks = (1 to 6).map(n => t.connectionMark(other(n)))
+      for ((mark, n) <- marks.zipWithIndex)
+        t.connectionFailed(other(n + 1), mark)
+      assert(t.unreachable(url).isEmpty)
+
+      failedDownload(t, url)
+      failedDownload(t, url)
+      assert(t.unreachable(url) == Some(1.minute))
+    }
+
+    test("a download failing late doesn't extend the pause") {
+      val clock = new ManualClock(0L)
+      val t     = unreachableThrottle(clock)
+
+      // started before the host was found unreachable, waiting on its connect timeout
+      val lateMark = t.connectionMark(url)
+      failedDownload(t, url)
+      failedDownload(t, url)
+      failedDownload(t, url)
+      assert(t.unreachable(url) == Some(1.minute))
+
+      clock.advance(30.seconds)
+      t.connectionFailed(url, lateMark)
+      assert(t.unreachable(url) == Some(30.seconds))
+    }
+
+    test("a download failing after an answer it started before doesn't count") {
+      val clock = new ManualClock(0L)
+      val t     = unreachableThrottle(clock)
+
+      val mark = t.connectionMark(url)
+      t.succeeded(url)
+      failedDownload(t, url)
+      failedDownload(t, url)
+      t.connectionFailed(url, mark)
+      assert(t.unreachable(url).isEmpty)
+      failedDownload(t, url)
+      assert(t.unreachable(url) == Some(1.minute))
     }
 
     test("the nop throttle holds nothing off") {

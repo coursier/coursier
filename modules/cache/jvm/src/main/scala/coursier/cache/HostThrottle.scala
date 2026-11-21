@@ -39,13 +39,22 @@ trait HostThrottle {
     */
   def succeeded(url: String): Unit
 
-  /** Records that a connection to `url`'s host could not be established
+  /** What was recorded about `url`'s host so far, to be passed back to [[connectionFailed]]
+    *
+    * Taken before a download makes its first attempt, so that its failure can be told apart from
+    * the ones of the downloads that ran alongside it.
+    */
+  def connectionMark(url: String): Long = 0L
+
+  /** Records that a download could not connect to `url`'s host, all its attempts included
     *
     * Like a 429, this is about the host rather than the artifact: when a repository is down or out
     * of reach (a VPN that dropped, say), every request to it waits out its connect timeout, then
     * its retries, one artifact after the other.
+    *
+    * `mark` is what [[connectionMark]] returned before the download started.
     */
-  def connectionFailed(url: String): Unit = ()
+  def connectionFailed(url: String, mark: Long): Unit = ()
 
   /** How long requests to `url`'s host should still fail without being sent, if they should
     *
@@ -190,21 +199,37 @@ object HostThrottle {
         state0.tooLong = false
         state0.connectFailures = 0
         state0.unreachableUntil = 0L
+        state0.generation += 1L
       }
+
+    override def connectionMark(url: String): Long =
+      hostKey(url).flatMap(key => Option(states.get(key))).fold(0L)(_.generation)
 
     /** @inheritdoc
       *
+      * A failure only counts when nothing was recorded about the host since the download started.
+      * The downloads in flight when a connection to a host fails tend to fail together - a blip of
+      * the network, a DNS lookup that failed for a moment - and that is one failure, not one per
+      * download: counting each of them had six parallel downloads make a host unreachable for a
+      * minute from a single incident. The same goes for a failure that lands after the host was
+      * found unreachable, from a connection already under way then: it says nothing new, and isn't
+      * allowed to push the end of the pause further.
+      *
       * The failures are counted until the host answers again, so once it has been unreachable, the
-      * first request that fails after the pause starts a new one.
+      * first download that fails after the pause starts a new one.
       */
-    override def connectionFailed(url: String): Unit =
+    override def connectionFailed(url: String, mark: Long): Unit =
       for {
         after  <- unreachableAfter
         state0 <- state(url)
       } state0.synchronized {
-        state0.connectFailures += 1
-        if (state0.connectFailures >= after)
-          state0.unreachableUntil = clock.millis() + unreachableFor.toMillis
+        if (state0.generation == mark) {
+          state0.generation += 1L
+          state0.connectFailures += 1
+          val now = clock.millis()
+          if (state0.connectFailures >= after && state0.unreachableUntil <= now)
+            state0.unreachableUntil = now + unreachableFor.toMillis
+        }
       }
 
     override def unreachable(url: String): Option[FiniteDuration] =
@@ -269,6 +294,10 @@ object HostThrottle {
 
     /** Epoch millis before which requests to the host fail without being sent */
     @volatile var unreachableUntil: Long = 0L
+
+    /** Bumped by every connection failure counted and every answer, see `Default.connectionFailed`
+      */
+    @volatile var generation: Long = 0L
   }
 
   /** Scheme, host and port - what a rate limit is actually applied to
