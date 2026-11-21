@@ -353,6 +353,61 @@ object FileCacheErrorTests extends TestSuite {
           assert(ctx.errorFile.exists())
         }
       }
+
+      test("keeps the cached not-found when the host is found unreachable") {
+
+        // Same as above, but for a request that isn't sent at all, as other downloads already
+        // failed to connect to the host
+
+        val log   = new RequestLog
+        val state = new ServerState
+
+        withTmpDir { dir =>
+
+          val base = FileCache[Task]((dir / "cache").toIO).copy(
+            checksums = Nil,
+            ttl = Some(ttl),
+            retry = 0
+          )
+
+          val (jarUrl, pomUrl) =
+            withHttpServer(logRequests(log)(routes(state))) { serverUri =>
+              val ctx = new Ctx(
+                state,
+                log,
+                base,
+                (serverUri / "dir" / "foo.jar").renderString,
+                (serverUri / "dir" / "foo.pom").renderString
+              )
+              ctx.seedPom()
+              val artifact      = ctx.jar.copy(extra = Map("metadata" -> ctx.pom))
+              val (requests, _) = ctx.at(t0, CachePolicy.FetchMissing, artifact)
+              assert(requests == List("GET"))
+              assert(ctx.errorFile.exists())
+              (ctx.jarUrl, ctx.pomUrl)
+            }
+
+          val throttle = HostThrottle(
+            initialDelay = Duration(1L, TimeUnit.SECONDS),
+            maxDelay = None,
+            delayMultiplier = 2.0,
+            maxRetryAfter = None,
+            clock = Clock.systemUTC(),
+            unreachableAfter = Some(1),
+            unreachableFor = Duration(1L, TimeUnit.HOURS)
+          )
+          throttle.connectionFailed(jarUrl, throttle.connectionMark(jarUrl))
+          assert(throttle.unreachable(jarUrl).nonEmpty)
+
+          val ctx      = new Ctx(state, log, base.copy(hostThrottle = throttle), jarUrl, pomUrl)
+          val artifact = ctx.jar.copy(extra = Map("metadata" -> ctx.pom))
+
+          val (_, res) = ctx.at(hoursIn(1), CachePolicy.FetchMissing, artifact)
+          val nf       = assertNotFound(res)
+          assert(nf.permanent.contains(true))
+          assert(ctx.errorFile.exists())
+        }
+      }
     }
 
     test("FetchMissing ignores cached errors") {

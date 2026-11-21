@@ -1162,13 +1162,21 @@ object Downloader {
     if (isConnectFailure(e))
       hostThrottle.connectionFailed(url, mark)
 
-  /** Stands for "this host could not be reached lately, so no request was sent" */
-  private def unreachable(url: String, left: FiniteDuration): ArtifactError.DownloadError =
-    new ArtifactError.DownloadError(
+  /** Stands for "this host could not be reached lately, so no request was sent"
+    *
+    * Its cause is an `IOException`, like the one of the connection failures it stands in for, so
+    * that the cache handles both alike: a not-found error cached for the artifact, in particular,
+    * is kept and returned, rather than forgotten (see `remoteKeepErrors`).
+    */
+  private def unreachable(url: String, left: FiniteDuration): ArtifactError.DownloadError = {
+    val message =
       s"Not downloading $url: connections to its host kept failing, not trying it again for " +
-        s"${(left.toMillis + 999L) / 1000L} s",
-      None
-    )
+        s"${(left.toMillis + 999L) / 1000L} s"
+    new ArtifactError.DownloadError(message, Some(new UnreachableHostException(message)))
+  }
+
+  /** What [[unreachable]] errors are caused by, standing for the connection that wasn't made */
+  private final class UnreachableHostException(message: String) extends IOException(message)
 
   /** Records a host's pause, and reports it if this 429 is what started it
     *
