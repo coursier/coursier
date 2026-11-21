@@ -226,6 +226,26 @@ object HostThrottleTests extends TestSuite {
       assert(t.unreachable(url) == Some(1.minute))
     }
 
+    test("a 429 is an answer too") {
+      val clock = new ManualClock(0L)
+      val t     = unreachableThrottle(clock)
+
+      failedDownload(t, url)
+      failedDownload(t, url)
+      t.rateLimited(url, Some(1.second))
+      clock.advance(1.second)
+      failedDownload(t, url)
+      assert(t.unreachable(url).isEmpty)
+
+      // and one that comes back while the host is thought unreachable ends that
+      failedDownload(t, url)
+      failedDownload(t, url)
+      assert(t.unreachable(url) == Some(1.minute))
+      t.rateLimited(url, Some(2.seconds))
+      assert(t.unreachable(url).isEmpty)
+      assert(t.holdOff(url) == Wait(2.seconds))
+    }
+
     test("the nop throttle holds nothing off") {
       val t = HostThrottle.Nop
 

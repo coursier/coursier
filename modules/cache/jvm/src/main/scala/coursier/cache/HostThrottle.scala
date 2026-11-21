@@ -159,6 +159,8 @@ object HostThrottle {
     def rateLimited(url: String, retryAfterOpt: Option[FiniteDuration]): Option[FiniteDuration] =
       state(url).flatMap { state0 =>
         state0.synchronized {
+          // turning us away is still answering: whatever connections failed before, it is reachable
+          state0.answered()
           val now = clock.millis()
           // Holding off for less than the server asked is what we refuse to do, so a `Retry-After`
           // we are not willing to sit out is one to give up on rather than shorten.
@@ -197,9 +199,7 @@ object HostThrottle {
       } state0.synchronized {
         state0.delay = initialDelay
         state0.tooLong = false
-        state0.connectFailures = 0
-        state0.unreachableUntil = 0L
-        state0.generation += 1L
+        state0.answered()
       }
 
     override def connectionMark(url: String): Long =
@@ -298,6 +298,13 @@ object HostThrottle {
     /** Bumped by every connection failure counted and every answer, see `Default.connectionFailed`
       */
     @volatile var generation: Long = 0L
+
+    /** Records that the host answered, which says it can be connected to - to call with the lock */
+    def answered(): Unit = {
+      connectFailures = 0
+      unreachableUntil = 0L
+      generation += 1L
+    }
   }
 
   /** Scheme, host and port - what a rate limit is actually applied to
