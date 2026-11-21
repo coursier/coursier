@@ -637,6 +637,8 @@ object CacheUrl {
             log(s"$method $url0 failed: $e")
           if (conn != null)
             closeConn(conn)
+          if (url0 != initialUrl)
+            e.addSuppressed(new RedirectTargetFailed(url0))
           throw e
       }
 
@@ -647,6 +649,22 @@ object CacheUrl {
         ret
     }
   }
+
+  /** Attached to what a request throws when it failed after being redirected, to `url`
+    *
+    * Kept apart from the exception itself, whose type the retries go by: what it adds is that the
+    * failure is about where the request was redirected to, rather than about the host it was sent
+    * to - a repository whose CDN is down still answers us, and isn't to be found unreachable for
+    * it.
+    */
+  private[cache] final class RedirectTargetFailed(val url: String)
+      extends Exception(s"after a redirection to $url", null, false, false)
+
+  private[cache] def failedAfterRedirect(e: Throwable): Boolean =
+    e.getSuppressed.exists {
+      case _: RedirectTargetFailed => true
+      case _                       => false
+    }
 
   def responseCode(conn: URLConnection): Option[Int] =
     conn match {

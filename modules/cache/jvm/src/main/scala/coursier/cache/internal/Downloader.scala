@@ -1152,6 +1152,9 @@ object Downloader {
     * Called once the retry loop of a download is over, rather than for each of its attempts: a few
     * failed attempts in a row are what the retries are there for, and counting each of them had a
     * DNS lookup failing for a few milliseconds leave the whole host unreachable for a minute.
+    *
+    * A connection that failed after a redirect isn't recorded: it is about another host than
+    * `url`'s, which did answer us.
     */
   private def recordConnectFailure(
     hostThrottle: HostThrottle,
@@ -1159,7 +1162,7 @@ object Downloader {
     mark: Long,
     e: Throwable
   ): Unit =
-    if (isConnectFailure(e))
+    if (isConnectFailure(e) && !CacheUrl.failedAfterRedirect(e))
       hostThrottle.connectionFailed(url, mark)
 
   /** Stands for "this host could not be reached lately, so no request was sent"

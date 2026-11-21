@@ -190,6 +190,25 @@ object FileCacheTimeoutTests extends TestSuite {
       }
     }
 
+    test("a redirect target that refuses connections doesn't make the repository unreachable") {
+      val cdnUrl = s"http://127.0.0.1:${closedPort()}/cdn/foo.jar"
+
+      RawServer.withServer(RawServer.redirectTo(cdnUrl)) { server =>
+        withTmpDir { dir =>
+          val throttle = unreachableThrottle(after = 1)
+          val cache    = cacheOf(dir).copy(retry = 2, hostThrottle = throttle)
+
+          val first = fetch(cache, server.url("/dir/foo.jar"))
+          assert(refused(first))
+
+          // the repository itself answered, with the redirect
+          assert(throttle.unreachable(server.url("/dir/bar.jar")).isEmpty)
+          val second = fetch(cache, server.url("/dir/bar.jar"))
+          assert(refused(second))
+        }
+      }
+    }
+
     test("waiting on a download in flight doesn't outlast it") {
 
       // the delay between polls used to double without bound, so a waiter only noticed the
@@ -324,6 +343,18 @@ object FileCacheTimeoutTests extends TestSuite {
         if (method != "GET")
           socket.close()
         // and never anything else: the connection is left open and silent
+      }
+
+    /** Redirects every request to `location` */
+    def redirectTo(location: String): (String, Socket) => Unit =
+      (_, socket) => {
+        val out = socket.getOutputStream
+        out.write(
+          s"HTTP/1.1 302 Found\r\nLocation: $location\r\nContent-Length: 0\r\n\r\n"
+            .getBytes(US_ASCII)
+        )
+        out.flush()
+        socket.close()
       }
 
     /** Serves the body in chunks spread over `over` */
