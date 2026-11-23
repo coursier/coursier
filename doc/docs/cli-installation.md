@@ -46,6 +46,31 @@ chmod +x cs
 
 Other flavors of native Linux launchers are available, see [below](#other-native-linux-launchers).
 
+#### Minimum glibc version
+
+The native Linux launchers, on both x86-64 and ARM64, need glibc 2.34 or later, and zlib (`libz.so.1`).
+This holds for the [container](#container-launchers) and [compat](#compat-launchers) launchers as well.
+It is the case since coursier 2.1.25, and was checked on the launchers of coursier 2.1.27.
+That makes Ubuntu 22.04 the oldest Ubuntu LTS they run on.
+The oldest versions of other popular distributions they run on are:
+
+| Distribution                 | Oldest version | Its glibc version |
+|------------------------------|----------------|-------------------|
+| Ubuntu                       | 22.04 LTS      | 2.35              |
+| Debian                       | 12 (bookworm)  | 2.36              |
+| RHEL, Rocky Linux, AlmaLinux | 9              | 2.34              |
+| Fedora                       | 35             | 2.34              |
+| Amazon Linux                 | 2023           | 2.34              |
+| openSUSE Leap, SLES          | 15.6, 15 SP6   | 2.38              |
+
+On older distributions (Ubuntu 20.04, Debian 11, RHEL 8, Amazon Linux 2, openSUSE Leap 15.5, …),
+the launchers fail to start, with errors like
+```text
+./cs: /lib/x86_64-linux-gnu/libc.so.6: version `GLIBC_2.34' not found (required by ./cs)
+```
+Use the [static launchers](#static-launchers) there. They don't depend on glibc.
+Or use the [JAR-based launcher](#jar-based-launcher).
+
 ### macOS
 
 On macOS, download and run the coursier installer with
