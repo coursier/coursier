@@ -1,4 +1,7 @@
-# Dependency
+---
+title: Dependencies via the API
+sidebar_label: Dependencies
+---
 
 ```scala mdoc:reset-object:invisible
 import coursier._
@@ -57,7 +60,7 @@ val bomVersionConstraint = VersionConstraint("1.0.1")
 Dependency(module, versionConstraint)
   .addBom(BomDependency(bomModule, bomVersionConstraint))
 ```
- In Scala 2.x, on can use convenient string interpolators:
+In Scala 2.x, one can use convenient string interpolators:
 ```scala mdoc:silent
 dep"my-org:my-name:1.2.3"
   .addBom(mod"my-org:my-bom", bomVersionConstraint)
@@ -96,13 +99,16 @@ Fetch().withGradleModuleSupport(true)
 
 Variant attributes can be specified once for all dependencies, with
 ```scala mdoc:silent
-Fetch()
+import coursier.core.VariantSelector.VariantMatcher
+
+Fetch().addVariantAttributes(
+  "org.gradle.category"        -> VariantMatcher.Library,
+  "org.gradle.jvm.environment" -> VariantMatcher.Equals("standard-jvm")
+)
 ```
 
 One can ask for specific Gradle Module variants of a dependency, like
 ```scala mdoc:silent
-import coursier.core.VariantSelector.VariantMatcher
-
 dep"my-org:my-name:1.2.3".addVariantAttributes(
   "org.gradle.usage"                   -> VariantMatcher.Runtime,
   "org.jetbrains.kotlin.platform.type" -> VariantMatcher.Equals("js"),
@@ -138,7 +144,7 @@ dep"my-org:my-name:1.2.3".variantSelector
 ### Maven Configuration fallback
 
 coursier tries to download Gradle Module files if support for Gradle Modules is enabled. Such
-a support can be enabled
+a support can be enabled [as described above](#enabling-gradle-module-support).
 
 If a repository doesn't have a Gradle Module file for such dependency, but has a POM
 file for it, coursier falls back to using Maven Configurations for this module. The configuration

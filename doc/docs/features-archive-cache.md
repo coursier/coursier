@@ -1,6 +1,8 @@
-# Coursier Archive Cache
+---
+title: Archive cache
+---
 
-The archive cache offers to unpack artifacts downloaded by the [main coursier cache](features-cache.md).
+The archive cache offers to unpack artifacts downloaded by the [main coursier cache](cache.md).
 It unpacks them in a predefined and stable location, so that things need to be unpacked only once,
 and can be re-used many times after that.
 
@@ -10,7 +12,7 @@ in this location on Linux:
 ~/.cache/coursier/arc/https/cosmo.zip/pub/cosmocc/cosmocc-3.9.7.zip/
 ```
 
-Note the `arc` component in the path, where paths of the [main coursier cache](features-cache.md) contain
+Note the `arc` component in the path, where paths of the [main coursier cache](cache.md) contain
 a `v1` instead.
 
 One can get such a path from the command-line, with:
@@ -45,16 +47,19 @@ While various features of coursier rely on the archive cache, it can be used in 
 ## Cache location
 
 The exact location of the archive cache is OS-dependent. Like for
-[the main coursier cache](features-cache.md#cache-location), it relies on the
+[the main coursier cache](cache.md#cache-location), it relies on the
 [directories-jvm](https://github.com/dirs-dev/directories-jvm) library (more precisely,
 [a slightly customized fork of it](https://github.com/coursier/directories-jvm)) to follow
 OS conventions and put the coursier cache at the most appropriate location for your OS.
 
 | OS | Location | Note |
 |----|----------|------|
-| Linux | `~/.cache/coursier/arc/` | XDG… |
+| Linux | `~/.cache/coursier/arc/` | Follows the [XDG Base Directory specification](https://specifications.freedesktop.org/basedir-spec/latest/), so `XDG_CACHE_HOME` is taken into account |
 | macOS | `~/Library/Caches/Coursier/arc/` |      |
-| Windows | `C:\Users\username\AppData\Local\Coursier\Cache\arc` | Windows API… |
+| Windows | `C:\Users\username\AppData\Local\Coursier\Cache\arc` | That is, `%LOCALAPPDATA%\Coursier\Cache\arc`, obtained via the Windows API |
+
+This location can be changed, see how [via the API](api-archive-cache.md#archive-cache-location)
+and [via the CLI](cli-archive-cache.md#cache-location).
 
 ## Archive content addressing
 

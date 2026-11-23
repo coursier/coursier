@@ -1,4 +1,6 @@
-# Contact
+---
+title: Contact
+---
 
 As much as possible, use public channels to ask questions and report issues about coursier.
 

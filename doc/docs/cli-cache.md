@@ -1,4 +1,7 @@
-# Cache
+---
+title: Cache on the command-line
+sidebar_label: Cache
+---
 
 From the CLI, one can interact directly with the cache with `cs get`. One can also
 adjust some cache parameters, that should apply to all applications using coursier.
@@ -12,7 +15,7 @@ $ cs get https://repo1.maven.org/maven2/org/scala-lang/scala-library/2.13.16/sca
 ```
 
 For URLs whose content might change, pass `--changing`, to check for updates if the last
-check is older than the [TTL](features-cache.md#ttl):
+check is older than the [TTL](cache.md#ttl):
 ```text
 $ cs get https://repo1.maven.org/maven2/org/scala-lang/scala-library/maven-metadata.xml --changing
 ~/.cache/coursier/v1/https/repo1.maven.org/maven2/org/scala-lang/scala-library/maven-metadata.xml
@@ -34,7 +37,8 @@ Adjust the TTL with `COURSIER_TTL`:
 $ export COURSIER_TTL="1 hour"
 ```
 
-The value of `COURSIER_TTL` is parsed with `scala.concurrent.duration.Duration`.
+The value of `COURSIER_TTL` is parsed with `scala.concurrent.duration.Duration`. See
+[the TTL page](ttl.md) for more details.
 
 ### HTTP debugging
 

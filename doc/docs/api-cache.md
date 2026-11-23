@@ -1,4 +1,7 @@
-# Cache
+---
+title: Cache API
+sidebar_label: Cache
+---
 
 ## Example
 

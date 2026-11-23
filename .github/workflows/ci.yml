@@ -309,7 +309,6 @@ jobs:
     runs-on: ubuntu-latest
     name: Website check
     env:
-      MKDOCS_TASKS: "{docs.mdoc,docs.mkdocsBuild}"
       DOCUSAURUS_TASKS: "doc.generate"
     steps:
     - name: Don't convert LF to CRLF during checkout
@@ -324,32 +323,16 @@ jobs:
     - uses: coursier/cache-action@ee0650f98295f27a505e4bfd284c9bfaa913a465 # v9.0.1
       with:
         disableFallback: true
-    # On pull requests, each website is only built if the changes affect it
-    - name: Snapshot the inputs of the websites at the base commit
-      run: .github/scripts/selective-tests.sh prepare "$MKDOCS_TASKS" "$DOCUSAURUS_TASKS"
+    # On pull requests, the website is only built if the changes affect it
+    - name: Snapshot the inputs of the website at the base commit
+      run: .github/scripts/selective-tests.sh prepare "$DOCUSAURUS_TASKS"
       shell: bash
       env:
-        # scripts run by the steps below, which Mill doesn't track
-        SELECTIVE_TESTS_EXTRA_PATHS: .github/scripts/setup-mkdocs.sh
         SELECTIVE_TESTS_BASE_SHA: ${{ github.event.pull_request.base.sha }}
-    - name: Check whether the changes affect the mkdocs website
-      id: mkdocs
-      run: .github/scripts/selective-tests.sh affected "$MKDOCS_TASKS"
-      shell: bash
     - name: Check whether the changes affect the Docusaurus website
       id: docusaurus
       run: .github/scripts/selective-tests.sh affected "$DOCUSAURUS_TASKS"
       shell: bash
-    - run: ./mill -i docs.mdoc
-      if: steps.mkdocs.outputs.affected != 'false'
-      env:
-        COURSIER_JNI: force
-    - run: .github/scripts/setup-mkdocs.sh
-      if: steps.mkdocs.outputs.affected != 'false'
-    - run: ./mill -i docs.mkdocsBuild
-      if: steps.mkdocs.outputs.affected != 'false'
-      env:
-        COURSIER_JNI: force
     - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
       if: steps.docusaurus.outputs.affected != 'false'
       with:
@@ -1243,7 +1226,6 @@ jobs:
       - uses: coursier/cache-action@ee0650f98295f27a505e4bfd284c9bfaa913a465 # v9.0.1
         with:
           disableFallback: true
-      - run: .github/scripts/setup-mkdocs.sh
       # GH_TOKEN only for the step pushing the website, not for the ones building it
       - run: npm install --ignore-scripts
       - run: ./mill -i buildWebsite
@@ -1271,7 +1253,6 @@ jobs:
       - uses: coursier/cache-action@ee0650f98295f27a505e4bfd284c9bfaa913a465 # v9.0.1
         with:
           disableFallback: true
-      - run: .github/scripts/setup-mkdocs.sh
       # GH_TOKEN only for the step pushing the website, not for the ones building it
       - run: npm install --ignore-scripts
       - run: ./mill -i buildWebsite

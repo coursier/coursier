@@ -1,4 +1,7 @@
-# coursier sub-projects
+---
+title: coursier sub-projects
+sidebar_label: Sub-projects
+---
 
 Some coursier core APIs have been moved to external repositories, so that these
 can be used in a standalone fashion.

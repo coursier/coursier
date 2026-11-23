@@ -13,7 +13,18 @@
       "cli-resolve",
       "cli-fetch",
       "cli-complete",
-      "cli-appdescriptors"
+      "cli-appdescriptors",
+      "cli-dependency",
+      "cli-cache",
+      "cli-archive-cache"
+    ],
+    "Features": [
+      "cache",
+      "ttl",
+      "features-archive-cache",
+      "features-jvm",
+      "features-bom",
+      "features-gradle-modules"
     ],
     "Motivation": [
       "overview-motivations",
@@ -25,12 +36,15 @@
     ],
     "API": [
       "api",
+      "api-dependency",
+      "api-cache",
+      "api-archive-cache",
       "api-low-level",
-      "api-scala-js"
+      "api-scala-js",
+      "api-projects",
+      "java-api"
     ],
     "Other": [
-      "cache",
-      "ttl",
       "other-retries",
       "other-repositories",
       "other-mirrors",
@@ -45,6 +59,12 @@
     "Development": [
       "dev-contributing",
       "dev-website"
+    ],
+    "About": [
+      "about-community",
+      "about-funding",
+      "about-contact",
+      "about-security"
     ]
   }
 }

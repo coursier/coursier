@@ -1,4 +1,6 @@
-# Security
+---
+title: Security
+---
 
 ## Dependency verification
 

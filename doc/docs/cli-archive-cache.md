@@ -1,4 +1,7 @@
-# Archive cache
+---
+title: Archive cache on the command-line
+sidebar_label: Archive cache
+---
 
 From the CLI, one can interact directly with the archive cache with `cs get --archive`. One can also
 adjust some archive cache parameters, that should apply to all applications using the coursier archive
