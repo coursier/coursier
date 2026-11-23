@@ -372,9 +372,15 @@ object `execve-test` extends CoursierJavaModule with coursierbuild.Launchers.CsJ
   }
 
   def nativeImageGraalVmJvmId = Versions.graalVmJvmId
-  def nativeImageClassPath    = runClasspath()
-  def nativeImageMainClass    = mainClass().getOrElse(sys.error("No main class"))
-  def nativeImageName         = "execve-test"
+  // Without JNA, which the GraalVM substitutions of exec replace, to check that native images
+  // build without it (users may keep it off their native image class path, as it embeds native
+  // libraries). GraalVM still loads the classes the substitutions target, so these mustn't
+  // reference JNA types in their signatures.
+  def nativeImageClassPath = Task {
+    runClasspath().filter(!_.path.last.startsWith("jna-"))
+  }
+  def nativeImageMainClass = mainClass().getOrElse(sys.error("No main class"))
+  def nativeImageName      = "execve-test"
   def nativeImageOptions = Task {
     Seq("--no-fallback") ++ super.nativeImageOptions()
   }
