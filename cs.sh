@@ -71,19 +71,37 @@ if [ ! -f "$CACHE_DEST" ]; then
   mv "$TMP_DEST" "$CACHE_DEST"
 fi
 
-if [ ! -f "$CS_BIN_PATH" ]; then
+extract_launcher() {
   if [ "$IS_WINDOWS" == true ]; then
     # PowerShell is always available on Windows, unlike unzip, that MinGit doesn't ship.
-    # The archive only contains cs-x86_64-pc-win32.exe, which is what CS_BIN_PATH points at.
-    # Not Expand-Archive: when run from PowerShell 7, Windows PowerShell inherits its
-    # PSModulePath, loads PowerShell 7's Archive module, and that one fails on .NET Framework
-    # ("Cannot find an overload for "ExtractToDirectory" and the argument count: "3"").
-    CS_ARCHIVE="$CACHE_DEST" CS_ARCHIVE_DEST="$(dirname "$CACHE_DEST")" \
+    # The archive only contains cs-x86_64-pc-win32.exe, whose name matches CS_BIN_PATH.
+    # This calls .NET rather than Expand-Archive: when run from PowerShell 7, Windows PowerShell
+    # inherits its PSModulePath, and loads the Archive module of PowerShell 7, which relies on .NET
+    # methods that Windows PowerShell lacks (and still exits with code 0 when they fail).
+    CS_ARCHIVE="$CACHE_DEST" CS_ARCHIVE_DEST="$EXTRACT_DIR" \
       powershell -NoProfile -NonInteractive -Command \
-      'Add-Type -AssemblyName System.IO.Compression.FileSystem; [System.IO.Compression.ZipFile]::ExtractToDirectory($env:CS_ARCHIVE, $env:CS_ARCHIVE_DEST)'
+      '$ErrorActionPreference = [System.Management.Automation.ActionPreference]::Stop; Add-Type -AssemblyName System.IO.Compression.FileSystem; [System.IO.Compression.ZipFile]::ExtractToDirectory($env:CS_ARCHIVE, $env:CS_ARCHIVE_DEST)'
   else
-    gunzip -k "$CACHE_DEST"
+    gunzip -c "$CACHE_DEST" > "$EXTRACTED_BIN"
   fi
+}
+
+if [ ! -f "$CS_BIN_PATH" ]; then
+  # Extract in a temporary directory, so that CS_BIN_PATH never points at a partially extracted
+  # launcher, and check that the launcher is actually there afterwards, rather than trusting
+  # the exit code of the extraction command only
+  EXTRACT_DIR="$CACHE_DEST.tmp-extract"
+  EXTRACTED_BIN="$EXTRACT_DIR/$(basename "$CS_BIN_PATH")"
+  rm -rf "$EXTRACT_DIR"
+  mkdir -p "$EXTRACT_DIR"
+  if ! extract_launcher || [ ! -s "$EXTRACTED_BIN" ]; then
+    # The archive might be corrupted, remove it so that the next run downloads it again
+    rm -rf "$EXTRACT_DIR" "$CACHE_DEST"
+    echo "Error: could not extract the cs launcher from $CS_URL" 1>&2
+    exit 1
+  fi
+  mv "$EXTRACTED_BIN" "$CS_BIN_PATH"
+  rm -rf "$EXTRACT_DIR"
 fi
 
 if [ "$IS_WINDOWS" != true ]; then
