@@ -170,7 +170,19 @@ if [ ! -s "${MILL}" ] || [ "$MILL_TEST_DRY_RUN_LAUNCHER_SCRIPT" = "1" ] ; then
 
   echo "Downloading mill ${MILL_VERSION} from ${MILL_DOWNLOAD_URL} ..." 1>&2
   # retry: a transient 404/5xx from Maven Central would otherwise fail the whole CI job
-  curl -f -L --retry 5 --retry-all-errors --retry-delay 2 -o "${MILL_TEMP_DOWNLOAD_FILE}" "${MILL_DOWNLOAD_URL}"
+  if ! curl -f -L --retry 5 --retry-all-errors --retry-delay 2 -o "${MILL_TEMP_DOWNLOAD_FILE}" "${MILL_DOWNLOAD_URL}" ; then
+    # repo1 sometimes answers 404 for a while for files that are there, try the Google mirror
+    case "${MILL_DOWNLOAD_URL}" in
+      https://repo1.maven.org/maven2/*)
+        MILL_DOWNLOAD_URL="https://maven-central.storage-download.googleapis.com/maven2/${MILL_DOWNLOAD_URL#https://repo1.maven.org/maven2/}"
+        echo "Downloading mill ${MILL_VERSION} from ${MILL_DOWNLOAD_URL} ..." 1>&2
+        curl -f -L --retry 5 --retry-all-errors --retry-delay 2 -o "${MILL_TEMP_DOWNLOAD_FILE}" "${MILL_DOWNLOAD_URL}"
+        ;;
+      *)
+        exit 1
+        ;;
+    esac
+  fi
 
   chmod +x "${MILL_TEMP_DOWNLOAD_FILE}"
 
