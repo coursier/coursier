@@ -75,9 +75,12 @@ if [ ! -f "$CS_BIN_PATH" ]; then
   if [ "$IS_WINDOWS" == true ]; then
     # PowerShell is always available on Windows, unlike unzip, that MinGit doesn't ship.
     # The archive only contains cs-x86_64-pc-win32.exe, which is what CS_BIN_PATH points at.
+    # Not Expand-Archive: when run from PowerShell 7, Windows PowerShell inherits its
+    # PSModulePath, loads PowerShell 7's Archive module, and that one fails on .NET Framework
+    # ("Cannot find an overload for "ExtractToDirectory" and the argument count: "3"").
     CS_ARCHIVE="$CACHE_DEST" CS_ARCHIVE_DEST="$(dirname "$CACHE_DEST")" \
       powershell -NoProfile -NonInteractive -Command \
-      'Expand-Archive -LiteralPath $env:CS_ARCHIVE -DestinationPath $env:CS_ARCHIVE_DEST -Force'
+      'Add-Type -AssemblyName System.IO.Compression.FileSystem; [System.IO.Compression.ZipFile]::ExtractToDirectory($env:CS_ARCHIVE, $env:CS_ARCHIVE_DEST)'
   else
     gunzip -k "$CACHE_DEST"
   fi
