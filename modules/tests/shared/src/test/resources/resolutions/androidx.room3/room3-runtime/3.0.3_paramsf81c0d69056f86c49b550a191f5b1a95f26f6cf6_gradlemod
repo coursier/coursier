@@ -1,0 +1,16 @@
+androidx.room3:room3-runtime:3.0.3:{ org.gradle.category=library, org.gradle.usage=runtime, org.jetbrains.kotlin.platform.type=jvm }
+androidx.room3:room3-runtime-jvm:3.0.3:{ org.gradle.category=library, org.gradle.usage=runtime, org.jetbrains.kotlin.platform.type=jvm }
+androidx.annotation:annotation:1.9.1:{ org.gradle.category=library, org.gradle.usage=runtime, org.jetbrains.kotlin.platform.type=jvm }
+androidx.collection:collection:1.5.0:{ org.gradle.category=library, org.gradle.usage=runtime, org.jetbrains.kotlin.platform.type=jvm }
+androidx.room3:room3-common:3.0.3:{ org.gradle.category=library, org.gradle.usage=runtime, org.jetbrains.kotlin.platform.type=jvm }
+androidx.sqlite:sqlite:2.7.1:{ org.gradle.category=library, org.gradle.usage=runtime, org.jetbrains.kotlin.platform.type=jvm }
+androidx.sqlite:sqlite-async:2.7.1:{ org.gradle.category=library, org.gradle.usage=runtime, org.jetbrains.kotlin.platform.type=jvm }
+org.jetbrains.kotlin:kotlin-stdlib:2.1.20:{ org.gradle.category=library, org.gradle.usage=runtime, org.jetbrains.kotlin.platform.type=jvm }
+org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0:{ org.gradle.category=library, org.gradle.usage=runtime, org.jetbrains.kotlin.platform.type=jvm }
+androidx.annotation:annotation-jvm:1.9.1:{ org.gradle.category=library, org.gradle.usage=runtime, org.jetbrains.kotlin.platform.type=jvm }
+androidx.collection:collection-jvm:1.5.0:{ org.gradle.category=library, org.gradle.usage=runtime, org.jetbrains.kotlin.platform.type=jvm }
+androidx.room3:room3-common-jvm:3.0.3:{ org.gradle.category=library, org.gradle.usage=runtime, org.jetbrains.kotlin.platform.type=jvm }
+androidx.sqlite:sqlite-jvm:2.7.1:{ org.gradle.category=library, org.gradle.usage=runtime, org.jetbrains.kotlin.platform.type=jvm }
+androidx.sqlite:sqlite-async-jvm:2.7.1:{ org.gradle.category=library, org.gradle.usage=runtime, org.jetbrains.kotlin.platform.type=jvm }
+org.jetbrains:annotations:23.0.0:runtime
+org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.9.0:{ org.gradle.category=library, org.gradle.usage=runtime, org.jetbrains.kotlin.platform.type=jvm }

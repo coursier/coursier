@@ -221,20 +221,26 @@ object GradleModule {
     implicit lazy val codec: JsonValueCodec[StringOrInt] =
       new JsonValueCodec[StringOrInt] {
 
-        val stringCodec: JsonValueCodec[String] = JsonCodecMaker.make
-        val intCodec: JsonValueCodec[Int]       = JsonCodecMaker.make
+        val stringCodec: JsonValueCodec[String]   = JsonCodecMaker.make
+        val intCodec: JsonValueCodec[Int]         = JsonCodecMaker.make
+        val booleanCodec: JsonValueCodec[Boolean] = JsonCodecMaker.make
 
         def nullValue = StringOrInt(stringCodec.nullValue)
         def encodeValue(x: StringOrInt, out: JsonWriter) =
           stringCodec.encodeValue(x.value, out)
+        // Gradle module attribute values can be strings, integers, or booleans
+        // (e.g. "androidx.kmp.hasCInterop": false in androidx modules)
         def decodeValue(in: JsonReader, default: StringOrInt) = {
           in.setMark()
-          val isString =
-            try in.isNextToken('"')
+          val nextToken =
+            try in.nextToken()
             finally in.rollbackToMark()
           StringOrInt {
-            if (isString) stringCodec.decodeValue(in, default.value)
-            else intCodec.decodeValue(in, 0).toString
+            nextToken match {
+              case '"'       => stringCodec.decodeValue(in, default.value)
+              case 't' | 'f' => booleanCodec.decodeValue(in, false).toString
+              case _         => intCodec.decodeValue(in, 0).toString
+            }
           }
         }
       }
