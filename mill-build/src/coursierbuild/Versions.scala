@@ -17,7 +17,7 @@ object Versions {
   def jsoniterScalaScala2 = "2.13.8" // scala-steward:off
 
   def sbtCoursier  = "2.1.13"
-  def graalVmJvmId = "liberica-nik:25.0.5.0.3"
+  def graalVmJvmId = "liberica-nik:25.0.5.1"
   def scalaCli     = "1.19.0"
   def csDocker     = "2.1.27"
   def csQemu       = "9.2.1-1"
