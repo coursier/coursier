@@ -7,6 +7,7 @@ object Versions {
   def jsoniterScala  = "2.43.0"
   def junit          = "4.13.2"
   def nativeTerminal = "0.1.0"
+  def osLib          = "0.11.10"
   def scalaz         = "7.2.36"
 
   // The Scala 2 modules still support Java 8, and jsoniter-scala 2.13.9 and later target Java 11,

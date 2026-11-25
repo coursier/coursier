@@ -114,6 +114,7 @@ object cache extends Module {
   object `jvm-native` extends SharedScalaSources
   object jvm          extends Cross[CacheJvm](ScalaVersions.all)
   object js           extends CacheJs
+  object native       extends CacheNative
 }
 object `archive-cache` extends Cross[ArchiveCache](ScalaVersions.allButScala212)
 object `benchmark` extends ScalaModule with JmhModule {
@@ -584,6 +585,31 @@ trait CacheJvm extends CacheJvmBase with DataClassModule with Scala212SnapshotOn
         customLoaderCp().map(_.path.toString)
           .mkString(File.pathSeparator)
     )
+  }
+}
+trait CacheNative extends Cache with CsScalaNativeModule with Scala3DataClassModule {
+  def sources = Task {
+    super.sources() ++ cache.shared.sources() ++ cache.shared.sourcesScala3() ++
+      cache.`jvm-native`.sources() ++ cache.`jvm-native`.sourcesScala3()
+  }
+  def moduleDeps = Seq(
+    util.native
+  )
+  def mvnDeps = super.mvnDeps() ++ Seq(
+    Deps.scalaJavaTime,
+    Deps.scalaJavaLocales,
+    Deps.scalaNativeCrypto
+  )
+  // OpenSSL backs both java.security.MessageDigest (via scala-native-crypto) and the TLS side of
+  // the Scala Native HTTP client
+  def nativeLinkingOptions = super.nativeLinkingOptions() ++ Seq("-lssl", "-lcrypto")
+  object test extends SbtTests with ScalaNativeTests with CsNativeTests with CsScalaNativeTests {
+    def mvnDeps = Task {
+      super[CsNativeTests].mvnDeps() ++ super[ScalaNativeTests].mvnDeps()
+    }
+    def sources = Task {
+      super.sources() ++ cache.`jvm-native`.testSources()
+    }
   }
 }
 trait CacheJs extends Cache with CsScalaJsModule with Scala3DataClassModule {

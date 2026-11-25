@@ -48,17 +48,22 @@ object Deps {
   def mdoc           = mvn"org.scalameta::mdoc:2.9.3"
   def nativeTerminal =
     mvn"io.github.alexarchambault.native-terminal:native-terminal:${Versions.nativeTerminal}"
-  def noCrcZis       = mvn"io.github.alexarchambault.scala-cli.tmp:zip-input-stream:0.1.1"
-  def osLib          = mvn"com.lihaoyi::os-lib:0.11.10"
+  def noCrcZis = mvn"io.github.alexarchambault.scala-cli.tmp:zip-input-stream:0.1.1"
+  def osLib    = mvn"com.lihaoyi::os-lib:${Versions.osLib}"
+  // the platform one, for Scala Native (osLib above is the JVM one)
+  def osLibCross     = mvn"com.lihaoyi::os-lib::${Versions.osLib}"
   def plexusArchiver = mvn"org.codehaus.plexus:plexus-archiver:4.16.0"
   // plexus-archiver needs its loggers
   def plexusContainerDefault = mvn"org.codehaus.plexus:plexus-container-default:2.1.1"
     .exclude("junit" -> "junit")
-  def plexusUtils      = mvn"org.codehaus.plexus:plexus-utils:4.2.0"
-  def pprint           = mvn"com.lihaoyi::pprint::0.9.6"
-  def proguard         = mvn"com.guardsquare:proguard-base:7.10.0"
-  def pythonNativeLibs = mvn"ai.kien::python-native-libs:0.2.5"
-  def scalaAsync       = mvn"org.scala-lang.modules::scala-async::1.0.1"
+  def plexusUtils       = mvn"org.codehaus.plexus:plexus-utils:4.2.0"
+  def pprint            = mvn"com.lihaoyi::pprint::0.9.6"
+  def proguard          = mvn"com.guardsquare:proguard-base:7.10.0"
+  def pythonNativeLibs  = mvn"ai.kien::python-native-libs:0.2.5"
+  def scalaAsync        = mvn"org.scala-lang.modules::scala-async::1.0.1"
+  def scalaJavaLocales  = mvn"io.github.cquiroz::scala-java-locales::1.5.4"
+  def scalaJavaTime     = mvn"io.github.cquiroz::scala-java-time::2.6.0"
+  def scalaNativeCrypto = mvn"com.github.lolgab::scala-native-crypto::0.3.0"
   def scalaCliConfig(sv: String) =
     if (sv.startsWith("2.12"))
       mvn"org.virtuslab.scala-cli::config:1.1.3"
