@@ -1,13 +1,14 @@
 package coursier.cache
 
 import java.io._
-import java.net.{URI, URLConnection}
+import java.net.URI
 import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Path}
 import java.util.concurrent.{ConcurrentHashMap, ExecutorService}
 import java.util.zip.{GZIPOutputStream, ZipEntry, ZipInputStream, ZipOutputStream}
 
 import coursier.cache.internal.MockCacheEscape
+import coursier.cache.net.URLConnection
 import coursier.paths.Util
 import coursier.util.{Artifact, EitherT, Sync, WebPage}
 import coursier.util.Monad.ops._
@@ -25,7 +26,7 @@ import scala.util.{Failure, Success, Try}
   S: Sync[F],
   dummyArtifact: Artifact => Boolean = _ => false,
   @since
-    proxy: Option[java.net.Proxy] = None,
+    proxy: Option[coursier.cache.net.Proxy] = None,
   @since
     // FIXME Needs to be a sub-directory of base
     baseChangingOpt: Option[Path] = None,

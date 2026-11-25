@@ -1,7 +1,7 @@
 package coursier.cache.internal
 
 import java.io.{ByteArrayOutputStream, InputStream, OutputStream}
-import java.nio.file.{Files, LinkOption, Path, StandardOpenOption}
+import java.nio.file.{Files, LinkOption, Path, StandardCopyOption, StandardOpenOption}
 
 import coursier.paths.Util
 
@@ -29,6 +29,16 @@ object FileUtil {
     try os.write(content)
     finally os.close()
   }
+
+  /** Moves `from` onto `to` atomically, replacing `to` if it is already there.
+    *
+    * `ATOMIC_MOVE` on its own already replaces an existing target on the JVM. Scala Native's
+    * `Files.move` throws `FileAlreadyExistsException` instead unless `REPLACE_EXISTING` is passed
+    * too, and passing both changes nothing on the JVM - it ignores every other option when
+    * `ATOMIC_MOVE` is set.
+    */
+  def moveAtomically(from: Path, to: Path): Path =
+    Files.move(from, to, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING)
 
   // Won't be necessary anymore with Java 9
   // (https://docs.oracle.com/javase/9/docs/api/java/io/InputStream.html#readAllBytes--,

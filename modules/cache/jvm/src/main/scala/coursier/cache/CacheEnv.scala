@@ -1,6 +1,6 @@
 package coursier.cache
 
-import coursier.credentials.{Credentials, DirectCredentials, FileCredentials, Password}
+import coursier.credentials.{Credentials, FileCredentials}
 import coursier.parse.{CachePolicyParser, CredentialsParser}
 import coursier.util.{EnvEntry, EnvValues}
 
@@ -8,7 +8,6 @@ import java.io.File
 import java.net.URI
 import java.nio.file.{Path, Paths}
 
-import scala.cli.config.{ConfigDb, Keys}
 import scala.concurrent.duration.{Duration, DurationInt, FiniteDuration}
 import scala.util.{Failure, Success, Try}
 
@@ -18,7 +17,7 @@ import scala.util.{Failure, Success, Try}
   * The computed values then have to be passed manually to `coursier.Resolve`, `coursier.Fetch`,
   * `FileCache`, etc.
   */
-object CacheEnv {
+object CacheEnv extends PlatformCacheEnv {
 
   /** Env var and Java prop names for the main cache location */
   val cache = EnvEntry("COURSIER_CACHE", "coursier.cache")
@@ -159,27 +158,6 @@ object CacheEnv {
     val configCredentials = configPaths.flatMap(credentialsFromConfig)
 
     configCredentials ++ legacyCredentials
-  }
-
-  def credentialsFromConfig(configPath: Path): Seq[Credentials] = {
-    val configDb = ConfigDb.open(configPath).fold(e => throw new Exception(e), identity)
-    configDb.get(Keys.repositoryCredentials).fold(
-      e => throw new Exception(e),
-      _.getOrElse(Nil).map { c =>
-        DirectCredentials(
-          c.host,
-          c.user.map(_.get().value),
-          c.password.map(p => Password(p.get().value)),
-          c.realm,
-          c.optional.getOrElse(DirectCredentials.defaultOptional),
-          c.matchHost.getOrElse(DirectCredentials.defaultMatchHost),
-          // not sure about the default value here
-          c.httpsOnly.getOrElse(DirectCredentials.defaultHttpsOnly),
-          // not sure either about this one
-          c.passOnRedirect.getOrElse(DirectCredentials.defaultPassOnRedirect)
-        )
-      }
-    )
   }
 
   /** Computes the default Scala config file location from the passed env var and Java property */

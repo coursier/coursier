@@ -1,8 +1,6 @@
 package coursier.cache
 
-import java.net.{Proxy, URLConnection}
-import javax.net.ssl.{HostnameVerifier, SSLSocketFactory}
-
+import coursier.cache.net.{HostnameVerifier, Proxy, SSLSocketFactory, URLConnection}
 import coursier.core.Authentication
 import coursier.credentials.DirectCredentials
 import dataclass.{data, since}

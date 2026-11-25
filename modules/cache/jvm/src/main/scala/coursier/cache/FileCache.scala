@@ -15,7 +15,6 @@ import java.security.MessageDigest
 import java.time.Clock
 import java.util.Locale
 import java.util.concurrent.ExecutorService
-import javax.net.ssl.{HostnameVerifier, SSLSocketFactory}
 
 import coursier.cache.internal.{
   ArchiveIntegrity,
@@ -23,8 +22,10 @@ import coursier.cache.internal.{
   DownloadResult,
   FileCacheHelpers,
   FileUtil,
+  PlatformRemoteCache,
   Retry
 }
+import coursier.cache.net.{HostnameVerifier, SSLSocketFactory}
 import coursier.credentials.{Credentials, DirectCredentials, FileCredentials}
 import coursier.paths.CachePath
 import coursier.util.{Artifact, EitherT, Sync, Task, WebPage}
@@ -504,7 +505,8 @@ import scala.util.control.NonFatal
     remoteCacheSubstitute match {
       case Some(remoteCache) =>
         ensureLoggerIsInitialized[ArtifactError].flatMap { _ =>
-          remoteCache.fileWithChecks(artifact, integrityCheck, expectedChecksum)(remoteCache.sync)
+          // RemoteCache.substituteFor gives the remote cache the same Sync as this one
+          remoteCache.fileWithChecks(artifact, integrityCheck, expectedChecksum)(S)
         }
       case None =>
         fileWith(
@@ -700,8 +702,8 @@ import scala.util.control.NonFatal
     *
     * See [[RemoteCache.substituteFor]] for the settings that [[RemoteCache]] gets from this cache.
     */
-  private[cache] lazy val remoteCacheSubstitute: Option[RemoteCache[F]] =
-    if (allowCacheSubstitution) RemoteCache.substituteFor(this, Cache.default)
+  private[cache] lazy val remoteCacheSubstitute: Option[Cache[F]] =
+    if (allowCacheSubstitution) PlatformRemoteCache.substituteFor(this)
     else None
 
   lazy val ec = ExecutionContext.fromExecutorService(pool)

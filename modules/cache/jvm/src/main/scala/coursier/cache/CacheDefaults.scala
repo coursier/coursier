@@ -7,11 +7,10 @@ import coursier.credentials.Credentials
 import coursier.paths.CachePath
 import coursier.util.Sync
 
-import scala.cli.config.Secret
 import scala.concurrent.duration.{Duration, DurationInt, FiniteDuration}
 import scala.util.Try
 
-object CacheDefaults {
+object CacheDefaults extends PlatformCacheDefaults {
 
   lazy val location: File =
     CacheEnv.defaultCacheLocation(CacheEnv.cache.read()).toFile
@@ -26,16 +25,6 @@ object CacheDefaults {
 
   lazy val cacheServerAddress: Option[String] =
     CacheEnv.defaultServerAddress(CacheEnv.server.read())
-  lazy val cacheServerBasicAuth: Option[Secret[String]] = {
-    val userValues     = CacheEnv.serverUser.read()
-    val passwordValues = CacheEnv.serverPassword.read()
-    val userOpt        = userValues.prop.orElse(userValues.env)
-    val passwordOpt    = passwordValues.prop.orElse(passwordValues.env)
-    if (userOpt.isEmpty && passwordOpt.isEmpty)
-      None
-    else
-      Some(Secret((userOpt.toSeq ++ passwordOpt.toSeq).mkString(":")))
-  }
 
   @deprecated(
     "Legacy cache location support was dropped, this method does nothing.",

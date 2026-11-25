@@ -1,19 +1,25 @@
 package coursier.cache.internal
 
 import java.io.{Serializable => _, _}
-import java.net.{HttpURLConnection, URLConnection, MalformedURLException}
+import java.net.MalformedURLException
 import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets.UTF_8
-import java.nio.file.{AccessDeniedException, Files, StandardCopyOption}
+import java.nio.file.{AccessDeniedException, Files}
 import java.time.{Clock, Duration => JDuration, Instant}
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import java.util.concurrent.TimeUnit.{MILLISECONDS, SECONDS}
 import java.util.concurrent.ExecutorService
 import java.util.zip.GZIPInputStream
-import javax.net.ssl.{HostnameVerifier, SSLSocketFactory}
 
 import coursier.cache._
+import coursier.cache.net.{
+  HostnameVerifier,
+  HttpURLConnection,
+  SSLException,
+  SSLSocketFactory,
+  URLConnection
+}
 import coursier.core.Authentication
 import coursier.credentials.DirectCredentials
 import coursier.paths.{CachePath, Util}
@@ -485,11 +491,11 @@ import scala.util.control.NonFatal
                     ".length"
                   )
                   Files.write(tmpLen, lenBytes)
-                  try Files.move(tmpLen, lenFile, StandardCopyOption.ATOMIC_MOVE)
-                  catch {
-                    case _: java.nio.file.AtomicMoveNotSupportedException =>
+                  try FileUtil.moveAtomically(tmpLen, lenFile)
+                  catch PlatformFileUtil.atomicMoveNotSupported.andThen { _ =>
                       Files.move(tmpLen, lenFile)
-                  }
+                      ()
+                    }
                 }
                 FileUtil.newOutputStreamNoFollow(tmp.toPath, append = partialDownload)
               }
@@ -519,12 +525,12 @@ import scala.util.control.NonFatal
             for (lastModified <- lastModifiedOpt)
               tmpDest.setLastModified(lastModified)
             Util.createDirectories(dest.toPath.getParent)
-            Files.move(tmpDest.toPath, dest.toPath, StandardCopyOption.ATOMIC_MOVE)
+            FileUtil.moveAtomically(tmpDest.toPath, dest.toPath)
           }
 
           CacheLocks.withStructureLock(location) {
             Util.createDirectories(file.toPath.getParent)
-            Files.move(tmp.toPath, file.toPath, StandardCopyOption.ATOMIC_MOVE)
+            FileUtil.moveAtomically(tmp.toPath, file.toPath)
           }
 
           for (lastModified <- lastModifiedOpt)
@@ -1194,7 +1200,7 @@ object Downloader {
         case _: ArtifactError.RetryableHttpError =>
           throttleOutcome(hostThrottle, url)
         case _: AccessDeniedException if Properties.isWin => Retry.Failed(None)
-        case _: javax.net.ssl.SSLException                => Retry.Failed(None)
+        case _: SSLException                              => Retry.Failed(None)
         // a DNS lookup failure, which is transient often enough to be worth another attempt
         case _: java.net.UnknownHostException => Retry.Failed(None)
         case _: java.net.SocketException      => Retry.Failed(None)
