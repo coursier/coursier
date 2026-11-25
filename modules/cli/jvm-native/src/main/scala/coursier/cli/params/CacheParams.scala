@@ -5,7 +5,6 @@ import java.util.concurrent.ExecutorService
 
 import coursier.cache._
 import coursier.credentials.Credentials
-import coursier.internal.InMemoryCache
 import coursier.util.{Sync, Task}
 
 import scala.concurrent.duration.Duration
@@ -24,7 +23,7 @@ final case class CacheParams(
   userAgent: Option[String] = None,
   userAgentComments: Seq[String] = Nil,
   rejectNonAuthoritativeResponses: Boolean = false
-) {
+) extends PlatformCacheParams {
 
   def withCacheLocation(cacheLocation: java.io.File): CacheParams =
     copy(cacheLocation = cacheLocation)
@@ -96,33 +95,8 @@ final case class CacheParams(
           c = c.copy(credentials = Nil)
         c = c.addCredentials(credentials*)
         c
-      case rc: RemoteCache[Task] =>
-        rc.copy(
-          location = cacheLocation,
-          logger = logger,
-          pool = pool,
-          fileFallback = Some(basicCustomizations(Cache.defaultLocalCache)),
-          cachePolicies = cachePolicies,
-          ttl = overrideTtl.orElse(ttl)
-        )
-      // .withLocalArtifactsShouldBeCached(cacheLocalArtifacts)
       case other =>
-        // FIXME Warn users if they customize that aren't going to be used
-        other
+        customizeOtherCache(other, pool, logger, overrideTtl, basicCustomizations)
     }
-  }
-
-  def cache(
-    pool: ExecutorService,
-    logger: CacheLogger,
-    inMemoryCache: Boolean
-  ): Cache[Task] = {
-
-    val c = cache(pool, logger)
-
-    if (inMemoryCache)
-      InMemoryCache(c, Task.sync)
-    else
-      c
   }
 }

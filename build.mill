@@ -397,6 +397,7 @@ object install extends Install
 object docker extends Cross[Docker](Seq(ScalaVersions.scala3))
 
 object cli extends Cli {
+  object `jvm-native` extends SharedScalaSources
   object test extends SbtTests with CsTests with CsResourcesTests with JvmCiTests {
     def testDataDir             = tests.shared.testDataDir
     def testHandmadeMetadataDir = tests.handmadeMetadata
@@ -1186,6 +1187,9 @@ trait Cli extends CsModule
     with CoursierPublishModule with Launchers {
   def jvmRelease   = scala3LatestJvmRelease
   def scalaVersion = ScalaVersions.scala3Cli
+  def sources = Task {
+    super.sources() ++ cli.`jvm-native`.sources()
+  }
   def moduleDeps = super.moduleDeps ++ Seq(
     coursier.jvm(ScalaVersions.scala3),
     install,

@@ -1,7 +1,6 @@
 package coursier.cli.get
 
 import caseapp.core.RemainingArgs
-import coursier.cache.ArchiveCache
 import coursier.cli.CoursierCommand
 import coursier.core.Authentication
 import coursier.util.{Artifact, Sync, Task}
@@ -9,7 +8,8 @@ import coursier.util.{Artifact, Sync, Task}
 import scala.concurrent.ExecutionContext
 
 object Get extends CoursierCommand[GetOptions] {
-  override def hidden: Boolean = true
+  // one low-level command among many on the JVM, the only one on Scala Native
+  override def hidden: Boolean = PlatformGet.hiddenCommand
   def run(options: GetOptions, args: RemainingArgs): Unit = {
 
     val params = GetParams(options).toEither match {
@@ -23,8 +23,7 @@ object Get extends CoursierCommand[GetOptions] {
     val pool  = Sync.fixedThreadPool(params.cache.parallel)
     val cache = params.cache.cache(pool, params.output.logger())
 
-    val archiveCache = ArchiveCache.create[Task](params.archiveCacheLocation)
-      .copy(cache = cache)
+    val fetchArchive = PlatformGet.archiveFetcher(params.archiveCacheLocation, cache)
 
     val artifacts = args.all.map { rawUrl =>
       var artifact = Artifact.fromUrl(rawUrl)
@@ -55,7 +54,7 @@ object Get extends CoursierCommand[GetOptions] {
       artifacts.map { artifact =>
         val isArchive = params.archiveOpt.getOrElse(artifact.url.contains("!"))
         if (isArchive)
-          archiveCache.get(artifact)
+          fetchArchive(artifact)
         else
           cache.file(artifact).run
       }

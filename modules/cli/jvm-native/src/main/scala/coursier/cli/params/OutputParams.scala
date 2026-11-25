@@ -4,9 +4,7 @@ import caseapp.Tag
 import cats.data.{Validated, ValidatedNel}
 import cats.implicits._
 import coursier.cache.CacheLogger
-import coursier.cache.loggers.RefreshLogger
 import coursier.cli.options.OutputOptions
-import coursier.cache.loggers.FileTypeRefreshDisplay
 
 final case class OutputParams(
   verbosity: Int,
@@ -16,27 +14,11 @@ final case class OutputParams(
 ) {
   def logger(): CacheLogger =
     logger(byFileType = false)
-  def logger(byFileType: Boolean): CacheLogger = {
-
-    val loggerFallbackMode =
-      !progressBars && RefreshLogger.defaultFallbackMode
-
+  def logger(byFileType: Boolean): CacheLogger =
     if (verbosity >= -1)
-      RefreshLogger.create(
-        System.err,
-        if (byFileType)
-          FileTypeRefreshDisplay.create(keepOnScreen = false)
-        else
-          RefreshLogger.defaultDisplay(
-            loggerFallbackMode,
-            quiet = verbosity == -1 || Option(System.getenv("CI")).nonEmpty
-          ),
-        logChanging = logChanging,
-        logPickedVersions = logPickedVersions
-      )
+      PlatformOutputParams.logger(this, byFileType)
     else
       CacheLogger.nop
-  }
 }
 
 object OutputParams {
