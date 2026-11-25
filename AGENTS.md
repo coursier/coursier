@@ -8,7 +8,7 @@ Prefer minimal, local, reversible changes and follow existing patterns.
 - Build tool: Mill (`./mill`) with config in `build.mill`.
 - Languages: Scala (JVM + Scala.js), some Java, docs tooling.
 - Test framework: uTest (`utest.runner.Framework`).
-- Active cross Scala versions: `2.13.18`, `3.9.0`. `2.12.21` only for the modules sbt-coursier depends on (util, core, cache, coursier) and the modules testing them, see `ScalaVersions` in `mill-build`.
+- Active cross Scala versions: `2.13.18`, `3.9.0`. `2.12.21` only for the modules sbt-coursier depends on (util, core, cache, coursier) and the modules testing them, see `ScalaVersions` in `mill-build`. Scala.js and Scala Native modules are Scala 3 only and not cross-built (no bracket in their task paths): `scala3` (3.3.x), but `cli.native` follows the JVM CLI (`scala3Cli`).
 - Formatting: Scalafmt (`.scalafmt.conf`, max column 100).
 - CI source of truth: `.github/workflows/ci.yml`.
 
@@ -26,6 +26,8 @@ Prefer minimal, local, reversible changes and follow existing patterns.
   - `./mill __.compile`
 - Compile Scala.js modules (CI pattern):
   - `./mill -j1 __.js.__.compile`
+- Link the Scala Native CLI launcher (`cs get` only, needs clang and OpenSSL):
+  - `./mill cli.native.nativeLink`
 - Publish all modules locally (heavy):
   - `./mill -i __.publishLocal`
 - Build the website (pages under `doc/docs`, processed by mdoc, then Docusaurus):
@@ -72,6 +74,10 @@ Prefer minimal, local, reversible changes and follow existing patterns.
   - `./mill -i '__[2.12.21].__:CrossJvmCiTests.testForked'`
 - Run all Scala.js tests:
   - `./mill -i -j1 '__:CsScalaJsTests.testForked'`
+- Run all Scala Native tests:
+  - `./mill -i '__:CsScalaNativeTests.testForked'`
+  - (needs clang and OpenSSL; not to be confused with `nativeTests`, which runs the GraalVM
+    native-image CLI tests; the CI doesn't run these yet)
 - Run docker-focused tests:
   - `./mill -i 'docker[_].test.testForked'`
 - Only run the tests affected by local changes (like the CI does for pull requests):
@@ -110,6 +116,12 @@ Notes:
   - `npm install --ignore-scripts`
   - `./mill -i -j1 __.js.__.compile`
   - `./mill -i -j1 '__:CsScalaJsTests.testForked'`
+- Scala Native code changes:
+  - `./mill -i cache.native.compile`
+  - `./mill -i '__:CsScalaNativeTests.testForked'`
+  - `./mill -i cli.native.nativeLink` then run the binary it writes to `nativeLink.dest`
+  - compiling is not a portability gate on either Scala.js or Scala Native: `java.*` references are
+    typechecked against the JVM's bootclasspath and only fail in the linker. Always link or run.
 - Docs changes:
   - `./mill -i doc.generate --npm-install --yarn-run-build`
 - Public API / compatibility-sensitive changes:
@@ -163,7 +175,10 @@ Notes:
 
 ### Testing approach
 
-- Add tests close to the changed module (`modules/*/(jvm|js|shared)/src/test`).
+- Add tests close to the changed module (`modules/*/(jvm|js|native|shared|jvm-native)/src/test`).
+- `shared` is JVM + JS + Native, `jvm-native` is JVM + Native. Tests in `cache/jvm-native` run on
+  both, against `RawHttpServer` rather than http4s.
+- `modules/cli/jvm-native` is shared by the JVM CLI and `cli.native`, both on `scala3Cli`.
 - Prefer targeted unit tests before broad suites.
 - Keep tests deterministic and CI-friendly.
 - Reuse existing test infra helpers for network/repository scenarios.
