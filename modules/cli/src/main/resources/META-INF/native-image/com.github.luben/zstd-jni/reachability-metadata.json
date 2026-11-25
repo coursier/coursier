@@ -1,7 +1,7 @@
 {
   "comment": [
     "TEMPORARY: remove this file once zstd-jni ships this metadata itself (it does not as of",
-    "1.5.7-26). Same approach as ../../dev.dirs/reachability-metadata.json.",
+    "1.6.0-1). Same approach as ../../dev.dirs/reachability-metadata.json.",
     "",
     "Since 1.5.7-17, zstd-jni is a multi-release JAR: on JDK 22+, its stream classes",
     "(ZstdInputStreamNoFinalizer, ZstdOutputStreamNoFinalizer, the buffer streams) come from",
@@ -332,7 +332,6 @@
           "size_t",
           "void*",
           "void*",
-          "int",
           "int"
         ]
       },
