@@ -1,9 +1,5 @@
 package coursier.cache
 
-import cats.data.{Kleisli, OptionT}
-import cats.effect.IO
-import org.http4s.{HttpRoutes, Request}
-
 import java.util.concurrent.ConcurrentLinkedQueue
 
 import scala.jdk.CollectionConverters._
@@ -14,7 +10,7 @@ import scala.jdk.CollectionConverters._
   * up in the cache: a resume that silently re-downloads from scratch, or a lock that lets two
   * downloads through, both give byte-perfect content.
   */
-final class RequestLog {
+final class RequestLog extends PlatformRequestLog {
 
   import RequestLog.Entry
 
@@ -24,13 +20,6 @@ final class RequestLog {
     buf.add(Entry(method, path, headers))
     ()
   }
-
-  def record(req: Request[IO]): Unit =
-    record(
-      req.method.name,
-      req.uri.path.renderString,
-      req.headers.headers.map(h => (h.name.toString, h.value)).toMap
-    )
 
   def entries: List[Entry] = buf.iterator().asScala.toList
 
@@ -46,7 +35,7 @@ final class RequestLog {
     entries.mkString("RequestLog(", ", ", ")")
 }
 
-object RequestLog {
+object RequestLog extends PlatformRequestLogCompanion {
 
   final case class Entry(method: String, path: String, headers: Map[String, String]) {
     def header(name: String): Option[String] =
@@ -57,11 +46,4 @@ object RequestLog {
     def ifModifiedSince: Option[String] = header("If-Modified-Since")
   }
 
-  /** Wraps `routes` so that every request reaching the server is recorded, including the ones no
-    * route matches.
-    */
-  def logRequests(log: RequestLog)(routes: HttpRoutes[IO]): HttpRoutes[IO] =
-    Kleisli { (req: Request[IO]) =>
-      OptionT(IO(log.record(req)).flatMap(_ => routes.run(req).value))
-    }
 }

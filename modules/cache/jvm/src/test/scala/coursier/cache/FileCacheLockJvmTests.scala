@@ -12,13 +12,20 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 import scala.concurrent.duration.DurationInt
 
-/** Behavioural baseline for the locking done around downloads.
+/** The locking tests that cannot run on Scala Native.
   *
-  * These assert on the requests the server receives, not only on the resulting content: a lock
-  * released too early, or not taken at all, yields the very same (correct) content, just downloaded
-  * several times.
+  * Both simulate a *second process* holding a lock, from a second thread of this one. That only
+  * works on the JVM, which keeps its own registry of the `FileLock`s it has handed out and reports
+  * an overlapping request as an `OverlappingFileLockException`. Scala Native's `FileChannel.lock`
+  * is a plain `fcntl` record lock, and those are owned by the process - a second request from the
+  * same process is granted, so a competing holder in-process is invisible.
+  *
+  * That is a limitation of the *simulation*, not of the cache: within one process, concurrent
+  * fetches of one URL are serialised by `CacheLocks.withUrlLock`, and `CachePath.withStructureLock`
+  * takes an intra-process monitor before it goes near the lock file. Both of those are covered by
+  * [[FileCacheLockTests]], which does run on Native.
   */
-object FileCacheLockTests extends TestSuite {
+object FileCacheLockJvmTests extends TestSuite {
 
   private val content = "the artifact content, long enough to be downloaded in several chunks " * 32
 
@@ -28,8 +35,6 @@ object FileCacheLockTests extends TestSuite {
   )(
     entry: RequestLog.Entry
   ): RawHttpServer.Response =
-    // HEAD is served too: the watcher path does HEAD requests to get the length of the download it
-    // is watching, and a 404 there would hand it a bogus length
     if (found && entry.path == "/dir/foo.jar") {
       if (slowDownload && entry.method == "GET")
         Thread.sleep(500L)
@@ -54,15 +59,6 @@ object FileCacheLockTests extends TestSuite {
     t.setDaemon(true)
     t
   }
-
-  private def lockOrPartFiles(cacheDir: os.Path): Seq[os.SubPath] =
-    if (os.exists(cacheDir))
-      os.walk(cacheDir)
-        .filter(os.isFile)
-        .filter(p => p.last.endsWith(".lock") || p.last.endsWith(".part"))
-        .map(_.relativeTo(cacheDir).asSubPath)
-    else
-      Nil
 
   /** Records whether the logger was told about a download it was only watching. */
   private final class WatchingLogger extends CacheLogger {
@@ -91,41 +87,6 @@ object FileCacheLockTests extends TestSuite {
   }
 
   val tests = Tests {
-
-    test("only one download for concurrent requests on the same artifact") {
-
-      val log = new RequestLog
-
-      RawHttpServer.withServer(log)(handler(slowDownload = true)) { baseUrl =>
-        withTmpDir { dir =>
-
-          val cache    = testCache(dir / "cache")
-          val artifact = Artifact(s"$baseUrl/dir/foo.jar")
-
-          val results = runConcurrently(4) { _ =>
-            cache.file(artifact).run.unsafeRun(wrapExceptions = true)(cache.ec)
-          }
-
-          for (res <- results) {
-            val f = res.fold(e => throw new Exception(e.describe), identity)
-            assert(os.read(os.Path(f)) == content)
-          }
-
-          // the point of the test: the other callers waited for the download in flight rather
-          // than starting one of their own
-          val getCount = log.count("GET")
-          if (getCount != 1)
-            sys.error(s"Expected exactly one GET, got $getCount (requests: ${log.methodsAndPaths})")
-
-          // … and that they did wait, rather than find the artifact already in cache: the HEAD
-          // requests are the ones the watcher path does to report the progress of the download
-          // it is watching
-          assert(log.count("HEAD") > 0)
-
-          assert(lockOrPartFiles(dir / "cache").isEmpty)
-        }
-      }
-    }
 
     test("watch a download owned by someone else") {
 
@@ -191,30 +152,6 @@ object FileCacheLockTests extends TestSuite {
           assert(log.count("HEAD") > 0)
           assert(logger.watched.get())
         }
-      }
-    }
-
-    test("lock file cleanup") {
-
-      def check(found: Boolean, expectSuccess: Boolean): Unit =
-        RawHttpServer.withServer(new RequestLog)(handler(found = found)) { baseUrl =>
-          withTmpDir { dir =>
-            val cache = testCache(dir / "cache")
-            val res = cache
-              .file(Artifact(s"$baseUrl/dir/foo.jar")).run
-              .unsafeRun(wrapExceptions = true)(cache.ec)
-            assert(res.isRight == expectSuccess)
-            val leftOver = lockOrPartFiles(dir / "cache")
-            if (leftOver.nonEmpty)
-              sys.error(s"Left over lock / part files: $leftOver")
-          }
-        }
-
-      test("after a successful download") {
-        check(found = true, expectSuccess = true)
-      }
-      test("after a failed download") {
-        check(found = false, expectSuccess = false)
       }
     }
 

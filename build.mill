@@ -110,9 +110,10 @@ object core extends Module {
   object js     extends CoreJs
 }
 object cache extends Module {
-  object shared extends SharedScalaSources
-  object jvm    extends Cross[CacheJvm](ScalaVersions.all)
-  object js     extends CacheJs
+  object shared       extends SharedScalaSources
+  object `jvm-native` extends SharedScalaSources
+  object jvm          extends Cross[CacheJvm](ScalaVersions.all)
+  object js           extends CacheJs
 }
 object `archive-cache` extends Cross[ArchiveCache](ScalaVersions.allButScala212)
 object `benchmark` extends ScalaModule with JmhModule {
@@ -527,9 +528,10 @@ trait CoreJs extends Core with CsScalaJsModule with Scala3DataClassModule {
 trait CacheJvm extends CacheJvmBase with DataClassModule with Scala212SnapshotOnlyPublishModule {
   def sources = Task {
     val epochSources =
-      if (scalaVersion().startsWith("3.")) cache.shared.sourcesScala3()
-      else cache.shared.sourcesScala2()
-    super.sources() ++ cache.shared.sources() ++ epochSources
+      if (scalaVersion().startsWith("3."))
+        cache.shared.sourcesScala3() ++ cache.`jvm-native`.sourcesScala3()
+      else cache.shared.sourcesScala2() ++ cache.`jvm-native`.sourcesScala2()
+    super.sources() ++ cache.shared.sources() ++ cache.`jvm-native`.sources() ++ epochSources
   }
   def moduleDeps = Seq(
     paths,
@@ -550,7 +552,7 @@ trait CacheJvm extends CacheJvmBase with DataClassModule with Scala212SnapshotOn
   }
   object test extends CacheJvmBaseTests with CsTests with CrossJvmCiTests with LatestScala3Module {
     def sources = Task {
-      super.sources() ++ cache.shared.testSources()
+      super.sources() ++ cache.shared.testSources() ++ cache.`jvm-native`.testSources()
     }
     // cache-server is only built for Scala 3, so its tests only run there
     private def withCacheServer      = crossValue.startsWith("3.")
