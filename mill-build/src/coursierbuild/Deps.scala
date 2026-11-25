@@ -45,7 +45,7 @@ object Deps {
   def jsoup          = mvn"org.jsoup:jsoup:1.24.1"
   def logbackClassic = mvn"ch.qos.logback:logback-classic:1.6.8"
   def macroParadise  = mvn"org.scalamacros:::paradise:2.1.1"
-  def mdoc           = mvn"org.scalameta::mdoc:2.9.2"
+  def mdoc           = mvn"org.scalameta::mdoc:2.9.3"
   def nativeTerminal =
     mvn"io.github.alexarchambault.native-terminal:native-terminal:${Versions.nativeTerminal}"
   def noCrcZis       = mvn"io.github.alexarchambault.scala-cli.tmp:zip-input-stream:0.1.1"
