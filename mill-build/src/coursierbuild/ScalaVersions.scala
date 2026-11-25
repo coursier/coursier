@@ -23,10 +23,12 @@ object ScalaVersions {
   // coursier - see scripts/publish-local-coursier.sh in coursier/sbt-coursier), and by the
   // modules testing them. Everything else is built for Scala 2.13 and 3 only.
   //
-  // Only the JVM modules are cross-built at all: the Scala.js ones are built with `scala3`
-  // alone, and aren't cross-built (see CsScalaJsModule).
+  // Only the JVM modules are cross-built at all: the Scala.js and Scala Native ones are built
+  // with `scala3` alone, and aren't cross-built (see CsScalaJsModule and CsScalaNativeModule).
   val all            = Seq(scala213, scala212, scala3)
   val allButScala212 = Seq(scala213, scala3)
 
   def scalaJs = "1.23.0"
+
+  def scalaNative = "0.5.12"
 }

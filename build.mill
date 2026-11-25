@@ -37,6 +37,7 @@ import mill.*
 import mill.api.*
 import mill.scalalib._
 import mill.scalajslib._
+import mill.scalanativelib._
 import mill.util.Tasks
 
 import java.io.File
@@ -97,9 +98,11 @@ trait Scala3DataClassModule extends DataClassModuleBase with CsScala3Module {
 }
 
 object util extends Module {
-  object shared extends SharedScalaSources
-  object jvm    extends Cross[UtilJvm](ScalaVersions.all)
-  object js     extends UtilJs
+  object shared       extends SharedScalaSources
+  object `jvm-native` extends SharedScalaSources
+  object jvm          extends Cross[UtilJvm](ScalaVersions.all)
+  object js           extends UtilJs
+  object native       extends UtilNative
 }
 object core extends Module {
   object shared extends SharedScalaSources
@@ -448,7 +451,7 @@ trait TestCompatJs extends TestCompat with CsScalaJsModule with LatestScala3Modu
 
 trait UtilJvm extends UtilJvmBase with DataClassModule with Scala212SnapshotOnlyPublishModule {
   def sources = Task {
-    super.sources() ++ util.shared.sources()
+    super.sources() ++ util.shared.sources() ++ util.`jvm-native`.sources()
   }
   def mvnDeps = super.mvnDeps() ++ Seq(
     Deps.jsoup
@@ -457,6 +460,11 @@ trait UtilJvm extends UtilJvmBase with DataClassModule with Scala212SnapshotOnly
 trait UtilJs extends CsScalaJsModule with Util with Scala3DataClassModule {
   def sources = Task {
     super.sources() ++ util.shared.sources()
+  }
+}
+trait UtilNative extends CsScalaNativeModule with Util with Scala3DataClassModule {
+  def sources = Task {
+    super.sources() ++ util.shared.sources() ++ util.`jvm-native`.sources()
   }
 }
 
