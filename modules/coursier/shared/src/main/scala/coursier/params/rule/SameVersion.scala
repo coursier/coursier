@@ -64,7 +64,7 @@ import scala.collection.compat._
       .forceVersions0
       .view
       .filterKeys(conflict.modules)
-      .filter(_._2 != selectedVersion)
+      .filter(_._2 != VersionConstraint.fromVersion(selectedVersion))
       .iterator
       .toMap
 
