@@ -398,6 +398,7 @@ object docker extends Cross[Docker](Seq(ScalaVersions.scala3))
 
 object cli extends Cli {
   object `jvm-native` extends SharedScalaSources
+  object native       extends CliNative
   object test extends SbtTests with CsTests with CsResourcesTests with JvmCiTests {
     def testDataDir             = tests.shared.testDataDir
     def testHandmadeMetadataDir = tests.handmadeMetadata
@@ -1375,6 +1376,31 @@ trait Cli extends CsModule
     )
     ()
   }
+}
+
+/** The Scala Native launcher, holding the `get` command and nothing else.
+  *
+  * Everything it needs has to be reachable from `cache` alone - `core` and `coursier` are not
+  * cross-compiled to Native, so no command that resolves is available here, and `archive-cache` is
+  * JVM-only, so `get` goes through `FileCache` only.
+  *
+  * Built with the Scala version of the JVM CLI, that it shares `modules/cli/jvm-native` with.
+  */
+trait CliNative extends CsModule with CsScalaNativeModule {
+  def scalaVersion = ScalaVersions.scala3Cli
+  def sources = Task {
+    super.sources() ++ cli.`jvm-native`.sources()
+  }
+  def moduleDeps = Seq(
+    cache.native
+  )
+  def mvnDeps = super.mvnDeps() ++ Seq(
+    Deps.caseAppCross,
+    Deps.catsCoreCross
+  )
+  // same as cache.native - nativeLinkingOptions aren't inherited from module dependencies
+  def nativeLinkingOptions = super.nativeLinkingOptions() ++ Seq("-lssl", "-lcrypto")
+  def mainClass            = Some("coursier.cli.Coursier")
 }
 
 // not published: only hosts the tests of the CLI launchers
