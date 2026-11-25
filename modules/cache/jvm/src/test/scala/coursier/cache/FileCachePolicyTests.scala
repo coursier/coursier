@@ -1,14 +1,10 @@
 package coursier.cache
 
-import cats.effect.IO
-import coursier.cache.RequestLog.logRequests
 import coursier.cache.TestUtil._
 import coursier.util.{Artifact, Task}
-import org.http4s.dsl.io._
-import org.http4s.headers.`Last-Modified`
-import org.http4s.{HttpDate, HttpRoutes}
 import utest._
 
+import java.nio.charset.StandardCharsets.UTF_8
 import java.time.{Clock, LocalDateTime, ZoneOffset}
 import java.util.concurrent.TimeUnit
 
@@ -43,27 +39,35 @@ object FileCachePolicyTests extends TestSuite {
   // time of the file in cache, which coursier sets from the Last-Modified header of the response it
   // was downloaded from - so they are independent from the clock the cache runs with.
   private val lastModified1 =
-    HttpDate.unsafeFromInstant(LocalDateTime.of(2023, 1, 1, 0, 0, 0).toInstant(zone))
+    httpDate(LocalDateTime.of(2023, 1, 1, 0, 0, 0).toInstant(zone))
   private val lastModified2 =
-    HttpDate.unsafeFromInstant(LocalDateTime.of(2023, 6, 1, 0, 0, 0).toInstant(zone))
+    httpDate(LocalDateTime.of(2023, 6, 1, 0, 0, 0).toInstant(zone))
 
   private val firstContent  = "first pom"
   private val secondContent = "second pom"
 
   private final class ServerState {
-    @volatile var content: String        = firstContent
-    @volatile var lastModified: HttpDate = lastModified1
-    @volatile var found: Boolean         = true
+    @volatile var content: String      = firstContent
+    @volatile var lastModified: String = lastModified1
+    @volatile var found: Boolean       = true
   }
 
-  private def routes(state: ServerState): HttpRoutes[IO] = {
-    def respond =
-      Ok(state.content).map(_.putHeaders(`Last-Modified`(state.lastModified)))
-    HttpRoutes.of[IO] {
-      case GET -> Root / "dir" / "foo.pom" if state.found  => respond
-      case HEAD -> Root / "dir" / "foo.pom" if state.found => respond
+  private def handler(state: ServerState)(
+    entry: RequestLog.Entry
+  ): RawHttpServer.Response =
+    if (state.found && entry.path == "/dir/foo.pom") {
+      val body = state.content.getBytes(UTF_8)
+      RawHttpServer.Response(
+        "HTTP/1.1 200 OK",
+        Seq(
+          "Content-Length" -> body.length.toString,
+          "Last-Modified"  -> state.lastModified
+        ),
+        body
+      )
     }
-  }
+    else
+      RawHttpServer.notFound
 
   /** State of the artifact in the cache when the policy under test runs. */
   private sealed abstract class Local extends Product with Serializable
@@ -119,10 +123,10 @@ object FileCachePolicyTests extends TestSuite {
     val log   = new RequestLog
     val state = new ServerState
 
-    withHttpServer(logRequests(log)(routes(state))) { serverUri =>
+    RawHttpServer.withServer(log)(handler(state)) { baseUrl =>
       withTmpDir { dir =>
 
-        val url = (serverUri / "dir" / "foo.pom").renderString
+        val url = s"$baseUrl/dir/foo.pom"
 
         val baseCache = FileCache[Task]((dir / "cache").toIO).copy(
           ttl = Some(ttl),

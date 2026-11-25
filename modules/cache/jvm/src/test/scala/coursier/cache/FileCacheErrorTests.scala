@@ -1,11 +1,7 @@
 package coursier.cache
 
-import cats.effect.IO
-import coursier.cache.RequestLog.logRequests
 import coursier.cache.TestUtil._
 import coursier.util.{Artifact, Task}
-import org.http4s.HttpRoutes
-import org.http4s.dsl.io._
 import utest._
 
 import java.io.File
@@ -45,15 +41,21 @@ object FileCacheErrorTests extends TestSuite {
 
     /** Whether `/dir/foo.jar` is on the server. `/dir/foo.pom` always is. */
     @volatile var found: Boolean = false
+
+    /** Whether the server hangs up on every request without answering. */
+    @volatile var dropConnections: Boolean = false
   }
 
-  private def routes(state: ServerState): HttpRoutes[IO] =
-    HttpRoutes.of[IO] {
-      case GET -> Root / "dir" / "foo.jar" if state.found  => Ok(jarContent)
-      case HEAD -> Root / "dir" / "foo.jar" if state.found => Ok(jarContent)
-      case GET -> Root / "dir" / "foo.pom"                 => Ok(pomContent)
-      case HEAD -> Root / "dir" / "foo.pom"                => Ok(pomContent)
-    }
+  private def handler(state: ServerState)(entry: RequestLog.Entry): RawHttpServer.Response =
+    if (state.dropConnections)
+      // RawHttpServer closes the connection, with no response, when the handler throws
+      throw new java.io.IOException("dropping the connection")
+    else
+      entry.path match {
+        case "/dir/foo.jar" if state.found => RawHttpServer.ok(jarContent)
+        case "/dir/foo.pom"                => RawHttpServer.ok(pomContent)
+        case _                             => RawHttpServer.notFound
+      }
 
   private final class Ctx(
     val state: ServerState,
@@ -104,7 +106,7 @@ object FileCacheErrorTests extends TestSuite {
   private def withSetup[T](f: Ctx => T): T = {
     val log   = new RequestLog
     val state = new ServerState
-    withHttpServer(logRequests(log)(routes(state))) { serverUri =>
+    RawHttpServer.withServer(log)(handler(state)) { baseUrl =>
       withTmpDir { dir =>
         val base = FileCache[Task]((dir / "cache").toIO).copy(
           checksums = Nil,
@@ -114,8 +116,8 @@ object FileCacheErrorTests extends TestSuite {
           state,
           log,
           base,
-          (serverUri / "dir" / "foo.jar").renderString,
-          (serverUri / "dir" / "foo.pom").renderString
+          s"$baseUrl/dir/foo.jar",
+          s"$baseUrl/dir/foo.pom"
         ))
       }
     }
@@ -323,34 +325,33 @@ object FileCacheErrorTests extends TestSuite {
             retry = 0
           )
 
-          val (jarUrl, pomUrl) =
-            withHttpServer(logRequests(log)(routes(state))) { serverUri =>
-              val ctx = new Ctx(
-                state,
-                log,
-                base,
-                (serverUri / "dir" / "foo.jar").renderString,
-                (serverUri / "dir" / "foo.pom").renderString
-              )
-              ctx.seedPom()
-              val artifact      = ctx.jar.copy(extra = Map("metadata" -> ctx.pom))
-              val (requests, _) = ctx.at(t0, CachePolicy.FetchMissing, artifact)
-              assert(requests == List("GET"))
-              assert(ctx.errorFile.exists())
-              (ctx.jarUrl, ctx.pomUrl)
-            }
+          RawHttpServer.withServer(log)(handler(state)) { baseUrl =>
+            val ctx = new Ctx(
+              state,
+              log,
+              base,
+              s"$baseUrl/dir/foo.jar",
+              s"$baseUrl/dir/foo.pom"
+            )
+            ctx.seedPom()
+            val artifact      = ctx.jar.copy(extra = Map("metadata" -> ctx.pom))
+            val (requests, _) = ctx.at(t0, CachePolicy.FetchMissing, artifact)
+            assert(requests == List("GET"))
+            assert(ctx.errorFile.exists())
 
-          // the server is gone now, so connecting to it fails with an IOException
-          val ctx      = new Ctx(state, log, base, jarUrl, pomUrl)
-          val artifact = ctx.jar.copy(extra = Map("metadata" -> ctx.pom))
+            // the server now hangs up on every request, so the download fails with an IOException.
+            // (Shutting the server down instead isn't reliable: tests running in parallel can bind
+            // its port again in the meantime, and answer with a 404.)
+            state.dropConnections = true
 
-          val (_, res) = ctx.at(hoursIn(1), CachePolicy.FetchMissing, artifact)
-          val nf       = assertNotFound(res)
-          assert(nf.permanent.contains(true))
-          // the download error is kept as the cause, rather than reported as the error
-          assert(Option(nf.getCause).exists(_.isInstanceOf[ArtifactError.DownloadError]))
-          // and the cached error survives the transient failure
-          assert(ctx.errorFile.exists())
+            val (_, res) = ctx.at(hoursIn(1), CachePolicy.FetchMissing, artifact)
+            val nf       = assertNotFound(res)
+            assert(nf.permanent.contains(true))
+            // the download error is kept as the cause, rather than reported as the error
+            assert(Option(nf.getCause).exists(_.isInstanceOf[ArtifactError.DownloadError]))
+            // and the cached error survives the transient failure
+            assert(ctx.errorFile.exists())
+          }
         }
       }
     }

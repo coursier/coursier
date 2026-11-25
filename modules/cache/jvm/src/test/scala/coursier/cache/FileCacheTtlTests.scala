@@ -1,12 +1,7 @@
 package coursier.cache
 
-import cats.effect.IO
-import coursier.cache.RequestLog.logRequests
 import coursier.cache.TestUtil._
 import coursier.util.{Artifact, Task}
-import org.http4s.dsl.io._
-import org.http4s.headers.`Last-Modified`
-import org.http4s.{HttpDate, HttpRoutes}
 import utest._
 
 import java.io.File
@@ -30,17 +25,15 @@ object FileCacheTtlTests extends TestSuite {
 
   private val oneDay = Duration(24L, java.util.concurrent.TimeUnit.HOURS)
 
-  private val lastModified1 =
-    HttpDate.unsafeFromInstant(LocalDateTime.of(2023, 1, 1, 0, 0, 0).toInstant(zone))
-  private val lastModified2 =
-    HttpDate.unsafeFromInstant(LocalDateTime.of(2023, 6, 1, 0, 0, 0).toInstant(zone))
+  private val lastModified1 = httpDate(LocalDateTime.of(2023, 1, 1, 0, 0, 0).toInstant(zone))
+  private val lastModified2 = httpDate(LocalDateTime.of(2023, 6, 1, 0, 0, 0).toInstant(zone))
 
   private val firstContent  = "first pom"
   private val secondContent = "second pom"
 
   private final class ServerState {
-    @volatile var content: String        = firstContent
-    @volatile var lastModified: HttpDate = lastModified1
+    @volatile var content: String      = firstContent
+    @volatile var lastModified: String = lastModified1
 
     /** Makes the server serve something newer than what is in cache. */
     def serveNewer(): Unit = {
@@ -49,14 +42,11 @@ object FileCacheTtlTests extends TestSuite {
     }
   }
 
-  private def routes(state: ServerState): HttpRoutes[IO] = {
-    def respond =
-      Ok(state.content).map(_.putHeaders(`Last-Modified`(state.lastModified)))
-    HttpRoutes.of[IO] {
-      case GET -> Root / "dir" / "foo.pom"  => respond
-      case HEAD -> Root / "dir" / "foo.pom" => respond
-    }
-  }
+  private def handler(state: ServerState)(entry: RequestLog.Entry): RawHttpServer.Response =
+    if (entry.path == "/dir/foo.pom")
+      RawHttpServer.ok(state.content, Seq("Last-Modified" -> state.lastModified))
+    else
+      RawHttpServer.notFound
 
   private final class Ctx(
     val state: ServerState,
@@ -109,13 +99,13 @@ object FileCacheTtlTests extends TestSuite {
   private def withSetup[T](ttl: Option[Duration])(f: Ctx => T): T = {
     val log   = new RequestLog
     val state = new ServerState
-    withHttpServer(logRequests(log)(routes(state))) { serverUri =>
+    RawHttpServer.withServer(log)(handler(state)) { baseUrl =>
       withTmpDir { dir =>
         val base = FileCache[Task]((dir / "cache").toIO).copy(
           checksums = Nil,
           ttl = ttl
         )
-        f(new Ctx(state, log, base, (serverUri / "dir" / "foo.pom").renderString))
+        f(new Ctx(state, log, base, s"$baseUrl/dir/foo.pom"))
       }
     }
   }

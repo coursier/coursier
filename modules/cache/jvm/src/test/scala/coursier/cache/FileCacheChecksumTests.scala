@@ -1,11 +1,7 @@
 package coursier.cache
 
-import cats.effect.IO
-import coursier.cache.RequestLog.logRequests
 import coursier.cache.TestUtil._
 import coursier.util.{Artifact, Task}
-import org.http4s.HttpRoutes
-import org.http4s.dsl.io._
 import utest._
 
 import java.io.File
@@ -62,15 +58,17 @@ object FileCacheChecksumTests extends TestSuite {
     }
   }
 
-  private def routes(state: ServerState): HttpRoutes[IO] =
-    HttpRoutes.of[IO] {
-      case GET -> Root / "dir" / "foo.jar" =>
+  private def handler(state: ServerState)(entry: RequestLog.Entry): RawHttpServer.Response =
+    entry.path match {
+      case "/dir/foo.jar" =>
         if (state.asHeader)
-          Ok(goodContent).map(_.putHeaders("X-Checksum-SHA1" -> state.nextSum()))
+          RawHttpServer.ok(goodContent, Seq("X-Checksum-SHA1" -> state.nextSum()))
         else
-          Ok(goodContent)
-      case GET -> Root / "dir" / "foo.jar.sha1" if state.sumFound =>
-        Ok(state.nextSum())
+          RawHttpServer.ok(goodContent)
+      case "/dir/foo.jar.sha1" if state.sumFound =>
+        RawHttpServer.ok(state.nextSum())
+      case _ =>
+        RawHttpServer.notFound
     }
 
   private final class Ctx(
@@ -112,14 +110,14 @@ object FileCacheChecksumTests extends TestSuite {
     val log    = new RequestLog
     val logger = new RecordingLogger
     val state  = new ServerState
-    withHttpServer(logRequests(log)(routes(state))) { serverUri =>
+    RawHttpServer.withServer(log)(handler(state)) { baseUrl =>
       withTmpDir { dir =>
         val cache = FileCache[Task]((dir / "cache").toIO).copy(
           checksums = Seq(Some("SHA-1")),
           cachePolicies = Seq(CachePolicy.FetchMissing),
           logger = logger
         )
-        f(new Ctx(state, log, logger, cache, (serverUri / "dir" / "foo.jar").renderString))
+        f(new Ctx(state, log, logger, cache, s"$baseUrl/dir/foo.jar"))
       }
     }
   }

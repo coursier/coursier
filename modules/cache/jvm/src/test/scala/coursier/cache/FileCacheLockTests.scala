@@ -1,12 +1,8 @@
 package coursier.cache
 
-import cats.effect.IO
-import coursier.cache.RequestLog.logRequests
 import coursier.cache.TestUtil._
 import coursier.paths.CachePath
 import coursier.util.{Artifact, Sync, Task}
-import org.http4s.HttpRoutes
-import org.http4s.dsl.io._
 import utest._
 
 import java.io.{File, FileOutputStream}
@@ -26,20 +22,21 @@ object FileCacheLockTests extends TestSuite {
 
   private val content = "the artifact content, long enough to be downloaded in several chunks " * 32
 
-  private def routes(
+  private def handler(
     slowDownload: Boolean = false,
     found: Boolean = true
-  ): HttpRoutes[IO] = {
+  )(
+    entry: RequestLog.Entry
+  ): RawHttpServer.Response =
     // HEAD is served too: the watcher path does HEAD requests to get the length of the download it
     // is watching, and a 404 there would hand it a bogus length
-    def get =
-      if (slowDownload) IO.sleep(500.millis).flatMap(_ => Ok(content))
-      else Ok(content)
-    HttpRoutes.of[IO] {
-      case GET -> Root / "dir" / "foo.jar" if found  => get
-      case HEAD -> Root / "dir" / "foo.jar" if found => Ok(content)
+    if (found && entry.path == "/dir/foo.jar") {
+      if (slowDownload && entry.method == "GET")
+        Thread.sleep(500L)
+      RawHttpServer.ok(content)
     }
-  }
+    else
+      RawHttpServer.notFound
 
   private def testCache(cacheDir: os.Path): FileCache[Task] =
     FileCache[Task](cacheDir.toIO).copy(
@@ -99,11 +96,11 @@ object FileCacheLockTests extends TestSuite {
 
       val log = new RequestLog
 
-      withHttpServer(logRequests(log)(routes(slowDownload = true))) { serverUri =>
+      RawHttpServer.withServer(log)(handler(slowDownload = true)) { baseUrl =>
         withTmpDir { dir =>
 
           val cache    = testCache(dir / "cache")
-          val artifact = Artifact((serverUri / "dir" / "foo.jar").renderString)
+          val artifact = Artifact(s"$baseUrl/dir/foo.jar")
 
           val results = runConcurrently(4) { _ =>
             cache.file(artifact).run.unsafeRun(wrapExceptions = true)(cache.ec)
@@ -139,11 +136,11 @@ object FileCacheLockTests extends TestSuite {
       val log    = new RequestLog
       val logger = new WatchingLogger
 
-      withHttpServer(logRequests(log)(routes())) { serverUri =>
+      RawHttpServer.withServer(log)(handler()) { baseUrl =>
         withTmpDir { dir =>
 
           val cache    = testCache(dir / "cache").copy(logger = logger)
-          val url      = (serverUri / "dir" / "foo.jar").renderString
+          val url      = s"$baseUrl/dir/foo.jar"
           val artifact = Artifact(url)
 
           val file = cache.localFile(url)
@@ -200,11 +197,11 @@ object FileCacheLockTests extends TestSuite {
     test("lock file cleanup") {
 
       def check(found: Boolean, expectSuccess: Boolean): Unit =
-        withHttpServer(routes(found = found)) { serverUri =>
+        RawHttpServer.withServer(new RequestLog)(handler(found = found)) { baseUrl =>
           withTmpDir { dir =>
             val cache = testCache(dir / "cache")
             val res = cache
-              .file(Artifact((serverUri / "dir" / "foo.jar").renderString)).run
+              .file(Artifact(s"$baseUrl/dir/foo.jar")).run
               .unsafeRun(wrapExceptions = true)(cache.ec)
             assert(res.isRight == expectSuccess)
             val leftOver = lockOrPartFiles(dir / "cache")

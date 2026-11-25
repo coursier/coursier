@@ -3,7 +3,7 @@ package coursier.cache
 import java.io.{BufferedReader, InputStreamReader, OutputStream}
 import java.net.{InetAddress, ServerSocket, Socket}
 import java.nio.charset.StandardCharsets.US_ASCII
-import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.{AtomicBoolean, AtomicInteger}
 
 /** A minimal HTTP server for the tests http4s cannot serve.
   *
@@ -13,7 +13,8 @@ import java.util.concurrent.atomic.AtomicBoolean
   * accepted without complaint by `HttpURLConnection`, and never produces the partial download the
   * resume path needs.
   *
-  * Requests are handled one at a time, on a single thread, which is all these tests need.
+  * Each connection is served on its own thread, so tests can have several fetches in flight - which
+  * the locking tests need, and which a handler that blocks (to hold a download open) relies on.
   */
 final class RawHttpServer(
   log: RequestLog,
@@ -27,11 +28,24 @@ final class RawHttpServer(
 
   def baseUrl: String = s"http://localhost:${server.getLocalPort}"
 
+  private val connectionCount = new AtomicInteger
+
   private val acceptThread = {
     val t = new Thread("raw-http-server") {
       override def run(): Unit =
         while (!closed.get())
-          try handle(server.accept())
+          try {
+            val socket = server.accept()
+            val worker = new Thread(s"raw-http-server-${connectionCount.incrementAndGet()}") {
+              override def run(): Unit =
+                try handle(socket)
+                catch {
+                  case _: Exception => // the client hung up, or we are shutting down
+                }
+            }
+            worker.setDaemon(true)
+            worker.start()
+          }
           catch {
             case _: Exception if closed.get() => // shutting down
           }
@@ -112,11 +126,23 @@ object RawHttpServer {
   )
 
   def ok(body: Array[Byte]): Response =
+    ok(body, Nil)
+
+  def ok(body: Array[Byte], headers: Seq[(String, String)]): Response =
     Response(
       "HTTP/1.1 200 OK",
-      Seq("Content-Length" -> body.length.toString),
+      ("Content-Length" -> body.length.toString) +: headers,
       body
     )
+
+  def ok(body: String): Response =
+    ok(body.getBytes(java.nio.charset.StandardCharsets.UTF_8))
+
+  def ok(body: String, headers: Seq[(String, String)]): Response =
+    ok(body.getBytes(java.nio.charset.StandardCharsets.UTF_8), headers)
+
+  def status(statusLine: String): Response =
+    Response(statusLine, Seq("Content-Length" -> "0"))
 
   /** Announces the full length, then hangs up early.
     *

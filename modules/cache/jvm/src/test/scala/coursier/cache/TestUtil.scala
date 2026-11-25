@@ -252,6 +252,25 @@ object TestUtil {
       res
   }
 
+  private val httpDays =
+    Array("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+  private val httpMonths =
+    Array("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+
+  /** An instant in the canonical HTTP-date form, for `Last-Modified` and friends.
+    *
+    * Spelled out rather than left to
+    * `DateTimeFormatter.ofPattern("EEE, dd MMM yyyy …", Locale.US)`, whose `EEE` and `MMM` come out
+    * empty on Scala Native: scala-java-locales ships only the ROOT locale, and pulling in one of
+    * its locale databases just for this is not worth it. See `scala-native-issues.md`.
+    */
+  def httpDate(instant: java.time.Instant): String = {
+    val dt = java.time.ZonedDateTime.ofInstant(instant, java.time.ZoneOffset.UTC)
+    f"${httpDays(dt.getDayOfWeek.getValue - 1)}, ${dt.getDayOfMonth}%02d " +
+      f"${httpMonths(dt.getMonthValue - 1)} ${dt.getYear}%04d " +
+      f"${dt.getHour}%02d:${dt.getMinute}%02d:${dt.getSecond}%02d GMT"
+  }
+
   def sha256(b: Array[Byte]): String =
     checksum(b, "SHA-256", 64)
   def sha1(b: Array[Byte]): String =

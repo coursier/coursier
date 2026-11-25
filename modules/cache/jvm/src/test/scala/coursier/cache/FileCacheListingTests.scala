@@ -1,11 +1,7 @@
 package coursier.cache
 
-import cats.effect.IO
-import coursier.cache.RequestLog.logRequests
 import coursier.cache.TestUtil._
 import coursier.util.{Artifact, Task}
-import org.http4s.HttpRoutes
-import org.http4s.dsl.io._
 import utest._
 
 import java.io.File
@@ -37,11 +33,9 @@ object FileCacheListingTests extends TestSuite {
   /** What `WebPage.listElements` keeps out of `page`: `../` is filtered out. */
   private val expectedElements = "bar.pom\nfoo.jar\nsub/"
 
-  private def routes: HttpRoutes[IO] =
-    HttpRoutes.of[IO] {
-      case GET -> Root / "dir" / ""  => Ok(page)
-      case HEAD -> Root / "dir" / "" => Ok(page)
-    }
+  private def handler(entry: RequestLog.Entry): RawHttpServer.Response =
+    if (entry.path == "/dir/") RawHttpServer.ok(page)
+    else RawHttpServer.notFound
 
   private def testCache(dir: os.Path): FileCache[Task] =
     FileCache[Task]((dir / "cache").toIO).copy(
@@ -78,11 +72,11 @@ object FileCacheListingTests extends TestSuite {
 
         val log = new RequestLog
 
-        withHttpServer(logRequests(log)(routes)) { serverUri =>
+        RawHttpServer.withServer(log)(handler) { baseUrl =>
           withTmpDir { dir =>
 
             val cache = testCache(dir)
-            val url   = (serverUri / "dir" / "").renderString
+            val url   = s"$baseUrl/dir/"
             assert(url.endsWith("/"))
 
             val res = fetch(cache, url).fold(e => sys.error(e), identity)
@@ -105,11 +99,11 @@ object FileCacheListingTests extends TestSuite {
 
         val log = new RequestLog
 
-        withHttpServer(logRequests(log)(routes)) { serverUri =>
+        RawHttpServer.withServer(log)(handler) { baseUrl =>
           withTmpDir { dir =>
 
             val cache = testCache(dir)
-            val url   = (serverUri / "dir" / "").renderString
+            val url   = s"$baseUrl/dir/"
 
             val res = fetch(cache, s"$url.links").fold(e => sys.error(e), identity)
             assert(res == expectedElements)
@@ -128,11 +122,11 @@ object FileCacheListingTests extends TestSuite {
 
         val log = new RequestLog
 
-        withHttpServer(logRequests(log)(routes)) { serverUri =>
+        RawHttpServer.withServer(log)(handler) { baseUrl =>
           withTmpDir { dir =>
 
             val cache = testCache(dir)
-            val url   = (serverUri / "dir" / "").renderString
+            val url   = s"$baseUrl/dir/"
 
             assert(fetch(cache, url).isRight)
 
