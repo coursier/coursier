@@ -173,6 +173,50 @@ object ResolveRulesTests extends TestSuite {
         }
       }
 
+      // Without forced versions, scala-kernel 0.2.2 pulls jackson-annotations 2.8.0, and
+      // jackson-core and jackson-databind 2.8.4, so the rule selects 2.8.4
+
+      test("forced selected version") {
+        async {
+
+          val params = ResolutionParams()
+            .withScalaVersion("2.12.7")
+            .addRule(
+              SameVersion(mod"com.fasterxml.jackson.core:jackson-*"),
+              RuleResolution.TryResolve
+            )
+            .addForceVersion0(mod"com.fasterxml.jackson.core:jackson-core" -> VersionConstraint(
+              "2.8.4"
+            ))
+
+          val res = await(resolveAlmond(params))
+
+          await(validateDependencies(res, params))
+        }
+      }
+
+      test("forced other version") {
+        async {
+
+          val rule = SameVersion(mod"com.fasterxml.jackson.core:jackson-*")
+          val params = ResolutionParams()
+            .withScalaVersion("2.12.7")
+            .addRule(rule, RuleResolution.TryResolve)
+            .addForceVersion0(
+              mod"com.fasterxml.jackson.core:jackson-annotations" -> VersionConstraint("2.8.0")
+            )
+
+          val ex = await(resolveAlmond(params).failed)
+
+          ex match {
+            case e: SameVersion.CantForceSameVersion =>
+              assert(e.rule == rule)
+            case _ =>
+              throw new Exception("Unexpected exception type", ex)
+          }
+        }
+      }
+
       // Calling the rule directly on hand-made resolutions
       test("tryResolve") {
 
