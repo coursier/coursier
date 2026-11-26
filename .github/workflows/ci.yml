@@ -145,7 +145,11 @@ jobs:
       shell: bash
       env:
         SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
-        COURSIER_JNI: force
+        # TODO Restore COURSIER_JNI: force here and in the other jobs once Mill uses a
+        # jni-utils release copying the DLL per class loader. With jni-utils 0.5.0, the Mill
+        # daemon and its meta-build class loaders all load csjniutils-0.5.0.dll, and with
+        # force, the ones after the first fail with "already loaded in another classloader".
+        # COURSIER_JNI: force
         SELECTIVE_TESTS_BASE_SHA: ${{ github.event.pull_request.base.sha }}
     - name: Run Docker tests
       id: docker-tests
@@ -155,7 +159,7 @@ jobs:
       shell: bash
       env:
         SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
-        COURSIER_JNI: force
+        # COURSIER_JNI: force
     - name: Retry Docker tests with a fresh VM
       id: docker-tests-retry
       if: steps.docker-tests.outcome == 'failure' && matrix.OS == 'macos-15-intel'
@@ -164,7 +168,7 @@ jobs:
       shell: bash
       env:
         SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
-        COURSIER_JNI: force
+        # COURSIER_JNI: force
     - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
       if: steps.docker-tests.outcome == 'failure'
       continue-on-error: true
@@ -182,7 +186,7 @@ jobs:
       shell: bash
       env:
         SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
-        COURSIER_JNI: force
+        # COURSIER_JNI: force
 
   # Runs the CLI tests against the coursier and coursier.jar launchers, built like the released
   # ones: from the published coursier-cli artifact and its POM (via a local repository here),
@@ -206,11 +210,11 @@ jobs:
     - name: Snapshot test inputs at the base commit
       run: .github/scripts/selective-tests.sh prepare "$JAR_LAUNCHER_TESTS"
       env:
-        COURSIER_JNI: force
+        # COURSIER_JNI: force
         SELECTIVE_TESTS_BASE_SHA: ${{ github.event.pull_request.base.sha }}
     - run: .github/scripts/selective-tests.sh run "$JAR_LAUNCHER_TESTS"
       env:
-        COURSIER_JNI: force
+        # COURSIER_JNI: force
 
   js-test:
     runs-on: ubuntu-latest
@@ -340,7 +344,7 @@ jobs:
     - run: ./mill -i doc.generate --npm-install --yarn-run-build
       if: steps.docusaurus.outputs.affected != 'false'
       env:
-        COURSIER_JNI: force
+        # COURSIER_JNI: force
 
   test-selective-tests-script:
     # The logic deciding which parts of this file matter to a job, in selective-tests.sh, is plain
