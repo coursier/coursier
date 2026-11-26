@@ -217,7 +217,8 @@ object ResolveRulesTests extends TestSuite {
         }
       }
 
-      // Calling the rule directly on hand-made resolutions
+      // Calling the rule directly on hand-made resolutions, to check forced versions whose
+      // resolution would require version listings missing from the test metadata
       test("tryResolve") {
 
         val roots = Seq(
@@ -300,8 +301,20 @@ object ResolveRulesTests extends TestSuite {
         test("selected version") {
           checkForced(tryResolve(library -> ("2.11.12", "2.11.12")))
         }
+        test("interval resolving to selected version") {
+          checkForced(tryResolve(library -> ("[2.11.12]", "2.11.12")))
+        }
+        test("latest resolving to selected version") {
+          checkForced(tryResolve(library -> ("latest.release", "2.11.12")))
+        }
+        test("interval containing selected version") {
+          checkForced(tryResolve(actors -> ("[2.11.0,2.12)", "2.11.0")))
+        }
         test("other version") {
           checkCantForce(tryResolve(actors -> ("2.11.0", "2.11.0")))
+        }
+        test("interval not containing selected version") {
+          checkCantForce(tryResolve(actors -> ("[2.11.0,2.11.12)", "2.11.0")))
         }
       }
     }

@@ -60,11 +60,21 @@ import scala.collection.compat._
 
     // add stuff to root dependencies instead of forcing versions?
 
+    // A forced version doesn't prevent forcing selectedVersion if it already resolves to it
+    // (whatever its shape: exact version, interval, latest.*), or if it's an interval
+    // containing it.
+    def acceptsSelectedVersion(module: Module, constraint: VersionConstraint): Boolean =
+      res.retainedVersions.get(module).contains(selectedVersion) || (
+        constraint.preferred.isEmpty &&
+        constraint.latest.isEmpty &&
+        constraint.interval.contains(selectedVersion)
+      )
+
     val cantForce = res
       .forceVersions0
       .view
       .filterKeys(conflict.modules)
-      .filter(_._2 != VersionConstraint.fromVersion(selectedVersion))
+      .filter { case (module, constraint) => !acceptsSelectedVersion(module, constraint) }
       .iterator
       .toMap
 
