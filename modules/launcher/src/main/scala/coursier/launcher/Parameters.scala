@@ -144,6 +144,9 @@ object Parameters {
     override def isNative: Boolean = true
   }
 
+  /** Scala Native launchers aren't supported anymore: generating one throws a
+    * [[ScalaNativeLauncherUnsupported]]. Use Scala CLI instead.
+    */
   @data(
     deprecatedSetters = true,
     deprecatedSettersMessage = "Use copy instead",

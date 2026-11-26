@@ -890,29 +890,25 @@ abstract class BootstrapTests extends TestSuite with LauncherOptions {
       }
     }
 
-    test("python native") {
-      // both false means native launcher, where we can't use 'cs bootstrap --native'
-      // (as it class loads a launcher-native module at runtime)
-      // Can't make this pass for now
-      // if (acceptsDOptions || acceptsJOptions)
-      //   pythonNativeTest()
-      "Disabled"
-    }
-    def pythonNativeTest(): Unit = {
-      TestUtil.withTempDir { tmpDir =>
-        os.proc(
+    test("scala native unsupported") {
+      TestUtil.withTempDir { tmpDir0 =>
+        val tmpDir = os.Path(tmpDir0, os.pwd)
+        val res = os.proc(
           launcher,
           "bootstrap",
           "-o",
-          "echo-scalapy-native",
-          "--python",
+          "native-echo",
           "--native",
-          "io.get-coursier:scalapy-echo_native0.4_2.13:1.0.7",
+          "--native-gc",
+          "immix",
+          "io.get-coursier:echo_native0.4_2.13:1.0.5",
           extraOptions
-        ).call(cwd = os.Path(tmpDir), stdin = os.Inherit, stdout = os.Inherit)
-
-        val res = os.proc("./echo-scalapy-native", "a", "b").call(cwd = os.Path(tmpDir))
-        assert(res.out.trim() == "a b")
+        ).call(cwd = tmpDir, check = false, mergeErrIntoOut = true)
+        val output = res.out.text()
+        assert(res.exitCode != 0)
+        assert(output.contains("Scala Native launchers isn't supported by coursier anymore"))
+        assert(output.contains("scala-cli"))
+        assert(!os.exists(tmpDir / "native-echo"))
       }
     }
 

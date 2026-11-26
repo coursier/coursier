@@ -13,7 +13,7 @@ object Generator extends Generator[Parameters] {
       case b: Parameters.Bootstrap   => BootstrapGenerator.generate(b, output)
       case n: Parameters.NativeImage => NativeImageGenerator.generate(n, output)
       case p: Parameters.Prebuilt    => PrebuiltGenerator.generate(p, output)
-      case s: Parameters.ScalaNative => ScalaNativeGenerator.generate(s, output)
+      case _: Parameters.ScalaNative => throw new ScalaNativeLauncherUnsupported
       case d: Parameters.DummyNative => DummyNativeGenerator.generate(d, output)
       case m: Parameters.ManifestJar => ManifestJarGenerator.generate(m, output)
     }

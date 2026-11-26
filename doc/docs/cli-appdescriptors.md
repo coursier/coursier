@@ -325,7 +325,7 @@ Specifies the type of launcher that should be built for this application. Can be
 - `bootstrap`: builds a bootstrap as built by the `bootstrap` command by default
 - `assembly`: builds an assembly (corresponds to the `--assembly` option of the `bootstrap` command)
 - `standalone`: builds a bootstrap embedding its JAR dependencies as resources (corresponds to the `--standalone` option of the `bootstrap` command - these JARs are similar to the ones [one-jar](http://one-jar.sourceforge.net) builds)
-- `scala-native`: builds a Scala Native application (requires the right [environment setup](https://scala-native.readthedocs.io/en/v0.3.9-docs/user/setup.html), and requires coursier to be started via its [JAR-based launcher](cli-installation.md#jar-based-launcher) for now)
+- `scala-native`: a Scala Native application, that can only be installed from a [prebuilt](#prebuilt) binary (coursier doesn't build Scala Native launchers anymore, use [Scala CLI](https://scala-cli.virtuslab.org) for that)
 - `graalvm-native-image`: builds a GraalVM native image
 - `prebuilt`: points to an existing prebuilt executable (requires the [`prebuilt`](#prebuilt) field to be set as well)
 

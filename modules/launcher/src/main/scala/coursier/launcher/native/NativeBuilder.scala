@@ -1,10 +1,14 @@
 package coursier.launcher.native
 
 import java.io.File
-import java.net.URLClassLoader
 
 import coursier.launcher.Parameters.ScalaNative
+import coursier.launcher.ScalaNativeLauncherUnsupported
 
+@deprecated(
+  "Generating Scala Native launchers isn't supported anymore, use Scala CLI instead",
+  "2.1.28"
+)
 trait NativeBuilder {
   def build(
     mainClass: String,
@@ -16,24 +20,17 @@ trait NativeBuilder {
   ): Unit
 }
 
+@deprecated(
+  "Generating Scala Native launchers isn't supported anymore, use Scala CLI instead",
+  "2.1.28"
+)
 object NativeBuilder {
 
   def load(
     fetch: Seq[String] => Seq[File],
     version: String,
     parentLoader: ClassLoader = Thread.currentThread().getContextClassLoader
-  ): NativeBuilder = {
-
-    val sbv             = scala.util.Properties.versionNumberString.split('.').take(2).mkString(".")
-    val coursierVersion = coursier.launcher.internal.Properties.version
-    val dep = s"io.get-coursier:coursier-launcher-native_${version}_$sbv:$coursierVersion"
-
-    val files = fetch(Seq(dep))
-
-    val loader = new URLClassLoader(files.map(_.toURI.toURL).toArray, parentLoader)
-
-    val cls = loader.loadClass("coursier.launcher.NativeBuilderImpl")
-    cls.getDeclaredConstructor().newInstance().asInstanceOf[NativeBuilder]
-  }
+  ): NativeBuilder =
+    throw new ScalaNativeLauncherUnsupported
 
 }

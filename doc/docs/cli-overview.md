@@ -135,8 +135,7 @@ scalafmt scalafmt.bat
 ```
 
 `bootstrap` can generate a [variety of launchers](cli-bootstrap.md#launcher-types),
-including native ones like [GraalVM native images](cli-bootstrap.md#graalvm-native-image)
-or [Scala Native executables](cli-bootstrap.md#scala-native).
+including native ones like [GraalVM native images](cli-bootstrap.md#graalvm-native-image).
 See [the dedicated page](cli-bootstrap.md) for more details.
 
 ### `java`
