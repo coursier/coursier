@@ -1,6 +1,8 @@
 package coursier.tests
 
 import coursier.{Repositories, Resolve}
+import coursier.core.{Info, Module, Overrides, Project, Resolution}
+import coursier.error.ResolutionError.UnsatisfiableRule
 import coursier.error.conflict.{StrictRule, UnsatisfiedRule}
 import coursier.graph.Conflict
 import coursier.params.ResolutionParams
@@ -168,6 +170,94 @@ object ResolveRulesTests extends TestSuite {
           val res = await(resolveAlmond(params))
 
           await(validateDependencies(res, params))
+        }
+      }
+
+      // Calling the rule directly on hand-made resolutions
+      test("tryResolve") {
+
+        val roots = Seq(
+          dep"org.scala-lang:scala-library:2.11.12",
+          dep"org.scala-lang:scala-actors:2.11.0"
+        )
+        val library = roots.head.module
+        val actors  = roots(1).module
+        val rule    = SameVersion(library, actors)
+
+        def project(module: Module, version: String): Project =
+          Project(
+            module,
+            Version(version),
+            Nil,
+            Map.empty,
+            None,
+            Nil,
+            Nil,
+            Nil,
+            None,
+            None,
+            None,
+            false,
+            None,
+            Nil,
+            Info.empty,
+            Overrides.empty,
+            Map.empty,
+            Map.empty
+          )
+
+        // forced: module -> (forced constraint, version it resolves to)
+        def tryResolve(forced: (Module, (String, String))*)
+          : Either[UnsatisfiableRule, Resolution] = {
+          val projects =
+            roots.map(dep => (dep.module, dep.versionConstraint.asString)) ++
+              Seq(actors -> "2.11.12") ++
+              forced.map { case (mod, (constraint, _)) => (mod, constraint) }
+          val versions = forced.map { case (mod, (constraint, version)) =>
+            (mod, constraint) -> version
+          }.toMap
+          val res = Resolution()
+            .copy(
+              rootDependencies = roots,
+              forceVersions0 = forced
+                .map { case (mod, (constraint, _)) => mod -> VersionConstraint(constraint) }
+                .toMap,
+              projectCache0 = projects.map {
+                case k @ (mod, constraint) =>
+                  (mod, VersionConstraint(constraint)) -> (
+                    Repositories.central,
+                    project(mod, versions.getOrElse(k, constraint))
+                  )
+              }.toMap
+            )
+            .withDependencies(roots.toSet)
+          val conflict = rule.check(res).getOrElse(sys.error("Expected a conflict"))
+          rule.tryResolve(res, conflict)
+        }
+
+        def checkForced(result: Either[UnsatisfiableRule, Resolution]): Unit =
+          result match {
+            case Right(res) =>
+              assert(rule.check(res).isEmpty)
+              assert(res.forceVersions0.get(library).contains(VersionConstraint("2.11.12")))
+              assert(res.forceVersions0.get(actors).contains(VersionConstraint("2.11.12")))
+            case Left(err) =>
+              throw new Exception("Unexpected rule failure", err)
+          }
+
+        def checkCantForce(result: Either[UnsatisfiableRule, Resolution]): Unit =
+          result match {
+            case Left(e: SameVersion.CantForceSameVersion) =>
+              assert(e.rule == rule)
+            case _ =>
+              throw new Exception(s"Expected CantForceSameVersion, got $result")
+          }
+
+        test("selected version") {
+          checkForced(tryResolve(library -> ("2.11.12", "2.11.12")))
+        }
+        test("other version") {
+          checkCantForce(tryResolve(actors -> ("2.11.0", "2.11.0")))
         }
       }
     }
