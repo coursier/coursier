@@ -126,9 +126,8 @@ object `benchmark` extends ScalaModule with JmhModule {
 
 object `cache-server` extends CacheServer
 
-object launcher             extends Cross[Launcher](ScalaVersions.allButScala212)
-object env                  extends Cross[Env](ScalaVersions.allButScala212)
-object `launcher-native_04` extends LauncherNative04
+object launcher extends Cross[Launcher](ScalaVersions.allButScala212)
+object env      extends Cross[Env](ScalaVersions.allButScala212)
 
 object coursier extends Module {
   object shared extends SharedScalaSources
@@ -641,8 +640,7 @@ trait Launcher extends LauncherBase with DataClassModule {
   def mvnDeps = super.mvnDeps() ++ Seq(
     Deps.collectionCompat,
     Deps.jarjarAbrams,
-    Deps.noCrcZis,
-    Deps.pythonNativeLibs
+    Deps.noCrcZis
   )
   def commitHash = `build-util`.commitHash
 
@@ -675,20 +673,6 @@ trait Env extends CrossSbtModule with CsModule
 // only accepts 17 and later, so the modules compiled with ScalaVersions.scala3Cli
 // cannot target an earlier one.
 def scala3LatestJvmRelease = "17"
-// only published locally, for the sake of `cli-tests`
-trait LauncherNative04 extends CsModule
-    with LocalOnlyPublishModule {
-  def jvmRelease   = scala3LatestJvmRelease
-  def scalaVersion = ScalaVersions.scala3
-  def artifactName = "coursier-launcher-native_0.4"
-  def compileModuleDeps = Seq(
-    build.launcher(ScalaVersions.scala3)
-  )
-  def mvnDeps = super.mvnDeps() ++ Seq(
-    Deps.scalaNativeTools040
-  )
-}
-
 trait CoursierJvm extends CoursierJvmBase with DataClassModule
     with Scala212SnapshotOnlyPublishModule { self =>
   def sources = Task {
@@ -1171,6 +1155,7 @@ trait Cli extends CsModule
     Deps.noCrcZis,
     Deps.osLib,
     Deps.pprint,
+    Deps.pythonNativeLibs,
     Deps.slf4JNop
   )
   def compileMvnDeps = super.compileMvnDeps() ++ Seq(
@@ -1412,9 +1397,6 @@ trait CliTests extends CsModule { self =>
       super.forkEnv() ++ Seq(cli.csInPathForkEnv())
     }
     def forkArgs = Task {
-      // `cs bootstrap --native` loads coursier-launcher-native_0.4 at run time, from the local
-      // Ivy repository
-      `launcher-native_04`.publishLocalCached()
       super.forkArgs() ++ sharedTestArgs ++ Seq(
         s"-Dcoursier-test-launcher=${cli.launcher().path}",
         s"-Dcoursier-test-assembly=${cli.assembly().path}",
@@ -1598,32 +1580,6 @@ trait TestCacheJs extends CsModule with CsScalaJsModule {
   def moduleDeps = Seq(
     cache.js
   )
-}
-
-def simpleNative04CliTest() = Task.Command {
-  `launcher-native_04`.publishLocal()()
-  val launcher = cli.launcher().path
-  val tmpDir   = os.temp.dir(prefix = "coursier-bootstrap-scala-native-test")
-  def cleanUp(): Unit =
-    try os.remove.all(tmpDir)
-    catch {
-      case _: java.io.IOException =>
-        System.err.println(s"Error removing $tmpDir, ignoring it")
-    }
-  val res =
-    try {
-      os.proc(
-        launcher.toString,
-        "bootstrap",
-        "-S",
-        "-o",
-        "native-echo",
-        "io.get-coursier:echo_native0.4_2.13:1.0.5"
-      ).call(cwd = tmpDir) // TODO inherit all
-      os.proc(tmpDir / "native-echo", "-n", "foo", "a").call()
-    }
-    finally cleanUp()
-  assert(res.out.text() == "foo a")
 }
 
 def copyTo(task: mill.util.Tasks[PathRef], dest: String) = Task.Command {

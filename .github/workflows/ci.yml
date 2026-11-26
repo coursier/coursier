@@ -112,8 +112,6 @@ jobs:
         disableFallback: true
     - run: sudo apt-get install -y nailgun
       if: runner.os == 'Linux'
-    # - run: .github/scripts/scala-native-setup.sh
-    #   if: runner.os != 'Windows'
     # The tests of the cross-built modules run in the jobs of their Scala version, the other JVM
     # tests and the Docker ones (which don't depend on the job's Scala version) in the Scala 2.13
     # jobs only, see JvmCiTests in mill-build. The proxy tests start containers (Nexus, proxies)

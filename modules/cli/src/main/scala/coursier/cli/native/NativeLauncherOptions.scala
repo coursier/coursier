@@ -1,132 +1,97 @@
 package coursier.cli.native
 
-import java.nio.file.Paths
-
 import caseapp._
-import cats.data.{Validated, ValidatedNel}
 import coursier.cli.options.OptionGroup
-import coursier.launcher.Parameters.ScalaNative.ScalaNativeOptions
 
+/** Options of the former Scala Native launcher generation of `cs bootstrap --native`.
+  *
+  * That feature was removed, these are only accepted so that former command lines get a message
+  * pointing users to Scala CLI, rather than an unrecognized-option error.
+  */
 // format: off
 final case class NativeLauncherOptions(
   @Group(OptionGroup.native)
   @Hidden
+  @HelpMessage(NativeLauncherOptions.removedHelp)
   @ValueDescription("none|boehm|immix|default")
     nativeGc: Option[String] = None,
 
   @Group(OptionGroup.native)
   @Hidden
+  @HelpMessage(NativeLauncherOptions.removedHelp)
   @ValueDescription("release|debug")
     nativeMode: Option[String] = None,
 
   @Group(OptionGroup.native)
   @Hidden
+  @HelpMessage(NativeLauncherOptions.removedHelp)
     nativeLinkStubs: Boolean = true,
 
   @Group(OptionGroup.native)
   @Hidden
+  @HelpMessage(NativeLauncherOptions.removedHelp)
     nativeClang: Option[String] = None,
 
   @Group(OptionGroup.native)
   @Hidden
+  @HelpMessage(NativeLauncherOptions.removedHelp)
     nativeClangpp: Option[String] = None,
 
   @Group(OptionGroup.native)
   @Hidden
+  @HelpMessage(NativeLauncherOptions.removedHelp)
     nativeLinkingOption: List[String] = Nil,
   @Group(OptionGroup.native)
   @Hidden
+  @HelpMessage(NativeLauncherOptions.removedHelp)
     nativeDefaultLinkingOptions: Boolean = true,
   @Group(OptionGroup.native)
   @Hidden
+  @HelpMessage(NativeLauncherOptions.removedHelp)
     nativeUseLdflags: Boolean = true,
 
   @Group(OptionGroup.native)
   @Hidden
+  @HelpMessage(NativeLauncherOptions.removedHelp)
     nativeCompileOption: List[String] = Nil,
   @Group(OptionGroup.native)
   @Hidden
+  @HelpMessage(NativeLauncherOptions.removedHelp)
     nativeDefaultCompileOptions: Boolean = true,
 
   @Group(OptionGroup.native)
   @Hidden
+  @HelpMessage(NativeLauncherOptions.removedHelp)
     nativeTargetTriple: Option[String] = None,
 
   @Group(OptionGroup.native)
   @Hidden
+  @HelpMessage(NativeLauncherOptions.removedHelp)
     nativeLib: Option[String] = None,
 
   @Group(OptionGroup.native)
   @Hidden
+  @HelpMessage(NativeLauncherOptions.removedHelp)
     nativeVersion: Option[String] = None,
 
   @Group(OptionGroup.native)
   @Hidden
-  @HelpMessage("Native compilation target directory")
+  @HelpMessage(NativeLauncherOptions.removedHelp)
   @ExtraName("d")
     nativeWorkDir: Option[String] = None,
   @Group(OptionGroup.native)
   @Hidden
-  @HelpMessage("Don't wipe native compilation target directory (for debug purposes)")
+  @HelpMessage(NativeLauncherOptions.removedHelp)
     nativeKeepWorkDir: Boolean = false
 
 ) derives Parser, Help {
   // format: on
 
-  def params: ValidatedNel[String, ScalaNativeOptions] = {
+  def isDefault: Boolean =
+    this == NativeLauncherOptions()
+}
 
-    val gcOpt = nativeGc
-      .map(_.trim)
-      .filter(_.nonEmpty)
-
-    val modeOpt = nativeMode
-      .map(_.trim)
-      .filter(_.nonEmpty)
-
-    val linkStubs = nativeLinkStubs
-    val clangOpt = nativeClang
-      .filter(_.nonEmpty)
-      .map(Paths.get(_))
-    val clangppOpt = nativeClangpp
-      .filter(_.nonEmpty)
-      .map(Paths.get(_))
-
-    val prependDefaultLinkingOptions = nativeDefaultLinkingOptions
-    val linkingOptions = {
-      val ldflags =
-        if (nativeUseLdflags) Option(System.getenv("LDFLAGS")).toSeq.flatMap(_.split("\\s+"))
-        else Nil
-      ldflags ++ nativeLinkingOption
-    }
-
-    val prependDefaultCompileOptions = nativeDefaultCompileOptions
-    val compileOptions               = nativeCompileOption
-
-    val targetTripleOpt = nativeTargetTriple.filter(_.nonEmpty)
-
-    val nativeLibOpt = nativeLib
-      .filter(_.nonEmpty)
-      .map(Paths.get(_))
-
-    val workDirOpt  = nativeWorkDir.map(Paths.get(_))
-    val keepWorkDir = nativeKeepWorkDir
-
-    Validated.validNel(
-      ScalaNativeOptions().copy(
-        gcOpt = gcOpt,
-        modeOpt = modeOpt,
-        linkStubs = linkStubs,
-        clangOpt = clangOpt,
-        clangppOpt = clangppOpt,
-        prependDefaultLinkingOptions = prependDefaultLinkingOptions,
-        linkingOptions = linkingOptions,
-        prependDefaultCompileOptions = prependDefaultCompileOptions,
-        compileOptions = compileOptions,
-        targetTripleOpt = targetTripleOpt,
-        nativeLibOpt = nativeLibOpt,
-        workDirOpt = workDirOpt,
-        keepWorkDir = keepWorkDir
-      )
-    )
-  }
+object NativeLauncherOptions {
+  final val removedHelp =
+    "Removed: generating Scala Native launchers isn't supported anymore, use Scala CLI instead"
 }

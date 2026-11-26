@@ -11,16 +11,14 @@ import java.util.stream.Stream
 import java.util.zip.ZipEntry
 
 import coursier.cache.{ArchiveCache, ArchiveType, Cache}
-import coursier.core.{Dependency, Module, Repository}
+import coursier.core.{Dependency, Repository}
 import coursier.env.EnvironmentUpdate
 import coursier.install.error._
 import coursier.install.internal._
 import coursier.launcher.{ClassLoaderContent, ClassPathEntry, Generator, Parameters, Preamble}
 import coursier.launcher.internal.FileUtil
-import coursier.launcher.Parameters.ScalaNative
 import coursier.parse.JavaOrScalaModule
 import coursier.util.{Artifact, Task}
-import coursier.version.VersionConstraint
 
 import java.util.regex.Pattern
 
@@ -219,16 +217,8 @@ import scala.util.matching.Regex
         Parameters.Prebuilt()
 
       case LauncherType.ScalaNative =>
-        assert(appArtifacts.shared.isEmpty) // just in case
-
-        val fetch = simpleFetch(cache, coursierRepositories)
-        val nativeVersion = appArtifacts.platformSuffixOpt
-          .fold("" /* FIXME throw instead? */ )(_.stripPrefix("_native"))
-        // FIXME Allow options to be tweaked
-        val options = ScalaNative.ScalaNativeOptions()
-
-        Parameters.ScalaNative(fetch, mainClass, nativeVersion)
-          .copy(jars = appArtifacts.fetchResult.files, options = options, verbosity = verbosity)
+        // Only prebuilt binaries can be installed for these
+        throw new ScalaNativeLauncherUnsupported(desc.nameOpt.getOrElse(""))
     }
   }
 
@@ -736,33 +726,6 @@ object InstallDir {
       m,
       mainDependencyOpt.map(d => (d.module.organization.value, d.module.name.value))
     ) // appArtifacts.fetchResult.resolution.rootDependencies.headOption)
-  }
-
-  private def simpleFetch(
-    cache: Cache[Task],
-    repositories: Seq[Repository]
-  ): Seq[String] => Seq[File] = {
-
-    val fetch = coursier.Fetch(cache)
-      .withRepositories(repositories)
-
-    deps =>
-      import coursier.core.{ModuleName, Organization}
-      import coursier.util.StringInterpolators._
-      import coursier.util.Task
-
-      val deps0 = deps.map { dep =>
-        dep.split(":", 3) match {
-          case Array(org, name, ver) =>
-            Dependency(
-              Module(Organization(org), ModuleName(name), Map.empty),
-              VersionConstraint(ver)
-            )
-          case _ => ???
-        }
-      }
-
-      fetch.addDependencies(deps0: _*).run()
   }
 
   private def writing[T](

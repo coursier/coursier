@@ -31,9 +31,8 @@ import coursier.launcher.{
   Generator,
   Parameters,
   Preamble,
-  ScalaNativeGenerator
+  ScalaNativeLauncherUnsupported
 }
-import coursier.launcher.native.NativeBuilder
 import coursier.parse.{JavaOrScalaDependency, JavaOrScalaModule}
 import coursier.util.{Artifact, Sync, Task}
 import coursier.version.VersionConstraint
@@ -182,26 +181,6 @@ object Bootstrap extends CoursierCommand[BootstrapOptions] {
     ClassLoaderContent(urls0 ++ files0)
   }
 
-  private def defaultNativeVersion(deps: Seq[Dependency]): Option[String] =
-    deps
-      .map(_.module.name.value)
-      .iterator
-      .flatMap { name =>
-        val elems = name.split('_')
-        if (elems.length >= 3)
-          Iterator.single(elems(elems.length - 2))
-        else
-          Iterator.empty
-      }
-      .filter(_.startsWith("native"))
-      .map(_.stripPrefix("native"))
-      .toSet
-      .toVector
-      .map(coursier.version.Version(_))
-      .sorted
-      .lastOption
-      .map(_.repr)
-
   private def simpleFetchFunction(
     repositories: Seq[Repository],
     cache: Cache[Task]
@@ -245,6 +224,13 @@ object Bootstrap extends CoursierCommand[BootstrapOptions] {
         val res       = Resolve.handleApps(options, args.remaining, channels0)(_.addApp(_))
         res
       }
+
+    // with --native, BootstrapParams fails with the same message
+    val native = options0.sharedLaunchOptions.resolveOptions.dependencyOptions.native
+    if (!options0.nativeOptions.isDefault && !native)
+      System.err.println(
+        "Warning: ignoring --native-* options. " + ScalaNativeLauncherUnsupported.message
+      )
 
     val params = BootstrapParams(options0).exitOnError()
 
@@ -303,41 +289,7 @@ object Bootstrap extends CoursierCommand[BootstrapOptions] {
         params.sharedLaunch.javaOptions
 
     val params0 =
-      if (params.sharedLaunch.resolve.dependency.native) {
-
-        val nativeVersion = params.nativeShortVersionOpt
-          .orElse(defaultNativeVersion(res.rootDependencies))
-          .getOrElse {
-            // FIXME Throw here?
-            "0.3"
-          }
-
-        if (params.sharedLaunch.resolve.output.verbosity >= 1)
-          System.err.println(s"Using scala-native version $nativeVersion")
-
-        val log: String => Unit =
-          if (params.sharedLaunch.resolve.output.verbosity >= 0)
-            s => Console.err.println(s)
-          else
-            _ => ()
-
-        val fetch0 = {
-          val logger = params.sharedLaunch.resolve.output.logger()
-          simpleFetchFunction(
-            params.sharedLaunch.resolve.repositories.repositories,
-            params.sharedLaunch.resolve.cache.cache(pool, logger)
-          )
-        }
-
-        Parameters.ScalaNative(fetch0, mainClass, nativeVersion).copy(
-          jars = files.map(_._2),
-          options = params.nativeOptions,
-          log = log,
-          verbosity = params.sharedLaunch.resolve.output.verbosity,
-          python = params.sharedLaunch.python
-        )
-      }
-      else if (params.specific.nativeImage) {
+      if (params.specific.nativeImage) {
         val fetch0 = {
           val logger = params.sharedLaunch.resolve.output.logger()
           simpleFetchFunction(

@@ -2,29 +2,11 @@ package coursier.launcher
 
 import java.nio.file.Path
 
-import ai.kien.python.Python
-import coursier.launcher.native.NativeBuilder
-
+@deprecated(
+  "Generating Scala Native launchers isn't supported anymore, use Scala CLI instead",
+  "2.1.28"
+)
 object ScalaNativeGenerator extends Generator[Parameters.ScalaNative] {
-  def generate(parameters: Parameters.ScalaNative, output: Path): Unit = {
-    val options =
-      if (parameters.python) {
-        val extraLdflags = Python().ldflags.get
-        parameters.options.copy(
-          linkingOptions = parameters.options.linkingOptions ++ extraLdflags
-        )
-      }
-      else
-        parameters.options
-
-    val builder = NativeBuilder.load(parameters.fetch, parameters.nativeVersion)
-    builder.build(
-      parameters.mainClass,
-      parameters.jars,
-      output.toFile,
-      options,
-      parameters.log,
-      parameters.verbosity
-    )
-  }
+  def generate(parameters: Parameters.ScalaNative, output: Path): Unit =
+    throw new ScalaNativeLauncherUnsupported
 }

@@ -43,7 +43,7 @@ final case class DependencyOptions(
     scalaJs: Boolean = false,
 
   @Group(OptionGroup.dependency)
-  @HelpMessage("Enable scala-native")
+  @HelpMessage("Enable Scala Native (generating Scala Native launchers isn't supported anymore, use Scala CLI for that)")
   @ExtraName("S")
     native: Boolean = false,
 

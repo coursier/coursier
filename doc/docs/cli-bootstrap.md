@@ -233,43 +233,11 @@ sources is an option for you.
 
 ### Scala native
 
-`bootstrap` can generate
-[Scala Native](https://www.scala-native.org)-based native launchers:
-```bash
-$ cs bootstrap echo-native -o echo --native
-[info] Linking (1457 ms)
-[info] Discovered 614 classes and 4200 methods
-[info] Optimizing (debug mode) (2157 ms)
-[info] Generating intermediate code (1657 ms)
-[info] Produced 4 files
-…
-[info] Linking native code (immix gc, none lto) (207 ms)
-[info] Total (13172 ms)
-Wrote …/echo
-$ ls -lh echo
--rwxr-xr-x  1 user  group   1,6M  apr 9 00:57 echo
-```
-
-Note that this requires coursier to be launched via its [JVM launcher](cli-installation.md#jar-based-launcher).
-Install it with `cs install coursier`, or replace `coursier` in the command above with `cs launch coursier --`, like
-```
-$ cs launch coursier -- bootstrap echo-native -o echo --native
-```
-
-This requires the application you want a launcher for to be cross-compiled to
-Scala Native, and its Scala Native artifacts to be published to Maven or Ivy
-repositories. The [echo](https://github.com/coursier/echo) project of
-coursier has
-[such a module](https://github.com/coursier/echo/tree/master/native),
-published as
-[`io.get-coursier:echo_native0.3_2.11`](https://repo1.maven.org/maven2/io/get-coursier/echo_native0.3_2.11).
-
-In order to generate a launcher for such a published application, you'll need to
-have your environment
-[set up for Scala Native](https://www.scala-native.org/en/v0.3.8/user/setup.html#installing-clang-and-runtime-dependencies).
-
-Linking flags during the linking phase can be adjusted via `LDFLAGS` in the
-environment.
+`bootstrap` used to generate
+[Scala Native](https://www.scala-native.org)-based native launchers, via `--native`.
+That feature has been removed: `cs bootstrap --native` now fails, pointing to
+[Scala CLI](https://scala-cli.virtuslab.org), that can build Scala Native executables with
+[`scala-cli --power package --native`](https://scala-cli.virtuslab.org/docs/commands/package).
 
 ## Notes
 
