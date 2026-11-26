@@ -123,6 +123,18 @@ object ResolveRulesTests extends TestSuite {
     }
 
     test("sameVersionRule") {
+
+      def resolveAlmond(params: ResolutionParams) =
+        Resolve()
+          .noMirrors
+          .addDependencies(dep"sh.almond:scala-kernel_2.12.7:0.2.2")
+          .addRepositories(Repositories.jitpack)
+          .copy(
+            resolutionParams = params,
+            cache = cache
+          )
+          .future()
+
       test {
         async {
 
@@ -137,17 +149,7 @@ object ResolveRulesTests extends TestSuite {
               RuleResolution.TryResolve
             )
 
-          val res = await {
-            Resolve()
-              .noMirrors
-              .addDependencies(dep"sh.almond:scala-kernel_2.12.7:0.2.2")
-              .addRepositories(Repositories.jitpack)
-              .copy(
-                resolutionParams = params,
-                cache = cache
-              )
-              .future()
-          }
+          val res = await(resolveAlmond(params))
 
           await(validateDependencies(res, params))
         }
@@ -163,17 +165,7 @@ object ResolveRulesTests extends TestSuite {
               RuleResolution.TryResolve
             )
 
-          val res = await {
-            Resolve()
-              .noMirrors
-              .addDependencies(dep"sh.almond:scala-kernel_2.12.7:0.2.2")
-              .addRepositories(Repositories.jitpack)
-              .copy(
-                resolutionParams = params,
-                cache = cache
-              )
-              .future()
-          }
+          val res = await(resolveAlmond(params))
 
           await(validateDependencies(res, params))
         }
