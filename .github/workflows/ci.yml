@@ -211,8 +211,8 @@ jobs:
         # COURSIER_JNI: force
         SELECTIVE_TESTS_BASE_SHA: ${{ github.event.pull_request.base.sha }}
     - run: .github/scripts/selective-tests.sh run "$JAR_LAUNCHER_TESTS"
-      env:
-        # COURSIER_JNI: force
+      # env:
+      #   COURSIER_JNI: force
 
   js-test:
     runs-on: ubuntu-latest
@@ -341,8 +341,8 @@ jobs:
         node-version: '24'
     - run: ./mill -i doc.generate --npm-install --yarn-run-build
       if: steps.docusaurus.outputs.affected != 'false'
-      env:
-        # COURSIER_JNI: force
+      # env:
+      #   COURSIER_JNI: force
 
   test-selective-tests-script:
     # The logic deciding which parts of this file matter to a job, in selective-tests.sh, is plain
