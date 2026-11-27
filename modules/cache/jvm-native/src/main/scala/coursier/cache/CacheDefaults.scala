@@ -1,0 +1,236 @@
+package coursier.cache
+
+import java.io.File
+import java.nio.file.Path
+
+import coursier.credentials.Credentials
+import coursier.paths.CachePath
+import coursier.util.Sync
+
+import scala.concurrent.duration.{Duration, DurationInt, FiniteDuration}
+import scala.util.Try
+
+object CacheDefaults extends PlatformCacheDefaults {
+
+  lazy val location: File =
+    CacheEnv.defaultCacheLocation(CacheEnv.cache.read()).toFile
+
+  lazy val archiveCacheLocation: File =
+    CacheEnv.defaultArchiveCacheLocation(CacheEnv.archiveCache.read()).toFile
+
+  lazy val priviledgedArchiveCacheLocation: File =
+    CachePath.defaultPriviledgedArchiveCacheDirectory()
+
+  lazy val digestBasedCacheLocation: File = CachePath.defaultDigestBasedCacheDirectory()
+
+  lazy val cacheServerAddress: Option[String] =
+    CacheEnv.defaultServerAddress(CacheEnv.server.read())
+
+  @deprecated(
+    "Legacy cache location support was dropped, this method does nothing.",
+    "2.0.0-RC6-22"
+  )
+  def warnLegacyCacheLocation(): Unit = {}
+
+  private def defaultConcurrentDownloadCount = 6
+
+  lazy val concurrentDownloadCount: Int =
+    sys.props
+      .get("coursier.parallel-download-count")
+      .flatMap(s => Try(s.toInt).toOption)
+      .getOrElse(
+        defaultConcurrentDownloadCount
+      )
+
+  lazy val pool         = Sync.fixedThreadPool(concurrentDownloadCount)
+  lazy val watchLenPool = Sync.fixedThreadPool(concurrentDownloadCount)
+
+  def parseDuration(s: String): Either[Throwable, Duration] =
+    CacheEnv.parseDuration(s)
+
+  lazy val ttl: Option[Duration] =
+    CacheEnv.defaultTtl(CacheEnv.ttl.read())
+
+  /** Checksum types to check, in order of preference
+    *
+    * `Seq(Some("SHA-1"), None)` (check SHA-1 if available, else be fine with no checksum), unless
+    * the `COURSIER_CHECKSUMS` environment variable or the `coursier.checksums` Java property say
+    * otherwise, see [[CacheEnv.parseChecksums]].
+    */
+  lazy val checksums: Seq[Option[String]] =
+    CacheEnv.defaultChecksums(CacheEnv.checksums.read())
+
+  def defaultRetryCount                       = 5
+  private def defaultRetryBackoffInitialDelay = 10.milliseconds
+  private def defaultRetryBackoffMultiplier   = 2.0
+  private def defaultRetryBackoffMaxDelay     = 20.seconds
+  private def defaultRetryPollMaxDelay        = 200.milliseconds
+
+  lazy val retryCount =
+    sys.props
+      .get("coursier.exception-retry")
+      .flatMap(s => scala.util.Try(s.toInt).toOption)
+      .filter(_ >= 0)
+      .getOrElse(defaultRetryCount)
+
+  lazy val retryBackoffInitialDelay =
+    sys.props
+      .get("coursier.exception-retry-backoff-initial-delay")
+      .flatMap(s => parseDuration(s).toOption)
+      .collect {
+        case f: FiniteDuration => f
+      }
+      .getOrElse(defaultRetryBackoffInitialDelay)
+
+  lazy val retryBackoffMultiplier =
+    sys.props
+      .get("coursier.exception-retry-backoff-multiplier")
+      .flatMap(s => scala.util.Try(s.toDouble).toOption)
+      .filter(_ > 0)
+      .getOrElse(defaultRetryBackoffMultiplier)
+
+  /** Ceiling on the backoff delay between attempts that failed */
+  lazy val retryBackoffMaxDelay: Option[FiniteDuration] =
+    maxDelay("coursier.exception-retry-backoff-max-delay", defaultRetryBackoffMaxDelay)
+
+  /** Ceiling on the delay between attempts that have no answer yet
+    *
+    * These are not failures to back off from: they are a download another thread of this JVM
+    * already has in flight, which we only need to poll for. Backing off exponentially there means
+    * sleeping through the moment it lands, for as long again as the download itself took.
+    */
+  lazy val retryPollMaxDelay: Option[FiniteDuration] =
+    maxDelay("coursier.retry-poll-max-delay", defaultRetryPollMaxDelay)
+
+  private def defaultHttpRetryBackoffInitialDelay = 1.second
+  private def defaultHttpRetryBackoffMaxDelay     = 10.minutes
+
+  /** First delay after a server answered with an error worth trying again (a 503, a 408, …)
+    *
+    * The same as curl's `--retry`: a server that is down or overloaded doesn't come back in the
+    * milliseconds a dropped connection can, so this starts far higher than
+    * `retryBackoffInitialDelay`.
+    */
+  lazy val httpRetryBackoffInitialDelay: FiniteDuration =
+    sys.props
+      .get("coursier.http-retry-backoff-initial-delay")
+      .flatMap(s => parseDuration(s).toOption)
+      .collect {
+        case f: FiniteDuration => f
+      }
+      .getOrElse(defaultHttpRetryBackoffInitialDelay)
+
+  /** Ceiling on the delay between attempts the server answered with an error worth trying again */
+  lazy val httpRetryBackoffMaxDelay: Option[FiniteDuration] =
+    maxDelay("coursier.http-retry-backoff-max-delay", defaultHttpRetryBackoffMaxDelay)
+
+  private def defaultThrottleInitialDelay = 1.second
+  private def defaultThrottleMaxDelay     = 1.minute
+
+  /** First pause to observe when a host turns us away without saying for how long
+    *
+    * Rate limits are expressed per second or per minute, so this starts far higher than the
+    * millisecond-scale backoff that suits a connection error: retrying a rate limit 10 ms later is
+    * just one more request for the limiter to reject, and several of them count rejected requests
+    * toward the limit they are enforcing.
+    */
+  lazy val throttleInitialDelay: FiniteDuration =
+    sys.props
+      .get("coursier.retry-throttle-initial-delay")
+      .flatMap(s => parseDuration(s).toOption)
+      .collect {
+        case f: FiniteDuration => f
+      }
+      .getOrElse(defaultThrottleInitialDelay)
+
+  /** Ceiling on the pause we pick ourselves for a host that keeps turning us away */
+  lazy val throttleMaxDelay: Option[FiniteDuration] =
+    maxDelay("coursier.retry-throttle-max-delay", defaultThrottleMaxDelay)
+
+  /** The longest `Retry-After` we are willing to honour */
+  lazy val maxHttpRetryAfter: Option[FiniteDuration] =
+    CacheEnv.defaultMaxHttpRetryAfter(CacheEnv.maxHttpRetryAfter.read())
+
+  /** How long a single artifact may spend being told to come back later, in total
+    *
+    * Being throttled is not a failure, so it doesn't spend the attempts kept for those - what
+    * bounds it is this budget of wall clock time instead.
+    */
+  lazy val maxThrottleWait: Option[FiniteDuration] =
+    CacheEnv.defaultMaxThrottleWait(CacheEnv.maxThrottleWait.read())
+
+  /** Shared between all the caches of this JVM, like `pool` is
+    *
+    * A rate limit applies to the client as a whole, so a `FileCache` that kept its own would only
+    * see the share of the 429s that happened to land on it. Pass a `FileCache` its own throttle to
+    * isolate it - tests want that, most other things don't.
+    */
+  lazy val hostThrottle: HostThrottle =
+    HostThrottle(
+      throttleInitialDelay,
+      throttleMaxDelay,
+      retryBackoffMultiplier,
+      maxHttpRetryAfter
+    )
+
+  private def maxDelay(prop: String, default: FiniteDuration): Option[FiniteDuration] =
+    sys.props
+      .get(prop)
+      .flatMap(s => parseDuration(s).toOption)
+      .getOrElse(default) match {
+      case f: FiniteDuration if f > Duration.Zero => Some(f)
+      // both Duration.Zero and infinite durations mean "don't cap the delay"
+      case _ => None
+    }
+
+  lazy val connectTimeout: Option[FiniteDuration] =
+    CacheEnv.defaultConnectTimeout(CacheEnv.connectTimeout.read())
+
+  lazy val readTimeout: Option[FiniteDuration] =
+    CacheEnv.defaultReadTimeout(CacheEnv.readTimeout.read())
+
+  @deprecated("Use retryCount instead", "2.1.11")
+  lazy val sslRetryCount =
+    sys.props
+      .get("coursier.sslexception-retry")
+      .flatMap(s => scala.util.Try(s.toInt).toOption)
+      .filter(_ >= 0)
+      .getOrElse(retryCount)
+
+  private def defaultMaxRedirections = Option(20) // same default as java.net.HttpURLConnection
+  lazy val maxRedirections: Option[Int] = {
+    def prop(name: String) =
+      sys.props
+        .get(name)
+        .flatMap(s => scala.util.Try(s.toInt).toOption)
+        .filter(_ >= 0)
+    prop("coursier.http.maxRedirects")
+      .orElse(prop("http.maxRedirects")) // same property as java.net.HttpURLConnection
+      .orElse(defaultMaxRedirections)
+  }
+
+  val bufferSize = 1024 * 1024
+
+  lazy val credentials: Seq[Credentials] =
+    CacheEnv.defaultCredentials(
+      CacheEnv.credentials.read(),
+      CacheEnv.scalaCliConfig.read(),
+      CacheEnv.configDir.read()
+    )
+
+  def credentialsFromConfig(configPath: Path): Seq[Credentials] =
+    CacheEnv.credentialsFromConfig(configPath)
+
+  def noEnvCachePolicies: Seq[CachePolicy] =
+    CacheEnv.noEnvCachePolicies
+
+  lazy val cachePolicies: Seq[CachePolicy] =
+    CacheEnv.defaultCachePolicies(CacheEnv.cachePolicy.read())
+
+  /** Whether to print every HTTP request coursier makes, and how it was authenticated, on stderr
+    *
+    * Read from `COURSIER_HTTP_DEBUG` or the `coursier.http.debug` Java property.
+    */
+  lazy val httpDebug: Boolean =
+    CacheEnv.defaultHttpDebug(CacheEnv.httpDebug.read())
+}
