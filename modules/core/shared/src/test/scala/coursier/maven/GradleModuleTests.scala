@@ -1,5 +1,6 @@
 package coursier.maven
 
+import com.github.plokhotnyuk.jsoniter_scala.core.readFromString
 import coursier.core.{Classifier, Variant}
 import utest._
 
@@ -213,6 +214,52 @@ object GradleModuleTests extends TestSuite {
         assert(docPubs.nonEmpty)
         assert(docPubs.forall(_.classifier.contains(Classifier("javadoc"))))
       }
+    }
+
+    test("attribute values") {
+      // Gradle module attribute values can be strings, integers, or booleans
+      // (androidx modules have "androidx.kmp.hasCInterop": false, see com-lihaoyi/mill#7985)
+      val json =
+        """{
+          |  "formatVersion": "1.1",
+          |  "component": {
+          |    "group": "org.example",
+          |    "module": "test-artifact",
+          |    "version": "1.0.0"
+          |  },
+          |  "variants": [
+          |    {
+          |      "name": "releaseRuntimeElements",
+          |      "attributes": {
+          |        "androidx.kmp.hasCInterop": false,
+          |        "other.flag": true,
+          |        "org.gradle.category": "library",
+          |        "org.gradle.jvm.version": 11
+          |      },
+          |      "dependencies": [
+          |        {
+          |          "group": "org.example",
+          |          "module": "dep",
+          |          "version": { "requires": "1.0" },
+          |          "attributes": { "some.flag": true }
+          |        }
+          |      ]
+          |    }
+          |  ]
+          |}
+          |""".stripMargin
+      val module  = readFromString[GradleModule](json)(GradleModule.codec)
+      val variant = module.variants.head
+      val expected = Map(
+        "androidx.kmp.hasCInterop" -> "false",
+        "other.flag"               -> "true",
+        "org.gradle.category"      -> "library",
+        "org.gradle.jvm.version"   -> "11"
+      )
+      assert(variant.attributesMap == expected)
+      assert(
+        variant.dependencies.head.attributes == Map("some.flag" -> GradleModule.StringOrInt("true"))
+      )
     }
   }
 }

@@ -2458,6 +2458,53 @@ object ResolveTests extends TestSuite {
         )
       }
 
+      // androidx modules have boolean attribute values ("androidx.kmp.hasCInterop": false),
+      // see https://github.com/com-lihaoyi/mill/issues/7985
+      test("boolean attributes") {
+        test("android") {
+          // same attributes as Mill's AndroidModule, for a release build
+          gradleModuleCheck0(
+            defaultAttributes = Some(
+              VariantSelector.AttributesBased(Map(
+                "org.jetbrains.kotlin.platform.type" ->
+                  VariantMatcher.AnyOf(Seq(
+                    VariantMatcher.Equals("androidJvm"),
+                    VariantMatcher.Equals("common"),
+                    VariantMatcher.Equals("jvm")
+                  )),
+                "org.gradle.category" -> VariantMatcher.Library,
+                "org.gradle.jvm.environment" ->
+                  VariantMatcher.AnyOf(Seq(
+                    VariantMatcher.Equals("android"),
+                    VariantMatcher.Equals("common"),
+                    VariantMatcher.Equals("standard-jvm")
+                  )),
+                "org.gradle.dependency.bundling" -> VariantMatcher.Equals("external"),
+                "com.android.build.api.attributes.BuildTypeAttr" ->
+                  VariantMatcher.Equals("release"),
+                "com.android.build.api.attributes.VariantAttr" ->
+                  VariantMatcher.Equals("release")
+              ))
+            ),
+            attributesBasedReprAsToString = true
+          )(
+            dep"androidx.room3:room3-runtime:3.0.3"
+          )
+        }
+        test("jvm") {
+          gradleModuleCheck0(
+            defaultAttributes = Some(
+              VariantSelector.AttributesBased(Map(
+                "org.jetbrains.kotlin.platform.type" -> VariantMatcher.Equals("jvm")
+              ))
+            ),
+            attributesBasedReprAsToString = true
+          )(
+            dep"androidx.room3:room3-runtime:3.0.3"
+          )
+        }
+      }
+
       test("endorseStrictVersions") {
         gradleModuleCheck0(
           defaultAttributes = Some(
