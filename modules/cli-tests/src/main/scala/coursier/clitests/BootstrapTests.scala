@@ -747,6 +747,100 @@ abstract class BootstrapTests extends TestSuite with LauncherOptions {
       }
     }
 
+    def manifestAttributes(jar: os.Path): Map[String, String] = {
+      val jf = new JarFile(jar.toIO)
+      try
+        jf.getManifest.getMainAttributes.asScala.toMap.map {
+          case (k, v) => k.toString -> v.toString
+        }
+      finally jf.close()
+    }
+
+    def manifestAttributesTest(launcherTypeOptions: String*): Unit =
+      TestUtil.withTempDir { tmpDir0 =>
+        val tmpDir = os.Path(tmpDir0)
+        os.proc(
+          launcher,
+          "bootstrap",
+          launcherTypeOptions,
+          "-o",
+          "echo",
+          "io.get-coursier:echo:1.0.1",
+          "--manifest-attribute",
+          "Foo-Bar=a value",
+          "--manifest-attribute",
+          "Add-Opens=java.base/java.io",
+          "--add-opens",
+          "java.base/java.lang",
+          "--add-exports",
+          "java.base/sun.nio.ch=ALL-UNNAMED",
+          "--add-exports",
+          "jdk.compiler/com.sun.tools.javac.api",
+          extraOptions
+        ).call(cwd = tmpDir)
+
+        val attributes = manifestAttributes(tmpDir / "echo")
+        assert(attributes.get("Foo-Bar").contains("a value"))
+        assert(attributes.get("Add-Opens").contains("java.base/java.io java.base/java.lang"))
+        assert(
+          attributes.get("Add-Exports")
+            .contains("java.base/sun.nio.ch jdk.compiler/com.sun.tools.javac.api")
+        )
+
+        // the launcher still starts with 'java -jar', that reads those attributes
+        val output = os.proc("java", "-jar", "echo", "foo")
+          .call(cwd = tmpDir)
+          .out.text()
+        val expectedOutput = "foo" + System.lineSeparator()
+        assert(output == expectedOutput)
+      }
+
+    test("manifest attributes") {
+      test("bootstrap") {
+        manifestAttributesTest()
+      }
+      test("standalone") {
+        manifestAttributesTest("--standalone")
+      }
+      test("assembly") {
+        manifestAttributesTest("--assembly")
+      }
+    }
+
+    test("manifest attributes errors") {
+      def error(args: String*): String =
+        TestUtil.withTempDir { tmpDir0 =>
+          val tmpDir = os.Path(tmpDir0)
+          val res = os.proc(
+            launcher,
+            "bootstrap",
+            "-o",
+            "echo",
+            "io.get-coursier:echo:1.0.1",
+            args,
+            extraOptions
+          ).call(cwd = tmpDir, check = false, mergeErrIntoOut = true)
+          assert(res.exitCode != 0)
+          assert(!os.exists(tmpDir / "echo"))
+          res.out.text()
+        }
+
+      val mainClass = error("--manifest-attribute", "Main-Class=foo.Bar")
+      assert(mainClass.contains("Cannot set Main-Class via --manifest-attribute"))
+      val malformed = error("--manifest-attribute", "Foo")
+      assert(malformed.contains("Malformed manifest attribute 'Foo'"))
+      val invalidName = error("--manifest-attribute", "Foo Bar=a")
+      assert(invalidName.contains("Invalid manifest attribute name 'Foo Bar'"))
+      val duplicate = error("--manifest-attribute", "Foo=a", "--manifest-attribute", "foo=b")
+      assert(duplicate.contains("Manifest attributes passed more than once: Foo"))
+      val malformedPackage = error("--add-opens", "java.lang")
+      assert(malformedPackage.contains("Malformed --add-opens value 'java.lang'"))
+      val otherTarget = error("--add-exports", "java.base/sun.nio.ch=some.module")
+      assert(otherTarget.contains("Malformed --add-exports value"))
+      val manifestJar = error("--manifest-jar", "--add-opens", "java.base/java.lang")
+      assert(manifestJar.contains("can only be used with bootstraps"))
+    }
+
     test("assembly service files") {
       // Checks that META-INF/services files from multiple JARs are properly
       // concatenated with newline separators, so each provider class name

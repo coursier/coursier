@@ -1,8 +1,9 @@
 package coursier.launcher
 
-import java.io.{ByteArrayInputStream, FileNotFoundException}
+import java.io.{ByteArrayInputStream, ByteArrayOutputStream, FileNotFoundException}
 import java.nio.charset.StandardCharsets
 import java.nio.file.Path
+import java.util.jar.{Attributes, JarFile, Manifest}
 import java.util.zip.{CRC32, ZipEntry, ZipException, ZipOutputStream}
 
 import coursier.launcher.internal.{FileUtil, WrappedZipInputStream}
@@ -63,7 +64,8 @@ object BootstrapGenerator extends Generator[Parameters.Bootstrap] {
         parameters.javaProperties,
         parameters.pythonJep,
         parameters.python,
-        parameters.extraContent
+        parameters.extraContent,
+        parameters.manifestAttributes
       )
 
       zos.close()
@@ -82,7 +84,8 @@ object BootstrapGenerator extends Generator[Parameters.Bootstrap] {
     properties: Seq[(String, String)],
     pythonJep: Boolean,
     python: Boolean,
-    extraContent: Map[String, Seq[ClassLoaderContent]]
+    extraContent: Map[String, Seq[ClassLoaderContent]],
+    manifestAttributes: Seq[(String, String)]
   ): Unit = {
 
     val content0 = ClassLoaderContent.withUniqueFileNames(content)
@@ -109,7 +112,21 @@ object BootstrapGenerator extends Generator[Parameters.Bootstrap] {
 
     val bootstrapZip = WrappedZipInputStream.create(new ByteArrayInputStream(bootstrapJar))
 
-    for ((ent, content) <- extraZipEntries) {
+    // The manifest, whether it comes from extraZipEntries or from the bootstrap launcher, gets
+    // manifestAttributes
+    var wroteManifest = false
+    def isManifest(ent: ZipEntry): Boolean =
+      ent.getName == JarFile.MANIFEST_NAME
+    def manifestEntry(ent: ZipEntry, content: Array[Byte]): (ZipEntry, Array[Byte]) =
+      if (manifestAttributes.isEmpty || !isManifest(ent)) (ent, content)
+      else {
+        val ent0 = new ZipEntry(ent.getName)
+        ent0.setTime(ent.getTime)
+        (ent0, withAttributes(content, manifestAttributes))
+      }
+
+    for ((ent0, content0) <- extraZipEntries) {
+      val (ent, content) = manifestEntry(ent0, content0)
       try outputZip.putNextEntry(ent)
       catch {
         case _: ZipException if ent.isDirectory =>
@@ -117,12 +134,17 @@ object BootstrapGenerator extends Generator[Parameters.Bootstrap] {
       }
       outputZip.write(content)
       outputZip.closeEntry()
+      if (isManifest(ent))
+        wroteManifest = true
     }
 
-    for ((ent, data) <- bootstrapZip.entriesWithData()) {
+    for ((ent0, data0) <- bootstrapZip.entriesWithData()) {
+      val (ent, data) = manifestEntry(ent0, data0)
       val writeData =
         try {
           outputZip.putNextEntry(ent)
+          if (isManifest(ent))
+            wroteManifest = true
           true
         }
         catch {
@@ -223,6 +245,12 @@ object BootstrapGenerator extends Generator[Parameters.Bootstrap] {
         )
     }
 
+    if (!wroteManifest && manifestAttributes.nonEmpty)
+      throw new IllegalArgumentException(
+        s"No ${JarFile.MANIFEST_NAME} in bootstrap launcher $bootstrapResourcePath, " +
+          "cannot add manifest attributes to it"
+      )
+
     val propFileContent =
       (("bootstrap.mainClass" -> mainClass) +: properties)
         .map {
@@ -242,6 +270,28 @@ object BootstrapGenerator extends Generator[Parameters.Bootstrap] {
   }
 
   def resourceDir: String = "coursier/bootstrap/launcher/"
+
+  /** `manifest` (the content of a manifest file), with `attributes` added to its main section,
+    * overriding those of the same name - except `Main-Class`, that starts the bootstrap launcher
+    */
+  private def withAttributes(
+    manifest: Array[Byte],
+    attributes: Seq[(String, String)]
+  ): Array[Byte] = {
+    val manifest0 = new Manifest(new ByteArrayInputStream(manifest))
+    val main      = manifest0.getMainAttributes
+    for ((name, value) <- attributes) {
+      val name0 = new Attributes.Name(name)
+      if (name0 == Attributes.Name.MAIN_CLASS)
+        throw new IllegalArgumentException(
+          s"Cannot set ${Attributes.Name.MAIN_CLASS} in the manifest of a bootstrap launcher"
+        )
+      main.put(name0, value)
+    }
+    val baos = new ByteArrayOutputStream
+    manifest0.write(baos)
+    baos.toByteArray
+  }
 
   private def bootstrapResourcePath(hasResources: Boolean, proguarded: Boolean) =
     (hasResources, proguarded) match {

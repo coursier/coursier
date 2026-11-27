@@ -1,6 +1,7 @@
 package coursier.cli.bootstrap
 
 import java.nio.file.{Files, Path, Paths}
+import java.util.jar.Attributes
 
 import cats.data.{Validated, ValidatedNel}
 import cats.implicits._
@@ -35,7 +36,8 @@ final case class BootstrapSpecificParams(
   graalvmOptions: Seq[String],
   disableJarCheckingOpt: Option[Boolean],
   jvmIndexUrlOpt: Option[String],
-  validateChecksums: Boolean = false
+  validateChecksums: Boolean = false,
+  manifestAttributes: Seq[(String, String)] = Nil
 ) {
   import BootstrapSpecificParams.BootstrapPackaging
   def batOutput: Path =
@@ -189,15 +191,76 @@ object BootstrapSpecificParams {
           Validated.invalidNel(s"Base manifest $path not found")
     }
 
+    val manifestAttributesV = {
+      val attributesV = options.manifestAttribute.traverse { s =>
+        val idx = s.indexOf('=')
+        if (idx < 0)
+          Validated.invalidNel(s"Malformed manifest attribute '$s' (expected 'name=value')")
+        else
+          manifestAttribute(s.substring(0, idx).trim, s.substring(idx + 1))
+      }
+      def packagesV(optionName: String, values: List[String]) =
+        values.traverse { s =>
+          // like the java option, with the only target a manifest accepts
+          val s0       = s.trim.stripSuffix("=ALL-UNNAMED")
+          val slashIdx = s0.indexOf('/')
+          if (
+            slashIdx <= 0 || slashIdx == s0.length - 1 || s0.exists(c => c.isWhitespace || c == '=')
+          )
+            Validated.invalidNel(
+              s"Malformed $optionName value '$s' (expected 'module/package')"
+            )
+          else
+            Validated.validNel(s0)
+        }
+      (
+        attributesV,
+        packagesV("--add-exports", options.addExports),
+        packagesV("--add-opens", options.addOpens)
+      ).tupled.andThen {
+        case (attributes, exports, opens) =>
+          val duplicates = attributes
+            .groupBy { case (name, _) => new Attributes.Name(name) }
+            .collect { case (name, values) if values.length > 1 => name.toString }
+            .toVector
+            .sorted
+          // values of --add-exports and --add-opens go after those of --manifest-attribute
+          val merged = Seq(addExports -> exports, addOpens -> opens)
+            .filter(_._2.nonEmpty)
+            .foldLeft(attributes) {
+              case (acc, (name, packages)) =>
+                val name0 = new Attributes.Name(name)
+                acc.find { case (n, _) => new Attributes.Name(n) == name0 } match {
+                  case None => acc :+ (name -> packages.mkString(" "))
+                  case Some(former @ (formerName, formerValue)) =>
+                    acc.filter(_ != former) :+
+                      (formerName -> (formerValue +: packages).mkString(" "))
+                }
+            }
+          if (duplicates.nonEmpty)
+            Validated.invalidNel(
+              s"Manifest attributes passed more than once: ${duplicates.mkString(", ")}"
+            )
+          else if (merged.nonEmpty && (manifestJar || nativeImage || native))
+            Validated.invalidNel(
+              "--manifest-attribute, --add-exports, and --add-opens can only be used with " +
+                "bootstraps (standalone or not) and assemblies"
+            )
+          else
+            Validated.validNel(merged)
+      }
+    }
+
     (
       validateOutputType,
       validateNoMainClass,
       validateRelocate,
       rulesV,
       shadingRulesV,
-      baseManifestOptV
+      baseManifestOptV,
+      manifestAttributesV
     ).mapN {
-      (_, _, _, rules, shadingRules, baseManifestOpt) =>
+      (_, _, _, rules, shadingRules, baseManifestOpt, manifestAttributes) =>
         BootstrapSpecificParams(
           output,
           options.force,
@@ -221,10 +284,31 @@ object BootstrapSpecificParams {
           graalvmOptions,
           options.disableJarChecking,
           jvmIndex,
-          options.validateChecksums
+          options.validateChecksums,
+          manifestAttributes
         )
     }
   }
+
+  private val addExports = "Add-Exports"
+  private val addOpens   = "Add-Opens"
+
+  private def manifestAttribute(
+    name: String,
+    value: String
+  ): ValidatedNel[String, (String, String)] =
+    scala.util.Try(new Attributes.Name(name)).toOption match {
+      case None =>
+        Validated.invalidNel(s"Invalid manifest attribute name '$name'")
+      case Some(Attributes.Name.MAIN_CLASS) =>
+        Validated.invalidNel(
+          s"Cannot set ${Attributes.Name.MAIN_CLASS} via --manifest-attribute, use --main-class"
+        )
+      case Some(_) if value.exists(c => c == '\n' || c == '\r') =>
+        Validated.invalidNel(s"Invalid new line in the value of manifest attribute '$name'")
+      case Some(_) =>
+        Validated.validNel(name -> value)
+    }
 
   final case class BootstrapPackaging(
     standalone: Boolean,

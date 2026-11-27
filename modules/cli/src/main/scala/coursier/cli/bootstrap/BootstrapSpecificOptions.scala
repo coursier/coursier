@@ -61,6 +61,18 @@ final case class BootstrapSpecificOptions(
   @HelpMessage("Manifest to use as a start when creating a manifest for assemblies")
     baseManifest: Option[String] = None,
   @Group(OptionGroup.bootstrap)
+  @HelpMessage("Add an attribute to the main section of the JAR manifest of bootstraps and assemblies (can be repeated)")
+  @ValueDescription("name=value")
+    manifestAttribute: List[String] = Nil,
+  @Group(OptionGroup.bootstrap)
+  @HelpMessage("Have 'java -jar' export a package to the class path of bootstraps and assemblies, via the Add-Exports manifest attribute (can be repeated, see also --java-opt for the shell preamble)")
+  @ValueDescription("module/package")
+    addExports: List[String] = Nil,
+  @Group(OptionGroup.bootstrap)
+  @HelpMessage("Have 'java -jar' open a package to the class path of bootstraps and assemblies, via the Add-Opens manifest attribute (can be repeated, see also --java-opt for the shell preamble)")
+  @ValueDescription("module/package")
+    addOpens: List[String] = Nil,
+  @Group(OptionGroup.bootstrap)
   @Hidden
   @HelpMessage("Add preamble (default: true if the launcher has a main class, false otherwise)")
     preamble: Option[Boolean] = None,

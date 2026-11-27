@@ -327,6 +327,65 @@ Welcome to the Ammonite Repl 2.0.4 (Scala 2.13.1 Java 1.8.0_121)
 res0: String = "bar"
 ```
 
+### Manifest attributes
+
+The [Java options](#java-options) above are only passed by the shell preamble. When a
+launcher is run with `java -jar` instead (or was generated with
+[`--preamble=false`](#preamble)), they don't apply. `java` reads
+[some of its options](https://docs.oracle.com/en/java/javase/21/docs/specs/jar/jar.html#main-attributes)
+from the JAR's manifest attributes, though, whether the launcher is run directly or with
+`java -jar`: the shell preamble itself runs `java -jar` on the launcher.
+
+Manifest attributes can be added to [standard bootstraps](#bootstraps),
+[standalone bootstraps](#standalone-bootstraps), and [assemblies](#assemblies) (not to
+[manifest-based launchers](#manifest-based-launchers) or
+[native launchers](#graalvm-native-image)).
+
+#### Exporting and opening JDK packages
+
+Applications relying on JDK internals that need options like
+`--add-opens java.base/java.lang=ALL-UNNAMED` can get them via the `Add-Exports` and
+`Add-Opens` manifest attributes. Pass `--add-exports` and `--add-opens` to export or open
+packages of JDK modules to the application:
+```bash
+$ cs bootstrap my-app -o my-app.jar \
+    --add-exports jdk.compiler/com.sun.tools.javac.api \
+    --add-opens java.base/java.lang
+$ unzip -p my-app.jar META-INF/MANIFEST.MF
+Manifest-Version: 1.0
+Main-Class: coursier.bootstrap.launcher.Launcher
+Add-Exports: jdk.compiler/com.sun.tools.javac.api
+Add-Opens: java.base/java.lang
+$ java -jar my-app.jar # java.lang is open to the application
+```
+
+These options take `module/package` values, and can be repeated. Like the
+`--add-exports` and `--add-opens` Java options with `ALL-UNNAMED` as target, they export or
+open these packages to the application's class path, and to it only, as that's the only
+target manifests support: a trailing `=ALL-UNNAMED` is accepted, and any other target is
+rejected.
+
+Java ignores these attributes when it doesn't start the launcher with `-jar`, like when
+the launcher is added to the class path of another application. Keep passing the
+corresponding Java options in that case.
+
+#### Other attributes
+
+Any other attribute can be added to the main section of the manifest with
+`--manifest-attribute name=value`, which can be repeated for different attributes:
+```bash
+$ cs bootstrap my-app -o my-app.jar \
+    --manifest-attribute Enable-Native-Access=ALL-UNNAMED \
+    --manifest-attribute "Implementation-Title=My App"
+```
+
+These attributes override those of the same name the launcher already has, including those
+of a manifest passed to assemblies via `--base-manifest`. Values of `--add-exports` and
+`--add-opens` are appended to those of `--manifest-attribute Add-Exports=…` and
+`--manifest-attribute Add-Opens=…`, if any. `Main-Class` can't be set that way (in
+[bootstraps](#bootstraps), it has to start the bootstrap launcher): use `--main-class`
+(`-M`) to set the application's main class instead.
+
 ### Windows
 
 [Standard bootstraps](#bootstraps), [standalone bootstraps](#standalone-bootstraps),
