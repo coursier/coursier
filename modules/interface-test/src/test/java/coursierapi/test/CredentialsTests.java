@@ -157,4 +157,33 @@ public class CredentialsTests {
         }
     }
 
+    @Test
+    public void netrcCredentials() throws IOException {
+        Path cacheLocation = Files.createTempDirectory("coursier-interface-test-cache-");
+        Path netrcFile = Files.createTempFile("coursier-interface-test-netrc-", ".txt");
+        try (AuthenticatedRepository repository = new AuthenticatedRepository()) {
+            // plain HTTP, random port: netrc entries only look at the host, like with curl
+            Files.write(netrcFile, String.join("\n",
+                    "machine other.example.com login nope password nope",
+                    "machine " + repository.host() + " login " + USER + " password " + PASSWORD,
+                    "").getBytes(StandardCharsets.UTF_8));
+            Cache cache = Cache.create()
+                    .withLocation(cacheLocation.toFile())
+                    .withNetrc(true)
+                    .withNetrcFile(netrcFile.toFile())
+                    .withNetrcOptional(false);
+            checkFetches(cache, repository, cacheLocation);
+        } finally {
+            Files.deleteIfExists(netrcFile);
+        }
+    }
+
+    @Test
+    public void netrcOffByDefault() {
+        Cache cache = Cache.create();
+        assertFalse(cache.isNetrc());
+        assertNull(cache.getNetrcFile());
+        assertTrue(cache.isNetrcOptional());
+    }
+
 }

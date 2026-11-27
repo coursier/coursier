@@ -5,6 +5,7 @@ import caseapp.core.parser.Parser
 import coursier.cache.FileCache
 import coursier.cli.options.CacheOptions
 import coursier.cli.params.CacheParams
+import coursier.credentials.{DirectCredentials, NetrcCredentials}
 import coursier.util.Task
 import utest._
 
@@ -144,6 +145,74 @@ object CacheParamsTests extends TestSuite {
         coursier.cache.CacheUrl.userAgent("Coursier", "ci", "json") ==
           "Coursier/2.1 (+https://github.com/coursier; ci; json)"
       )
+    }
+
+    test("netrc") {
+      def netrc(args: String*): Option[NetrcCredentials] =
+        params(parse(args*)).netrc
+      def invalid(args: String*): Boolean =
+        parse(args*).params.isInvalid
+
+      test("read by default, optional") {
+        assert(netrc() == Some(NetrcCredentials(None, optional = true)))
+      }
+      def withNetrcFile[T](content: String)(f: String => T): T = {
+        val file = java.nio.file.Files.createTempFile("coursier-netrc", ".txt")
+        try {
+          java.nio.file.Files.write(file, content.getBytes(java.nio.charset.StandardCharsets.UTF_8))
+          f(file.toString)
+        }
+        finally java.nio.file.Files.delete(file)
+      }
+
+      test("--netrc and --netrc-file make it mandatory") {
+        withNetrcFile("machine a login b password c\n") { path =>
+          val expected = Some(NetrcCredentials(Some(path), optional = false))
+          assert(netrc("--netrc-file", path) == expected)
+          assert(netrc("--netrc", "--netrc-file", path) == expected)
+        }
+      }
+      test("a mandatory file that's missing or malformed is an error") {
+        assert(invalid("--netrc-file", "/nonexistent/netrc"))
+        withNetrcFile("machine a login b password \"c\n") { path =>
+          assert(invalid("--netrc-file", path))
+          assert(!invalid("--netrc-file", path, "--netrc-optional"))
+        }
+      }
+      test("--netrc-file and --netrc-optional") {
+        assert(
+          netrc("--netrc-file", "/a", "--netrc-optional") ==
+            Some(NetrcCredentials(Some("/a"), optional = true))
+        )
+      }
+      test("--netrc=false") {
+        assert(netrc("--netrc=false").isEmpty)
+      }
+      test("contradictions") {
+        assert(invalid("--netrc=false", "--netrc-optional"))
+        assert(invalid("--netrc=false", "--netrc-file", "/a"))
+        assert(invalid("--netrc", "--netrc-optional"))
+      }
+      test("comes after the other credentials") {
+        val params0 = params(parse("--credentials", "repo.example.com alex:pass"))
+        params0.cache(coursier.cache.CacheDefaults.pool, coursier.cache.CacheLogger.nop) match {
+          case fc: FileCache[Task] =>
+            val passed = fc.credentials.collect {
+              case c: DirectCredentials if c.host == "repo.example.com" => c
+            }
+            assert(passed.nonEmpty)
+            assert(fc.credentials.last == NetrcCredentials())
+          case other => sys.error(s"Expected a FileCache, got $other")
+        }
+      }
+      test("not with --netrc=false") {
+        val params0 = params(parse("--netrc=false"))
+        params0.cache(coursier.cache.CacheDefaults.pool, coursier.cache.CacheLogger.nop) match {
+          case fc: FileCache[Task] =>
+            assert(!fc.credentials.contains(NetrcCredentials()))
+          case other => sys.error(s"Expected a FileCache, got $other")
+        }
+      }
     }
   }
 }
