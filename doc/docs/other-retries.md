@@ -64,6 +64,39 @@ separately, see [Rate limiting](#rate-limiting) below.
 A `Retry-After` header on those HTTP responses is honoured in place of the delay, up to the
 `COURSIER_MAX_HTTP_RETRY_AFTER` limit described below.
 
+## Unreachable hosts
+
+When downloads keep failing to connect to a host - the connection is refused, there is no route
+to it, its name doesn't resolve, or the connection times out - coursier stops sending it requests
+for a while. A repository that is down, or a VPN that dropped, would otherwise cost every artifact
+of a resolution its connect timeout, then its retries, one after the other.
+
+- **It takes several downloads failing, not several attempts.** A failure counts once a download
+  has made all its attempts, as described above. The downloads running at the same time count as
+  one: those that fail together tell nothing more than the first of them.
+- **Then the host is skipped for a minute.** After 3 such failures in a row, requests to that host,
+  from that JVM, fail right away, without being sent, with an error like
+
+  ```text
+  Not downloading https://repo.example.com/…: connections to its host kept failing, not trying it again for 42 s
+  ```
+
+  An artifact that was cached as not found there is still reported as not found.
+- **Any answer starts the count over.** A response from the host, whatever it is - a 404 or a 429
+  included - shows it can be connected to. Until it gives one, once the minute has passed, the
+  first download that fails to connect again makes the host skipped for another minute.
+- **A read timeout doesn't count**, since the host did answer, only slowly. Neither does a failure
+  to connect to the host a request was redirected to: the repository itself answered.
+
+In a long-running JVM (an sbt shell, a Mill daemon, a language server), that means the requests
+sent in the minute after a VPN comes back can still fail. `coursier.unreachable-after=0` turns
+the whole mechanism off.
+
+| Java property | Default | Meaning |
+|---|---|---|
+| `coursier.unreachable-after` | `3` | Downloads failing to connect in a row that make a host skipped. `0` never skips it. |
+| `coursier.unreachable-for` | `1 min` | How long the host is then skipped for |
+
 ## Rate limiting
 
 An HTTP 429 response is not a failure: the server works, and asked to be left alone for a while.
@@ -187,11 +220,12 @@ val cache = FileCache[Task]().copy(
 )
 ```
 
-The per-host pause is kept by a `HostThrottle` shared by all the caches of a JVM, since a rate limit
-applies to the process as a whole. `FileCache` accepts one of its own through its `hostThrottle`
+The per-host pause, and the hosts found unreachable, are kept by a `HostThrottle` shared by all the
+caches of a JVM, since a rate limit applies to the process as a whole. `FileCache` accepts one of its own through its `hostThrottle`
 field, which is mostly useful in tests. `HostThrottle` is a trait, so that field also takes
 `HostThrottle.Nop`, which holds nothing off: rate limits are then left to the retry loop alone,
-bounded by `maxThrottleWait` only.
+bounded by `maxThrottleWait` only, and no host is ever skipped. `HostThrottle(...)` takes
+`unreachableAfter` and `unreachableFor` parameters, the API side of the properties above.
 
 A `CacheLogger` is told about rate limits through its `rateLimited(url, duration)` method, called
 once per pause: it is what prints the message above on the command line, and what to override to

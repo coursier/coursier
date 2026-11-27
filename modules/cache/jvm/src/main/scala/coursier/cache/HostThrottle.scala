@@ -38,6 +38,30 @@ trait HostThrottle {
   /** Records that `url`'s host answered us normally, so the next pause we pick starts small again
     */
   def succeeded(url: String): Unit
+
+  /** What was recorded about `url`'s host so far, to be passed back to [[connectionFailed]]
+    *
+    * Taken before a download makes its first attempt, so that its failure can be told apart from
+    * the ones of the downloads that ran alongside it.
+    */
+  def connectionMark(url: String): Long = 0L
+
+  /** Records that a download could not connect to `url`'s host, all its attempts included
+    *
+    * Like a 429, this is about the host rather than the artifact: when a repository is down or out
+    * of reach (a VPN that dropped, say), every request to it waits out its connect timeout, then
+    * its retries, one artifact after the other.
+    *
+    * `mark` is what [[connectionMark]] returned before the download started.
+    */
+  def connectionFailed(url: String, mark: Long): Unit = ()
+
+  /** How long requests to `url`'s host should still fail without being sent, if they should
+    *
+    * Kept apart from [[holdOff]], rather than being one more [[HostThrottle.HoldOff]], so that the
+    * matches on the latter written before it existed stay exhaustive.
+    */
+  def unreachable(url: String): Option[FiniteDuration] = None
 }
 
 object HostThrottle {
@@ -52,17 +76,60 @@ object HostThrottle {
   ): HostThrottle =
     new Default(initialDelay, maxDelay, delayMultiplier, maxRetryAfter, clock)
 
+  /** The throttle that actually holds requests off - see [[HostThrottle.Default]]
+    *
+    * `unreachableAfter` is how many connection failures in a row make a host unreachable (`None`
+    * never does), and `unreachableFor` how long requests to it then fail without being sent.
+    */
+  def apply(
+    initialDelay: FiniteDuration,
+    maxDelay: Option[FiniteDuration],
+    delayMultiplier: Double,
+    maxRetryAfter: Option[FiniteDuration],
+    clock: Clock,
+    unreachableAfter: Option[Int],
+    unreachableFor: FiniteDuration
+  ): HostThrottle =
+    new Default(
+      initialDelay,
+      maxDelay,
+      delayMultiplier,
+      maxRetryAfter,
+      clock,
+      unreachableAfter,
+      unreachableFor
+    )
+
   /** Holds a host off for as long as it asked, or as long as our own backoff says
     *
     * Instances are safe to share between threads, and meant to be - see [[HostThrottle]].
     */
   final class Default(
-    initialDelay: FiniteDuration = CacheDefaults.throttleInitialDelay,
-    maxDelay: Option[FiniteDuration] = CacheDefaults.throttleMaxDelay,
-    delayMultiplier: Double = CacheDefaults.retryBackoffMultiplier,
-    maxRetryAfter: Option[FiniteDuration] = CacheDefaults.maxHttpRetryAfter,
-    clock: Clock = Clock.systemDefaultZone()
+    initialDelay: FiniteDuration,
+    maxDelay: Option[FiniteDuration],
+    delayMultiplier: Double,
+    maxRetryAfter: Option[FiniteDuration],
+    clock: Clock,
+    unreachableAfter: Option[Int],
+    unreachableFor: FiniteDuration
   ) extends HostThrottle {
+
+    def this(
+      initialDelay: FiniteDuration = CacheDefaults.throttleInitialDelay,
+      maxDelay: Option[FiniteDuration] = CacheDefaults.throttleMaxDelay,
+      delayMultiplier: Double = CacheDefaults.retryBackoffMultiplier,
+      maxRetryAfter: Option[FiniteDuration] = CacheDefaults.maxHttpRetryAfter,
+      clock: Clock = Clock.systemDefaultZone()
+    ) =
+      this(
+        initialDelay,
+        maxDelay,
+        delayMultiplier,
+        maxRetryAfter,
+        clock,
+        CacheDefaults.unreachableAfter,
+        CacheDefaults.unreachableFor
+      )
 
     private val states = new ConcurrentHashMap[String, State]
 
@@ -92,6 +159,8 @@ object HostThrottle {
     def rateLimited(url: String, retryAfterOpt: Option[FiniteDuration]): Option[FiniteDuration] =
       state(url).flatMap { state0 =>
         state0.synchronized {
+          // turning us away is still answering: whatever connections failed before, it is reachable
+          state0.answered()
           val now = clock.millis()
           // Holding off for less than the server asked is what we refuse to do, so a `Retry-After`
           // we are not willing to sit out is one to give up on rather than shorten.
@@ -130,7 +199,46 @@ object HostThrottle {
       } state0.synchronized {
         state0.delay = initialDelay
         state0.tooLong = false
+        state0.answered()
       }
+
+    override def connectionMark(url: String): Long =
+      hostKey(url).flatMap(key => Option(states.get(key))).fold(0L)(_.generation)
+
+    /** @inheritdoc
+      *
+      * A failure only counts when nothing was recorded about the host since the download started.
+      * The downloads in flight when a connection to a host fails tend to fail together - a blip of
+      * the network, a DNS lookup that failed for a moment - and that is one failure, not one per
+      * download: counting each of them had six parallel downloads make a host unreachable for a
+      * minute from a single incident. The same goes for a failure that lands after the host was
+      * found unreachable, from a connection already under way then: it says nothing new, and isn't
+      * allowed to push the end of the pause further.
+      *
+      * The failures are counted until the host answers again, so once it has been unreachable, the
+      * first download that fails after the pause starts a new one.
+      */
+    override def connectionFailed(url: String, mark: Long): Unit =
+      for {
+        after  <- unreachableAfter
+        state0 <- state(url)
+      } state0.synchronized {
+        if (state0.generation == mark) {
+          state0.generation += 1L
+          state0.connectFailures += 1
+          val now = clock.millis()
+          if (state0.connectFailures >= after && state0.unreachableUntil <= now)
+            state0.unreachableUntil = now + unreachableFor.toMillis
+        }
+      }
+
+    override def unreachable(url: String): Option[FiniteDuration] =
+      for {
+        key    <- hostKey(url)
+        state0 <- Option(states.get(key))
+        left = state0.unreachableUntil - clock.millis()
+        if left > 0L
+      } yield FiniteDuration(left, MILLISECONDS)
 
     private def capped(delay: Duration, max: Option[FiniteDuration]): FiniteDuration = {
       val delay0 = delay match {
@@ -180,6 +288,23 @@ object HostThrottle {
 
     /** Whether `notBefore` comes from a `Retry-After` we decided not to honour */
     @volatile var tooLong: Boolean = false
+
+    /** Connections that failed since the host last answered */
+    @volatile var connectFailures: Int = 0
+
+    /** Epoch millis before which requests to the host fail without being sent */
+    @volatile var unreachableUntil: Long = 0L
+
+    /** Bumped by every connection failure counted and every answer, see `Default.connectionFailed`
+      */
+    @volatile var generation: Long = 0L
+
+    /** Records that the host answered, which says it can be connected to - to call with the lock */
+    def answered(): Unit = {
+      connectFailures = 0
+      unreachableUntil = 0L
+      generation += 1L
+    }
   }
 
   /** Scheme, host and port - what a rate limit is actually applied to

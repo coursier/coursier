@@ -170,6 +170,29 @@ object CacheDefaults {
   lazy val maxThrottleWait: Option[FiniteDuration] =
     CacheEnv.defaultMaxThrottleWait(CacheEnv.maxThrottleWait.read())
 
+  private def defaultUnreachableAfter = 3
+  private def defaultUnreachableFor   = 1.minute
+
+  /** How many connection failures in a row make a host unreachable, `None` (`0`) for never */
+  lazy val unreachableAfter: Option[Int] =
+    sys.props
+      .get("coursier.unreachable-after")
+      .flatMap(s => Try(s.toInt).toOption)
+      .getOrElse(defaultUnreachableAfter) match {
+      case n if n > 0 => Some(n)
+      case _          => None
+    }
+
+  /** How long requests to an unreachable host fail without being sent */
+  lazy val unreachableFor: FiniteDuration =
+    sys.props
+      .get("coursier.unreachable-for")
+      .flatMap(s => parseDuration(s).toOption)
+      .collect {
+        case f: FiniteDuration => f
+      }
+      .getOrElse(defaultUnreachableFor)
+
   /** Shared between all the caches of this JVM, like `pool` is
     *
     * A rate limit applies to the client as a whole, so a `FileCache` that kept its own would only

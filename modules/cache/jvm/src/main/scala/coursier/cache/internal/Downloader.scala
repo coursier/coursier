@@ -160,7 +160,8 @@ import scala.util.control.NonFatal
       currentLastModifiedOpt: Option[Long], // for the logger
       logger: CacheLogger,
       allCredentials0: Seq[DirectCredentials]
-    ): Either[ArtifactError, Option[Long]] =
+    ): Either[ArtifactError, Option[Long]] = {
+      val connectionMark = hostThrottle.connectionMark(url)
       try
         retry.retryOpt0 {
           urlLastModifiedOnce(url, currentLastModifiedOpt, logger, allCredentials0) match {
@@ -179,6 +180,7 @@ import scala.util.control.NonFatal
             throw ex
           Left(ex)
         case NonFatal(e) =>
+          Downloader.recordConnectFailure(hostThrottle, url, connectionMark, e)
           val ex = new ArtifactError.DownloadError(
             s"Caught $e${Option(e.getMessage).fold("")(" (" + _ + ")")} while getting last modified time of $url",
             Some(e)
@@ -187,6 +189,7 @@ import scala.util.control.NonFatal
             throw ex
           Left(ex)
       }
+    }
 
     private def urlLastModifiedOnce(
       url: String,
@@ -194,11 +197,15 @@ import scala.util.control.NonFatal
       logger: CacheLogger,
       allCredentials0: Seq[DirectCredentials]
     ): Either[ArtifactError, Option[Long]] =
-      hostThrottle.holdOff(url) match {
-        case HostThrottle.Clear =>
-          urlLastModifiedOnce0(url, currentLastModifiedOpt, logger, allCredentials0)
-        case HostThrottle.Wait(left)    => Left(Downloader.heldOff(url, left))
-        case HostThrottle.TooLong(left) => Left(Downloader.heldOff(url, left))
+      hostThrottle.unreachable(url) match {
+        case Some(left) => Left(Downloader.unreachable(url, left))
+        case None =>
+          hostThrottle.holdOff(url) match {
+            case HostThrottle.Clear =>
+              urlLastModifiedOnce0(url, currentLastModifiedOpt, logger, allCredentials0)
+            case HostThrottle.Wait(left)    => Left(Downloader.heldOff(url, left))
+            case HostThrottle.TooLong(left) => Left(Downloader.heldOff(url, left))
+          }
       }
 
     private def urlLastModifiedOnce0(
@@ -331,11 +338,15 @@ import scala.util.control.NonFatal
       // This host already told another download to slow down. Sending it a request it would only
       // reject is one more for its limiter to count, so we sit out the pause it asked for too,
       // rather than each thread having to discover the limit for itself.
-      hostThrottle.holdOff(url) match {
-        case HostThrottle.Clear =>
-          doDownload0(file, url, keepHeaderChecksums, allCredentials0, tmp)
-        case HostThrottle.Wait(left)    => Left(Downloader.heldOff(url, left))
-        case HostThrottle.TooLong(left) => Left(Downloader.heldOff(url, left))
+      hostThrottle.unreachable(url) match {
+        case Some(left) => Left(Downloader.unreachable(url, left))
+        case None =>
+          hostThrottle.holdOff(url) match {
+            case HostThrottle.Clear =>
+              doDownload0(file, url, keepHeaderChecksums, allCredentials0, tmp)
+            case HostThrottle.Wait(left)    => Left(Downloader.heldOff(url, left))
+            case HostThrottle.TooLong(left) => Left(Downloader.heldOff(url, left))
+          }
       }
 
     private def doDownload0(
@@ -549,8 +560,12 @@ import scala.util.control.NonFatal
       watchedLength: Downloader.WatchedLength
     ): Option[Either[ArtifactError, Unit]] = {
 
+      // Only for the progress display: a host found unreachable is not sent this request, which
+      // would wait out a connect timeout just to show a length. Nothing is kept either, so that
+      // the length is asked for again once the host can be tried.
       def lengthOnce(): Option[Long] =
-        watchedLength.getOrElseUpdate {
+        if (hostThrottle.unreachable(url).isDefined) watchedLength.get
+        else watchedLength.getOrElseUpdate {
           Downloader.contentLength(
             url,
             artifact.authentication,
@@ -1121,6 +1136,55 @@ object Downloader {
       case HostThrottle.TooLong(_) => Retry.GiveUp
     }
 
+  /** Whether `e` says that no connection to the host could be established
+    *
+    * A read timeout is not one: the host answered, it is only slow. The JDK reports both timeouts
+    * with the same exception, so its message is all that tells them apart.
+    */
+  private def isConnectFailure(e: Throwable): Boolean =
+    e match {
+      case _: java.net.ConnectException       => true
+      case _: java.net.NoRouteToHostException => true
+      case _: java.net.UnknownHostException   => true
+      case e: java.net.SocketTimeoutException =>
+        Option(e.getMessage).exists(_.equalsIgnoreCase("connect timed out"))
+      case _ => false
+    }
+
+  /** Records `e` against `url`'s host if it is a connection failure
+    *
+    * Called once the retry loop of a download is over, rather than for each of its attempts: a few
+    * failed attempts in a row are what the retries are there for, and counting each of them had a
+    * DNS lookup failing for a few milliseconds leave the whole host unreachable for a minute.
+    *
+    * A connection that failed after a redirect isn't recorded: it is about another host than
+    * `url`'s, which did answer us.
+    */
+  private def recordConnectFailure(
+    hostThrottle: HostThrottle,
+    url: String,
+    mark: Long,
+    e: Throwable
+  ): Unit =
+    if (isConnectFailure(e) && !CacheUrl.failedAfterRedirect(e))
+      hostThrottle.connectionFailed(url, mark)
+
+  /** Stands for "this host could not be reached lately, so no request was sent"
+    *
+    * Its cause is an `IOException`, like the one of the connection failures it stands in for, so
+    * that the cache handles both alike: a not-found error cached for the artifact, in particular,
+    * is kept and returned, rather than forgotten (see `remoteKeepErrors`).
+    */
+  private def unreachable(url: String, left: FiniteDuration): ArtifactError.DownloadError = {
+    val message =
+      s"Not downloading $url: connections to its host kept failing, not trying it again for " +
+        s"${(left.toMillis + 999L) / 1000L} s"
+    new ArtifactError.DownloadError(message, Some(new UnreachableHostException(message)))
+  }
+
+  /** What [[unreachable]] errors are caused by, standing for the connection that wasn't made */
+  private final class UnreachableHostException(message: String) extends IOException(message)
+
   /** Records a host's pause, and reports it if this 429 is what started it
     *
     * The downloads that then wait it out don't report anything of their own: what is worth saying
@@ -1162,7 +1226,8 @@ object Downloader {
   )(
     f: => Either[ArtifactError, T],
     ifLocked: => Option[Either[ArtifactError, T]]
-  ): Either[ArtifactError, T] =
+  ): Either[ArtifactError, T] = {
+    val connectionMark = hostThrottle.connectionMark(url)
     try
       retry.retryOpt0 {
         val res0 = CacheLocks.withUrlLock(url) {
@@ -1232,6 +1297,7 @@ object Downloader {
         else
           Left(ex)
       case NonFatal(e) =>
+        recordConnectFailure(hostThrottle, url, connectionMark, e)
         val ex = new ArtifactError.DownloadError(
           s"Caught ${e.getClass().getName()}${Option(e.getMessage).fold("")(" (" + _ + ")")} while downloading $url",
           Some(e)
@@ -1241,6 +1307,7 @@ object Downloader {
         else
           Left(ex)
     }
+  }
 
   private object UnknownProtocol {
     def unapply(t: Throwable): Option[(MalformedURLException, String)] = t match {
