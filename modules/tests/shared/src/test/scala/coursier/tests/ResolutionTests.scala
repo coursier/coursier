@@ -209,6 +209,32 @@ object ResolutionTests extends TestSuite {
         Variant.Configuration(Configuration.`import`) -> dep"acme:bom-cycle-a:1.0"
       )
     ),
+    // Evicting the versions that bring the newer versions brings the older ones back
+    // (https://github.com/coursier/coursier/issues/4044)
+    Project(
+      mod"acme:osc-root",
+      "2.0",
+      Seq(
+        Variant.emptyConfiguration -> dep"acme:osc-a:1.1",
+        Variant.emptyConfiguration -> dep"acme:osc-b:1.2"
+      )
+    ),
+    Project(
+      mod"acme:osc-b",
+      "1.2",
+      Seq(
+        Variant.emptyConfiguration -> dep"acme:osc-a:2.0"
+      )
+    ),
+    Project(mod"acme:osc-b", "3.0"),
+    Project(
+      mod"acme:osc-a",
+      "1.1",
+      Seq(
+        Variant.emptyConfiguration -> dep"acme:osc-b:3.0"
+      )
+    ),
+    Project(mod"acme:osc-a", "2.0"),
     Project(
       mod"gov.nsa:secure-pgp",
       "10.0",
@@ -594,6 +620,53 @@ object ResolutionTests extends TestSuite {
       }
       test("twoVersions") {
         check(dep"acme:version-cycle:1.0", mod"acme:version-cycle")
+      }
+    }
+    test("oscillatingVersions") {
+      test("process") {
+        async {
+          val res = await(resolve0(Seq(dep"acme:osc-root:2.0")))
+          assert(!res.isDone)
+          assert(res.missingFromCache.isEmpty)
+          assert(res.errors0.isEmpty)
+          val versions = res.oscillatingVersions
+          val expected = Map(
+            mod"acme:osc-a" -> Seq(VersionConstraint("1.1"), VersionConstraint("2.0")),
+            mod"acme:osc-b" -> Seq(VersionConstraint("1.2"), VersionConstraint("3.0"))
+          )
+          assert(versions == expected)
+          val message = coursier.Resolve.validate(res).either.left.toOption.map(_.head.getMessage)
+          assert(message.exists(_.contains("Resolution does not converge")))
+        }
+      }
+      test("maxIterations") {
+        // a negative maxIterations means no limit, so this hung forever before
+        async {
+          val initialRes = Resolution().copy(
+            rootDependencies = Seq(dep"acme:osc-root:2.0"),
+            osInfo = Activation.Os.empty
+          )
+          val res = await {
+            ResolutionProcess(initialRes)
+              .run0(Platform.fetch(repositories), maxIterations = -1)
+              .future()
+          }
+          assert(!res.isDone)
+          assert(res.oscillatingVersions.size == 2)
+        }
+      }
+      test("forceVersion") {
+        async {
+          val res = await(resolve0(
+            Seq(dep"acme:osc-root:2.0"),
+            forceVersions = Map(mod"acme:osc-b" -> VersionConstraint("3.0"))
+          ))
+          assert(res.isDone)
+          assert(res.oscillatingVersions.isEmpty)
+          val versions = res.minDependencies.map(d => d.module -> d.versionConstraint.asString)
+          assert(versions.contains(mod"acme:osc-a" -> "1.1"))
+          assert(versions.contains(mod"acme:osc-b" -> "3.0"))
+        }
       }
     }
     test("bomImportCycle") {
