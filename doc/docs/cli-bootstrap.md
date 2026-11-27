@@ -327,6 +327,31 @@ Welcome to the Ammonite Repl 2.0.4 (Scala 2.13.1 Java 1.8.0_121)
 res0: String = "bar"
 ```
 
+### Manifest attributes
+
+The Java options above are only passed by the shell preamble. When a launcher
+is run with `java -jar` instead, `java` reads
+[some of its options](https://docs.oracle.com/en/java/javase/21/docs/specs/jar/jar.html#main-attributes)
+from the attributes of its JAR manifest. Pass
+`--add-exports` and `--add-opens` to have [standard bootstraps](#bootstraps),
+[standalone bootstraps](#standalone-bootstraps), and [assemblies](#assemblies)
+export or open packages of JDK modules to the application, like the
+`--add-exports` and `--add-opens` Java options with `ALL-UNNAMED` as target do:
+```bash
+$ cs bootstrap my-app -o my-app.jar \
+    --add-exports jdk.compiler/com.sun.tools.javac.api \
+    --add-opens java.base/java.lang
+$ unzip -p my-app.jar META-INF/MANIFEST.MF
+Manifest-Version: 1.0
+Main-Class: coursier.bootstrap.launcher.Launcher
+Add-Exports: jdk.compiler/com.sun.tools.javac.api
+Add-Opens: java.base/java.lang
+```
+
+Any other attribute can be added with `--manifest-attribute name=value`.
+`Main-Class` can't be set that way, use `--main-class` (`-M`) to change the application's
+main class.
+
 ### Windows
 
 [Standard bootstraps](#bootstraps), [standalone bootstraps](#standalone-bootstraps),

@@ -64,7 +64,16 @@ object Parameters {
     pythonJep: Boolean = false,
     extraContent: Map[String, Seq[ClassLoaderContent]] = Map(),
     @since
-    rules: Seq[MergeRule] = MergeRule.default
+    rules: Seq[MergeRule] = MergeRule.default,
+    /** Attributes added to the main section of the manifest of the launcher.
+      *
+      * Like `Add-Opens` or `Add-Exports`, that `java -jar` honors in the manifest of the JAR it
+      * runs, for applications that need them whichever way they're started (the preamble's
+      * `javaOpts` only apply when the launcher is run as a script). They override those of the same
+      * name the launcher has. `Main-Class` can't be set: it's what starts the bootstrap launcher.
+      */
+    @since
+    manifestAttributes: Seq[(String, String)] = Nil
   ) extends Parameters {
 
     def withPreamble(preamble: Preamble): Bootstrap =

@@ -3,6 +3,7 @@ package coursier.cli.bootstrap
 import java.io.{File, PrintStream}
 import java.nio.file.Files
 import java.util.concurrent.ExecutorService
+import java.util.jar.Attributes
 
 import caseapp.core.RemainingArgs
 import coursier.cache.{Cache, CacheLogger}
@@ -356,6 +357,9 @@ object Bootstrap extends CoursierCommand[BootstrapOptions] {
             mainClass = mainClassOpt,
             rules = params.specific.assemblyRules,
             shadingRules = params.specific.shadingRules,
+            attributes = params.specific.manifestAttributes.map {
+              case (name, value) => new Attributes.Name(name) -> value
+            },
             baseManifest = params.specific.baseManifestOpt,
             preambleOpt = preambleOpt
           )
@@ -403,7 +407,8 @@ object Bootstrap extends CoursierCommand[BootstrapOptions] {
             disableJarChecking = params.specific.disableJarCheckingOpt,
             python = params.sharedLaunch.python,
             pythonJep = params.sharedLaunch.pythonJep,
-            rules = params.specific.assemblyRules
+            rules = params.specific.assemblyRules,
+            manifestAttributes = params.specific.manifestAttributes
           )
 
           if (params.sharedLaunch.python) {
